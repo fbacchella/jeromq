@@ -1,20 +1,34 @@
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/openjdk:8
-    steps:
-      - checkout
-      - restore_cache:
-          key: jeromq-{{ checksum "pom.xml" }}
-      - run: mvn dependency:go-offline dependency:resolve-plugins
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: jeromq-{{ checksum "pom.xml" }}
-      - run: mvn package
-      - store_test_results:
-          path: target/surefire-reports
-      - store_artifacts:
-          path: target/jeromq-*.jar
-
+    build:
+        docker:
+            - image: circleci/openjdk:11-jdk
+              environment:
+                  discovery.type: single-node
+        branches:
+            only:
+                - publishing
+        steps:
+            - checkout
+            - run: sudo apt-get install openjdk-11-jdk-headless openjdk-8-jdk-headless
+            - restore_cache:
+                key: jeromq-{{ checksum "pom.xml" }}
+            - run: mvn dependency:go-offline dependency:resolve-plugins
+            - run:
+                command: mvn compile
+                environment:
+                    JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+            - run:
+                command: mvn resources:testResources compiler:testCompile surefire:test
+                environment:
+                    JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
+            - run:
+                command: mvn site deploy -Dmaven.test.skip=true -Dmaven.main.skip=true -s .circleci/settings.xml
+                environment:
+                    JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+            - save_cache:
+                paths:
+                    - ~/.m2
+                key: jeromq-{{ checksum "pom.xml" }}
+            - store_test_results:
+                path: target/surefire-reports
