@@ -19,11 +19,11 @@ jobs:
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - run:
-                command: mvn resources:testResources compiler:testCompile surefire:test
+                command: mvn resources:testResources compiler:testCompile surefire:test -Djdk.compile.home=/usr/lib/jvm/java-8-openjdk-amd64
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
             - run:
-                command: mvn site deploy -Dmaven.test.skip=true -Dmaven.main.skip=true -s .circleci/settings.xml
+                command: mvn site deploy -Dmaven.test.skip=true -Dmaven.main.skip=true -s .circleci/settings.xml -Djdk.compile.home=/usr/lib/jvm/java-8-openjdk-amd64
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - save_cache:
