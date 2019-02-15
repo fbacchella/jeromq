@@ -90,6 +90,9 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+              <compilerArgs>
+                <arg>-Xbootclasspath:${jdk.compile.home}/jre/lib/rt.jar</arg>
+              </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
