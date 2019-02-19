@@ -19,7 +19,10 @@ jobs:
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - run:
-                command: mvn site deploy -Dmaven.test.skip=true -Dmaven.main.skip=true -s .circleci/settings.xml -Djdk.compile.home=/usr/lib/jvm/java-8-openjdk-amd64
+                command: |
+                    # If no symbolic name, it's a PR, will not deploy
+                    [ -n "$(git symbolic-ref HEAD 2>/dev/null )"] && DEPLOY="deploy"
+                     mvn $DEPLOY deploy -Dmaven.test.skip=true -Dmaven.main.skip=true -s .circleci/settings.xml -Djdk.compile.home=/usr/lib/jvm/java-8-openjdk-amd64
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - save_cache:
