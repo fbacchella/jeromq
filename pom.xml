@@ -24,6 +24,7 @@
   </developers>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jdk.compile.home>${java.home}</jdk.compile.home>
   </properties>
   <dependencies>
     <dependency>
@@ -92,9 +93,9 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-              <compilerArgs>
-                <arg>-Xbootclasspath:${jdk.compile.home}/jre/lib/rt.jar</arg>
-              </compilerArgs>
+          <compilerArgs>
+            <arg>-Xbootclasspath/p:${jdk.compile.home}/lib/rt.jar</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
@@ -247,6 +248,54 @@
         </plugins>
     </reporting>
   <profiles>
+    <profile>
+      <id>sonar</id>
+      <properties>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>${env.SONARCLOUD_ORG}</sonar.organization>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.3</version>
+            <configuration>
+              <output>file</output>
+              <append>true</append>
+            </configuration>
+            <executions>
+              <execution>
+                <id>jacoco-initialize</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>jacoco-site</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.6.0.1398</version>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sonar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>coverage</id>
         <activation>
