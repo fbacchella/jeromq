@@ -75,7 +75,7 @@ jobs:
                     else
                         SONAR=""
                     fi
-                    mvn -B test $SONAR -Dmaven.resources.skip=true -Dmaven.main.skip=true -DargLine="-Xmx2048m"
+                    mvn -B verify $SONAR -Dmaven.resources.skip=true -Dmaven.main.skip=true -DargLine="-Xmx2048m"
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - store_test_results:
