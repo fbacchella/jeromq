@@ -94,7 +94,7 @@ jobs:
                 command: |
                     # If no symbolic name, it's a PR, will not publish results
                     if [ -n "$(git symbolic-ref HEAD 2>/dev/null )" ] ; then
-                        PUBLISH="deploy"
+                        PUBLISH="deploy -Psonar"
                     else
                         PUBLISH="install"
                     fi
