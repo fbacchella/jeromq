@@ -68,7 +68,14 @@ jobs:
                     mv -n /tmp/ws/home/circleci/project/.??* /home/circleci/project/
             - run:
                 command: |
-                    mvn -B test -Dmaven.resources.skip=true -Dmaven.main.skip=true -DargLine="-Xmx2048m"
+                    # If no symbolic name, it's a PR, will not send sonar analysis
+                    if [ -n "$(git symbolic-ref HEAD 2>/dev/null )" ] ; then
+                        SONAR="-Psonar -Dsonar.login=$SONARCLOUD_LOGIN"
+                        echo "will do sonar analysis"
+                    else
+                        SONAR=""
+                    fi
+                    mvn -B test $SONAR -Dmaven.resources.skip=true -Dmaven.main.skip=true -DargLine="-Xmx2048m"
                 environment:
                     JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
             - store_test_results:
@@ -94,7 +101,7 @@ jobs:
                 command: |
                     # If no symbolic name, it's a PR, will not publish results
                     if [ -n "$(git symbolic-ref HEAD 2>/dev/null )" ] ; then
-                        PUBLISH="deploy -Psonar"
+                        PUBLISH="deploy"
                     else
                         PUBLISH="install"
                     fi
