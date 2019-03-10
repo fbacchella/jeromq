@@ -3,14 +3,12 @@ jobs:
     checkout:
         docker:
             - image: circleci/openjdk:8-jdk
-              environment:
-                  discovery.type: single-node
         steps:
             - checkout
             - restore_cache:
                 key: jeromq-{{ checksum "pom.xml" }}
             - run: mkdir -p /home/circleci/.sonar/cache /home/circleci/.m2/repository
-            - run: "mvn -B dependency:go-offline"
+            - run: "mvn -B dependency:go-offline -Prelease-sign-artifacts,doclint-java8-disable"
             - persist_to_workspace:
                 root: /
                 paths:
@@ -20,8 +18,6 @@ jobs:
     build:
         docker:
             - image: circleci/openjdk:11-jdk
-              environment:
-                  discovery.type: single-node
         steps:
             - attach_workspace:
                 at: /tmp/ws
@@ -42,8 +38,6 @@ jobs:
     testsj8:
         docker:
             - image: circleci/openjdk:8-jdk
-              environment:
-                  discovery.type: single-node
         steps:
             - attach_workspace:
                 at: /tmp/ws
@@ -62,8 +56,6 @@ jobs:
     testsj11:
         docker:
             - image: circleci/openjdk:11-jdk
-              environment:
-                  discovery.type: single-node
         steps:
             - attach_workspace:
                 at: /tmp/ws
@@ -95,8 +87,6 @@ jobs:
     savecache:
         docker:
             - image: circleci/openjdk:11-jdk
-              environment:
-                  discovery.type: single-node
         steps:
             - attach_workspace:
                 at: /tmp/ws
