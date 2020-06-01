@@ -205,7 +205,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         try {
             //  First check out whether the protcol is something we are aware of.
             NetProtocol proto = NetProtocol.getProtocol(protocol);
-            if (!proto.valid) {
+            if (!proto.isValid()) {
                 errno.set(ZError.EPROTONOSUPPORT);
                 return proto;
             }
@@ -470,7 +470,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             String address = uri.getAddress();
 
             NetProtocol protocol = checkProtocol(uri.getProtocol());
-            if (protocol == null || !protocol.valid) {
+            if (protocol == null || !protocol.isValid()) {
                 return false;
             }
 
