@@ -1,7 +1,8 @@
 package org.zeromq.util;
 
 import java.io.PrintStream;
-import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 
 import org.zeromq.ZMQ;
 
@@ -9,11 +10,16 @@ public class ZData
 {
     private static final String HEX_CHAR = "0123456789ABCDEF";
 
-    private final byte[] data;
+    private final ByteBuffer data;
 
     public ZData(byte[] data)
     {
-        this.data = data;
+        this.data = ByteBuffer.wrap(data);
+    }
+
+    public ZData(ByteBuffer data)
+    {
+        this.data = data.duplicate();
     }
 
     /**
@@ -42,9 +48,27 @@ public class ZData
         return new String(data, ZMQ.CHARSET).compareTo(str) == 0;
     }
 
+    /**
+     * String equals.
+     * Uses String compareTo for the comparison (lexigraphical)
+     * @param str String to compare with data
+     * @param data the binary data to compare
+     * @return True if data matches given string
+     */
+    public static boolean streq(ByteBuffer data, String str)
+    {
+        if (data == null) {
+            return false;
+        }
+        data.mark();
+        CharBuffer content = ZMQ.CHARSET.decode(data);
+        data.reset();
+        return str.contentEquals(content);
+    }
+
     public boolean equals(byte[] that)
     {
-        return Arrays.equals(data, that);
+        return ByteBuffer.wrap(that).equals(data);
     }
 
     @Override
@@ -60,16 +84,13 @@ public class ZData
             return false;
         }
         ZData that = (ZData) other;
-        if (!Arrays.equals(this.data, that.data)) {
-            return false;
-        }
-        return true;
-    }
+        return this.data.equals(that.data);
+     }
 
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(data);
+        return data.hashCode();
     }
 
     /**
@@ -82,25 +103,36 @@ public class ZData
         return toString(data);
     }
 
-    public static String toString(byte[] data)
+    public static String toString(ByteBuffer data)
     {
-        if (data == null) {
+        if (data == null || ! data.hasRemaining()) {
             return "";
         }
         // Dump message as text or hex-encoded string
         boolean isText = true;
-        for (byte aData : data) {
+        data.mark();
+        while (data.hasRemaining()) {
+            byte aData = data.get();
             if (aData < 32 || aData > 127) {
                 isText = false;
                 break;
             }
         }
+        data.reset();
+        String content;
         if (isText) {
-            return new String(data, ZMQ.CHARSET);
+            content = ZMQ.CHARSET.decode(data).toString();
         }
         else {
-            return strhex(data);
+            content =  strhex(data);
         }
+        data.reset();
+        return content;
+    }
+
+    public static String toString(byte[] data)
+    {
+        return toString(ByteBuffer.wrap(data));
     }
 
     /**
@@ -111,13 +143,18 @@ public class ZData
         return strhex(data);
     }
 
-    public static String strhex(byte[] data)
+    /**
+     * @return data as a printable hex string
+     */
+    public static String strhex(ByteBuffer data)
     {
-        if (data == null) {
+        if (data == null || ! data.hasRemaining()) {
             return "";
         }
-        StringBuilder b = new StringBuilder(data.length * 2);
-        for (byte aData : data) {
+        StringBuilder b = new StringBuilder(data.limit() * 2);
+        ByteBuffer readBuffer = data.asReadOnlyBuffer();
+        while (readBuffer.hasRemaining()) {
+            byte aData = readBuffer.get();
             int b1 = aData >>> 4 & 0xf;
             int b2 = aData & 0xf;
             b.append(HEX_CHAR.charAt(b1));
@@ -126,12 +163,17 @@ public class ZData
         return b.toString();
     }
 
-    public void print(PrintStream out, String prefix)
+    public static String strhex(byte[] data)
     {
-        print(out, prefix, data, data.length);
+        return strhex(ByteBuffer.wrap(data));
     }
 
-    public static void print(PrintStream out, String prefix, byte[] data, int size)
+    public void print(PrintStream out, String prefix)
+    {
+        print(out, prefix, data);
+    }
+
+    public static void print(PrintStream out, String prefix, ByteBuffer data)
     {
         if (data == null) {
             return;
@@ -139,30 +181,40 @@ public class ZData
         if (prefix != null) {
             out.printf("%s", prefix);
         }
-        boolean isBin = false;
-        int charNbr;
-        for (charNbr = 0; charNbr < size; charNbr++) {
-            if (data[charNbr] < 9 || data[charNbr] > 127) {
-                isBin = true;
+        int size = data.remaining();
+        out.printf("[%03d] ", size);
+        boolean isText = true;
+        ByteBuffer readBuffer = data.asReadOnlyBuffer();
+        readBuffer.mark();
+        while (readBuffer.hasRemaining()) {
+            byte aData = readBuffer.get();
+            if (aData < 32 || aData > 127) {
+                isText = false;
+                break;
             }
         }
-
-        out.printf("[%03d] ", size);
-        int maxSize = isBin ? 35 : 70;
+        readBuffer.reset();
+        readBuffer.rewind();
+        int maxSize = isText ? 70 : 35;
         String elipsis = "";
         if (size > maxSize) {
-            size = maxSize;
+            readBuffer.limit(maxSize);
             elipsis = "...";
         }
-        for (charNbr = 0; charNbr < size; charNbr++) {
-            if (isBin) {
-                out.printf("%02X", data[charNbr]);
-            }
-            else {
-                out.printf("%c", data[charNbr]);
+        if (isText) {
+            out.append(ZMQ.CHARSET.decode(readBuffer));
+        }
+        else {
+            while (readBuffer.hasRemaining()) {
+                out.printf("%02X", readBuffer.get());
             }
         }
         out.printf("%s\n", elipsis);
         out.flush();
+    }
+
+    public static void print(PrintStream out, String prefix, byte[] data, int size)
+    {
+        print(out, prefix, ByteBuffer.wrap(data, 0, size));
     }
 }

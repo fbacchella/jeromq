@@ -161,7 +161,7 @@ public class MetadataTest
         byte[] array = stream.toByteArray();
 
         Metadata dst = new Metadata();
-        dst.read(ByteBuffer.wrap(array), 0, null);
+        dst.read(ByteBuffer.wrap(array), 0);
 
         assertThat(dst, is(src));
     }

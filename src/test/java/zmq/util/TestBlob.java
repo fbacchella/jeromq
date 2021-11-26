@@ -17,7 +17,7 @@ public class TestBlob
     {
         HashMap<Blob, String> map = new HashMap<Blob, String>();
 
-        Blob b = Blob.createBlob("a".getBytes(ZMQ.CHARSET));
+        Blob b = new Blob("a".getBytes(ZMQ.CHARSET));
         map.put(b, "aa");
 
         assertThat(map.remove(b), notNullValue());

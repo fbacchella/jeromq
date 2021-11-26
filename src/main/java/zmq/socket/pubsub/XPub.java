@@ -124,7 +124,7 @@ public class XPub extends SocketBase
             }
             else {
                 //  Process user message coming upstream from xsub socket
-                pendingData.add(Blob.createBlob(sub));
+                pendingData.add(new Blob(sub));
                 pendingFlags.add(sub.flags());
                 continue;
             }
@@ -144,7 +144,7 @@ public class XPub extends SocketBase
                 //  we can't give them back to userspace as it would be an API
                 //  breakage since the payload of the message is completely
                 //  different. Manually craft an old-style message instead.
-                pendingData.add(Blob.createBlob(sub));
+                pendingData.add(new Blob(sub));
                 pendingFlags.add(0);
             }
             else {
@@ -160,7 +160,7 @@ public class XPub extends SocketBase
                 //  was removed, or verbose mode is enabled, store it so that
                 //  it can be passed to the user on next recv call.
                 if (options.type == ZMQ.ZMQ_XPUB && notify) {
-                    pendingData.add(Blob.createBlob(sub));
+                    pendingData.add(new Blob(sub));
                     pendingFlags.add(0);
                 }
             }
@@ -196,13 +196,13 @@ public class XPub extends SocketBase
         else if (option == ZMQ.ZMQ_SUBSCRIBE && manual) {
             if (null != lastPipe) {
                 String val = Options.parseString(option, optval);
-                subscriptions.add(new Msg(val.getBytes()), lastPipe);
+                subscriptions.add(new Msg(val.getBytes(ZMQ.CHARSET)), lastPipe);
             }
         }
         else if (option == ZMQ.ZMQ_UNSUBSCRIBE && manual) {
             if (null != lastPipe) {
                 String val = Options.parseString(option, optval);
-                subscriptions.rm(new Msg(val.getBytes()), lastPipe);
+                subscriptions.rm(new Msg(val.getBytes(ZMQ.CHARSET)), lastPipe);
             }
         }
         else {
@@ -288,7 +288,7 @@ public class XPub extends SocketBase
         }
 
         Blob first = pendingData.pollFirst();
-        Msg msg = new Msg(first.data());
+        Msg msg = new Msg(first.buf());
         int flags = pendingFlags.pollFirst();
         msg.setFlags(flags);
         return msg;
@@ -308,7 +308,7 @@ public class XPub extends SocketBase
             byte[] unsub = new byte[size + 1];
             unsub[0] = 0;
             System.arraycopy(data, 0, unsub, 1, size);
-            pendingData.add(Blob.createBlob(unsub));
+            pendingData.add(new Blob(unsub));
             pendingFlags.add(0);
 
             if (manual) {

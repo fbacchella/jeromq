@@ -1,5 +1,6 @@
 package org.zeromq;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import zmq.Msg;
@@ -179,6 +180,21 @@ public class ZSocket implements AutoCloseable
         return -1;
     }
 
+    public int send(ByteBuffer b)
+    {
+        return send(b, 0);
+    }
+
+    public int send(ByteBuffer b, int flags)
+    {
+        final Msg msg = new Msg(b);
+        if (socketBase.send(msg, flags)) {
+            return msg.size();
+        }
+        mayRaise();
+        return -1;
+    }
+
     /**
      * Send a frame
      *
@@ -188,8 +204,7 @@ public class ZSocket implements AutoCloseable
      */
     public boolean sendFrame(ZFrame frame, int flags)
     {
-        final byte[] data = frame.getData();
-        final Msg msg = new Msg(data);
+        final Msg msg = new Msg(frame.getDataBuffer());
         if (socketBase.send(msg, flags)) {
             return true;
         }
@@ -218,8 +233,7 @@ public class ZSocket implements AutoCloseable
 
     public int sendStringUtf8(String str, int flags)
     {
-        final byte[] b = str.getBytes(ZMQ.CHARSET);
-        return send(b, flags);
+        return send(ZMQ.CHARSET.encode(str), flags);
     }
 
     public byte[] receive()
@@ -236,6 +250,20 @@ public class ZSocket implements AutoCloseable
         return msg.data();
     }
 
+    public ByteBuffer receiveByteBuffer()
+    {
+        return receiveByteBuffer(0);
+    }
+
+    public ByteBuffer receiveByteBuffer(int flags)
+    {
+        final Msg msg = socketBase.recv(flags);
+        if (msg == null) {
+            return null;
+        }
+        return msg.buf();
+    }
+
     public String receiveStringUtf8()
     {
         return receiveStringUtf8(0);
@@ -243,8 +271,11 @@ public class ZSocket implements AutoCloseable
 
     public String receiveStringUtf8(int flags)
     {
-        final byte[] b = receive(flags);
-        return new String(b, ZMQ.CHARSET);
+        final Msg msg = socketBase.recv(flags);
+        if (msg == null) {
+            return null;
+        }
+        return ZMQ.CHARSET.decode(msg.buf()).toString();
     }
 
     private void mayRaise()

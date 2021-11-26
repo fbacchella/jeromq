@@ -1039,8 +1039,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
         Blob credential = mechanism.getUserId();
         if (credential != null && credential.size() > 0) {
-            Msg cred = new Msg(credential.size());
-            cred.put(credential.data(), 0, credential.size());
+            Msg cred = new Msg(credential.buf());
             cred.setFlags(Msg.CREDENTIAL);
 
             boolean rc = session.pushMsg(cred);

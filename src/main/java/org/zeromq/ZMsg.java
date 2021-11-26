@@ -5,12 +5,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 
 import org.zeromq.ZMQ.Socket;
+
 import zmq.util.Draft;
 import zmq.util.function.Consumer;
 
@@ -455,6 +457,12 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return this;
     }
 
+    public ZMsg addFirst(ByteBuffer data)
+    {
+        addFirst(new ZFrame(data));
+        return this;
+    }
+
     public ZMsg addLast(String stringValue)
     {
         addLast(new ZFrame(stringValue));
@@ -462,6 +470,12 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     }
 
     public ZMsg addLast(byte[] data)
+    {
+        addLast(new ZFrame(data));
+        return this;
+    }
+
+    public ZMsg addLast(ByteBuffer data)
     {
         addLast(new ZFrame(data));
         return this;
@@ -481,12 +495,23 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         return this;
     }
 
+    public ZMsg push(ByteBuffer data)
+    {
+        push(new ZFrame(data));
+        return this;
+    }
+
     public boolean add(String stringValue)
     {
         return add(new ZFrame(stringValue));
     }
 
     public boolean add(byte[] data)
+    {
+        return add(new ZFrame(data));
+    }
+
+    public boolean add(ByteBuffer data)
     {
         return add(new ZFrame(data));
     }
@@ -510,6 +535,18 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
      * @return this
      */
     public ZMsg append(byte[] data)
+    {
+        add(data);
+        return this;
+    }
+
+    /**
+     * Adds a {@link ByteBuffer} as a new frame in the message.
+     *
+     * @param data the value to add
+     * @return this
+     */
+    public ZMsg append(ByteBuffer data)
     {
         add(data);
         return this;

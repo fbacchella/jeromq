@@ -132,7 +132,7 @@ public class Stream extends SocketBase
 
                 //  Find the pipe associated with the identity stored in the prefix.
                 //  If there's no such pipe return an error
-                Blob identity = Blob.createBlob(msg);
+                Blob identity = new Blob(msg);
                 Outpipe op = outpipes.get(identity);
 
                 if (op != null) {
@@ -228,7 +228,7 @@ public class Stream extends SocketBase
         //  buffer and send a frame with peer's ID.
         Blob identity = pipe.get().getIdentity();
 
-        msg = new Msg(identity.data());
+        msg = new Msg(identity.buf());
 
         // forward metadata (if any)
         Metadata metadata = prefetchedMsg.getMetadata();
@@ -265,7 +265,7 @@ public class Stream extends SocketBase
 
         Blob identity = pipe.get().getIdentity();
 
-        prefetchedId = new Msg(identity.data());
+        prefetchedId = new Msg(identity.buf());
 
         // forward metadata (if any)
         Metadata metadata = prefetchedMsg.getMetadata();
@@ -296,7 +296,7 @@ public class Stream extends SocketBase
 
         Blob identity;
         if (connectRid != null && !connectRid.isEmpty() && isLocallyInitiated) {
-            identity = Blob.createBlob(connectRid.getBytes(ZMQ.CHARSET));
+            identity = new Blob(connectRid);
             connectRid = null;
 
             Outpipe outpipe = outpipes.get(identity);
@@ -306,7 +306,8 @@ public class Stream extends SocketBase
             ByteBuffer buf = ByteBuffer.allocate(5);
             buf.put((byte) 0);
             Wire.putUInt32(buf, nextRid++);
-            identity = Blob.createBlob(buf.array());
+            buf.flip();
+            identity = new Blob(buf);
         }
         pipe.setIdentity(identity);
         //  Add the record into output pipes lookup table

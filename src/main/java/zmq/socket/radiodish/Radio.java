@@ -12,6 +12,7 @@ import zmq.io.net.Address;
 import zmq.pipe.Pipe;
 import zmq.socket.pubsub.Dist;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -159,29 +160,27 @@ public class Radio extends SocketBase
         public boolean pushMsg(Msg msg)
         {
             if (msg.isCommand()) {
-                byte commandNameSize = msg.get(0);
+                ByteBuffer databuf = msg.buf();
+                int oldlimit = databuf.limit();
+                byte commandNameSize = databuf.get();
 
                 if (msg.size() < commandNameSize + 1) {
                     return super.pushMsg(msg);
                 }
 
-                byte[] data = msg.data();
+                databuf.limit(commandNameSize + 1);
+                String commandName = StandardCharsets.US_ASCII.decode(databuf).toString();
+                databuf.limit(oldlimit);
+                databuf.position(commandNameSize + 1);
 
-                String commandName = new String(data, 1, commandNameSize, StandardCharsets.US_ASCII);
-
-                int groupLength;
-                String group;
+                String group = StandardCharsets.US_ASCII.decode(databuf).toString();
                 Msg joinLeaveMsg = new Msg();
 
                 // Set the msg type to either JOIN or LEAVE
                 if (commandName.equals("JOIN")) {
-                    groupLength = msg.size() - 5;
-                    group = new String(data, 5, groupLength, StandardCharsets.US_ASCII);
                     joinLeaveMsg.initJoin();
                 }
                 else if (commandName.equals("LEAVE")) {
-                    groupLength = msg.size() - 6;
-                    group = new String(data, 6, groupLength, StandardCharsets.US_ASCII);
                     joinLeaveMsg.initLeave();
                 }
                 // If it is not a JOIN or LEAVE just push the message
@@ -213,7 +212,7 @@ public class Radio extends SocketBase
                     }
 
                     //  First frame is the group
-                    msg = new Msg(pending.getGroup().getBytes(StandardCharsets.US_ASCII));
+                    msg = new Msg(StandardCharsets.US_ASCII.encode(pending.getGroup()));
                     msg.setFlags(Msg.MORE);
 
                     //  Next status is the body

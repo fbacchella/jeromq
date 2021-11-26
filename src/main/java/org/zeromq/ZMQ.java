@@ -15,7 +15,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.zeromq.proto.ZPicture;
+
 import zmq.Ctx;
+import zmq.Msg;
 import zmq.Options;
 import zmq.SocketBase;
 import zmq.ZError;
@@ -3261,7 +3263,7 @@ public class ZMQ
          */
         public boolean send(String data)
         {
-            return send(data.getBytes(CHARSET), 0);
+            return send(data, 0);
         }
 
         /**
@@ -3273,7 +3275,7 @@ public class ZMQ
          */
         public boolean sendMore(String data)
         {
-            return send(data.getBytes(CHARSET), zmq.ZMQ.ZMQ_SNDMORE);
+            return send(data, zmq.ZMQ.ZMQ_SNDMORE);
         }
 
         /**
@@ -3297,7 +3299,7 @@ public class ZMQ
          */
         public boolean send(String data, int flags)
         {
-            return send(data.getBytes(CHARSET), flags);
+            return sendByteBuffer(CHARSET.encode(data), flags) != -1;
         }
 
         /**
@@ -3346,7 +3348,7 @@ public class ZMQ
          */
         public boolean send(byte[] data, int flags)
         {
-            zmq.Msg msg = new zmq.Msg(data);
+            Msg msg = new Msg(data);
             if (base.send(msg, flags)) {
                 return true;
             }
@@ -3376,7 +3378,7 @@ public class ZMQ
          */
         public boolean send(byte[] data, int flags, CancellationToken cancellationToken)
         {
-            zmq.Msg msg = new zmq.Msg(data);
+            Msg msg = new Msg(data);
             if (base.send(msg, flags, cancellationToken.canceled)) {
                 return true;
             }
@@ -3410,13 +3412,24 @@ public class ZMQ
         {
             byte[] copy = new byte[length];
             System.arraycopy(data, off, copy, 0, length);
-            zmq.Msg msg = new zmq.Msg(copy);
+            Msg msg = new Msg(copy);
             if (base.send(msg, flags)) {
                 return true;
             }
 
             mayRaise();
             return false;
+        }
+
+        /**
+         * Queues a message created from data, so it can be sent.
+         *
+         * @param data  ByteBuffer payload
+         * @return the number of bytes queued, -1 on error
+         */
+        public int sendByteBuffer(ByteBuffer data)
+        {
+            return sendByteBuffer(data, 0);
         }
 
         /**
@@ -3439,7 +3452,7 @@ public class ZMQ
          */
         public int sendByteBuffer(ByteBuffer data, int flags)
         {
-            zmq.Msg msg = new zmq.Msg(data);
+            Msg msg = new Msg(data);
             if (base.send(msg, flags)) {
                 return msg.size();
             }
@@ -3546,7 +3559,7 @@ public class ZMQ
          */
         public byte[] recv(int flags)
         {
-            zmq.Msg msg = base.recv(flags);
+            Msg msg = base.recv(flags);
 
             if (msg != null) {
                 return msg.data();
@@ -3578,7 +3591,7 @@ public class ZMQ
          */
         public byte[] recv(int flags, CancellationToken cancellationToken)
         {
-            zmq.Msg msg = base.recv(flags, cancellationToken.canceled);
+            Msg msg = base.recv(flags, cancellationToken.canceled);
 
             if (msg != null) {
                 return msg.data();
@@ -3609,7 +3622,7 @@ public class ZMQ
          */
         public int recv(byte[] buffer, int offset, int len, int flags)
         {
-            zmq.Msg msg = base.recv(flags);
+            Msg msg = base.recv(flags);
 
             if (msg != null) {
                 return msg.getBytes(0, buffer, offset, len);
@@ -3635,7 +3648,7 @@ public class ZMQ
          */
         public int recvByteBuffer(ByteBuffer buffer, int flags)
         {
-            zmq.Msg msg = base.recv(flags);
+            Msg msg = base.recv(flags);
 
             if (msg != null) {
                 buffer.put(msg.buf());
@@ -3644,6 +3657,64 @@ public class ZMQ
 
             mayRaise();
             return -1;
+        }
+
+        /**
+         * Receives a message into a ByteBuffer.
+         *
+         * @param flags  either:
+         *               <ul>
+         *               <li>{@link org.zeromq.ZMQ#DONTWAIT DONTWAIT}:
+         *               Specifies that the operation should be performed in non-blocking mode.
+         *               If there are no messages available on the specified socket,
+         *               the method shall fail with errno set to EAGAIN and return null.</li>
+         *               <li>0 : receive operation blocks until one message is successfully retrieved,
+         *               or stops when timeout set by {@link #setReceiveTimeOut(int)} expires.</li>
+         *               </ul>
+         * @return The byte buffer holding the zmq message payload or null in case of failure
+         */
+        public ByteBuffer recvByteBuffer(int flags)
+        {
+            Msg msg = base.recv(flags);
+
+            if (msg != null) {
+                return msg.buf();
+            }
+
+            mayRaise();
+            return null;
+        }
+
+        /**
+         * Receives a message, the call be canceled by calling cancellationToken {@link CancellationToken#cancel()}.
+         * If the operation is canceled a ZMQException is thrown with error code set to {@link ZError#ECANCELED}.
+         * <p>
+         * If possible, a reference to the data is returned, without copy.
+         * Otherwise a new byte array will be allocated and the data will be copied.
+         * <p>
+         * @param flags either:
+         *              <ul>
+         *              <li>{@link org.zeromq.ZMQ#DONTWAIT DONTWAIT}:
+         *              Specifies that the operation should be performed in non-blocking mode.
+         *              If there are no messages available on the specified socket,
+         *              the method shall fail with errno set to EAGAIN and return null.</li>
+         *              <li>0 : receive operation blocks until one message is successfully retrieved,
+         *              or stops when timeout set by {@link #setReceiveTimeOut(int)} expires.</li>
+         *              </ul>
+         * @param cancellationToken token to control cancellation of the receive operation.
+         *                          The token can be created by calling {@link #createCancellationToken() }.
+         * @return the message received, as an array of bytes; null on error.
+         */
+        public ByteBuffer recvByteBuffer(int flags, CancellationToken cancellationToken)
+        {
+            Msg msg = base.recv(flags, cancellationToken.canceled);
+
+            if (msg != null) {
+                return msg.buf();
+            }
+
+            mayRaise();
+            return null;
         }
 
         /**
@@ -3670,10 +3741,10 @@ public class ZMQ
          */
         public String recvStr(int flags)
         {
-            byte[] msg = recv(flags);
+            Msg msg = base.recv(flags);
 
             if (msg != null) {
-                return new String(msg, CHARSET);
+                return CHARSET.decode(msg.buf()).toString();
             }
 
             return null;

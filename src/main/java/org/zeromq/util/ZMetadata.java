@@ -1,8 +1,6 @@
 package org.zeromq.util;
 
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -55,16 +53,10 @@ public class ZMetadata
         if (meta == null || meta.length() == 0) {
             return null;
         }
-        try {
-            ByteBuffer buffer = ZMQ.CHARSET.newEncoder().encode(CharBuffer.wrap(meta));
-            Metadata data = new Metadata();
-            data.read(buffer, 0, null);
-            return new ZMetadata(data);
-        }
-        catch (CharacterCodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+        ByteBuffer buffer = ZMQ.CHARSET.encode(meta);
+        Metadata data = new Metadata();
+        data.read(buffer, 0);
+        return new ZMetadata(data);
     }
 
     public static ZMetadata read(ZConfig conf)

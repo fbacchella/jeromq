@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
 import zmq.io.Metadata;
 import zmq.util.Utils;
@@ -255,32 +254,23 @@ public class Msg
      */
     public byte[] data()
     {
-        if (buf.hasArray()) {
-            byte[] array = buf.array();
-            int offset = buf.arrayOffset();
-
-            if (offset == 0 && array.length == size) {
-                // If the backing array is exactly what we need, return it without copy.
-                return array;
-            }
-            else {
-                // Else use it to make an efficient copy.
-                return Arrays.copyOfRange(array, offset, offset + size);
-            }
+        if (buf.hasArray() && buf.arrayOffset() == 0 && buf.array().length == buf.limit()) {
+            // If the backing array is exactly the buffer content, return it without copy.
+            return buf.array();
         }
         else {
             // No backing array -> use ByteBuffer#get().
             byte[] array = new byte[size];
-            ByteBuffer dup = buf.duplicate();
-            dup.position(0);
-            dup.get(array);
+            buf.mark();
+            buf.get(array);
+            buf.reset();
             return array;
         }
     }
 
     public ByteBuffer buf()
     {
-        return buf.duplicate();
+        return (ByteBuffer) buf.duplicate();
     }
 
     public int size()
@@ -409,6 +399,12 @@ public class Msg
         count = Math.min(count, len);
         bb.put(dup);
         return count;
+    }
+
+    public boolean contentEquals(byte[] other)
+    {
+        ByteBuffer otherBuffer = ByteBuffer.wrap(other);
+        return buf.equals(otherBuffer);
     }
 
     @Override

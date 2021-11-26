@@ -236,7 +236,7 @@ public class Pipe extends ZObject
 
             //  If this is a credential, save a copy and receive next message.
             if (msg.isCredential()) {
-                credential = Blob.createBlob(msg);
+                credential = new Blob(msg);
                 continue;
             }
 

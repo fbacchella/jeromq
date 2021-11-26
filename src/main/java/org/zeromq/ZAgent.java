@@ -1,8 +1,8 @@
 package org.zeromq;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
-import java.util.Arrays;
 
 import org.zeromq.ZMQ.Socket;
 
@@ -124,7 +124,7 @@ public interface ZAgent
         private final Socket pipe;
 
         // the key used to lock the agent.
-        private final byte[] lock;
+        private final ByteBuffer lock;
 
         // the locked state.
         private boolean locked;
@@ -138,7 +138,7 @@ public interface ZAgent
         public SimpleAgent(Socket pipe, String lock)
         {
             this.pipe = pipe;
-            this.lock = lock == null ? null : lock.getBytes(ZMQ.CHARSET);
+            this.lock = lock == null ? null : ZMQ.CHARSET.encode(lock);
         }
 
         @Override
@@ -186,8 +186,7 @@ public interface ZAgent
 
                 if (msg.size() == 1) {
                     final ZFrame frame = msg.peek();
-                    byte[] key = frame.getData();
-                    if (lock != null && Arrays.equals(lock, key)) {
+                    if (lock != null && lock.compareTo(frame.getDataBuffer()) == 0) {
                         locked = true;
                         // this is the last message anyway, and not a one for a public display
                         msg = null;

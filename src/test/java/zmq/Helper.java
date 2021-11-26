@@ -233,7 +233,7 @@ public class Helper
     {
         Msg msg = ZMQ.recv(socket, 0);
         assert (msg != null);
-        return new String(msg.data(), ZMQ.CHARSET);
+        return ZMQ.CHARSET.decode(msg.buf()).toString();
     }
 
     //  Sends a message composed of frames that are C strings or null frames.
