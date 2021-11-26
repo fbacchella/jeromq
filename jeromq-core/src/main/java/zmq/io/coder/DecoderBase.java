@@ -43,7 +43,7 @@ public abstract class DecoderBase implements IDecoder
         toRead = 0;
         this.bufsize = bufsize;
         assert (bufsize > 0);
-        buf = ByteBuffer.allocateDirect(bufsize);
+        buf = ByteBuffer.allocate(bufsize);
         this.errno = errno;
     }
 
