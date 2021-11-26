@@ -15,7 +15,7 @@ public class RawDecoder implements IDecoder
 
     public RawDecoder(int bufsize)
     {
-        buffer = ByteBuffer.allocateDirect(bufsize);
+        buffer = ByteBuffer.allocate(bufsize);
         inProgress = new Msg();
     }
 

@@ -36,7 +36,7 @@ public abstract class EncoderBase implements IEncoder
     {
         this.errno = errno;
         this.bufferSize = bufferSize;
-        buffer = ByteBuffer.allocateDirect(bufferSize);
+        buffer = ByteBuffer.allocate(bufferSize);
         error = false;
     }
 

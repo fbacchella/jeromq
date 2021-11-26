@@ -99,6 +99,8 @@ public class Msg
     public static final int IDENTITY   = 64;
     public static final int SHARED     = 128;
 
+    private static final ByteBuffer EMPTYBUFFER = ByteBuffer.allocate(0).order(ByteOrder.BIG_ENDIAN);
+
     /// The maximum length of a group (Radio/Dish)
     public static final int MAX_GROUP_LENGTH = 255;
 
@@ -129,7 +131,7 @@ public class Msg
         this.type = Type.DATA;
         this.flags = 0;
         this.size = capacity;
-        this.buf = ByteBuffer.wrap(new byte[capacity]).order(ByteOrder.BIG_ENDIAN);
+        this.buf = capacity == 0 ? EMPTYBUFFER : ByteBuffer.wrap(new byte[capacity]).order(ByteOrder.BIG_ENDIAN);
     }
 
     public Msg(byte[] src)
@@ -140,7 +142,7 @@ public class Msg
         this.type = Type.DATA;
         this.flags = 0;
         this.size = src.length;
-        this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
+        this.buf = src.length == 0 ? EMPTYBUFFER : ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
     }
 
     public Msg(final ByteBuffer src)
