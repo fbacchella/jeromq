@@ -1,10 +1,11 @@
 package org.zeromq;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.util.ZData;
+
 import zmq.Msg;
 import zmq.SocketBase;
 
@@ -26,7 +27,7 @@ public class ZFrame
     public static final int DONTWAIT = ZMQ.DONTWAIT;
 
     private boolean more;
-    private byte[] data;
+    private ByteBuffer data;
     private int routingId;
     private String group;
 
@@ -48,7 +49,20 @@ public class ZFrame
     public ZFrame(byte[] data)
     {
         if (data != null) {
-            this.data = data;
+            this.data = ByteBuffer.wrap(data);
+        }
+    }
+
+    /**
+     * Class Constructor
+     * Copies message data into ZFrame object
+     * @param data
+     *          Data to copy into ZFrame object
+     */
+    public ZFrame(ByteBuffer data)
+    {
+        if (data != null) {
+            this.data = data.duplicate();
         }
     }
 
@@ -61,7 +75,7 @@ public class ZFrame
     public ZFrame(String data)
     {
         if (data != null) {
-            this.data = data.getBytes(ZMQ.CHARSET);
+            this.data = ZMQ.CHARSET.encode(data);
         }
     }
 
@@ -70,12 +84,12 @@ public class ZFrame
      * Uses internal Msg class to access routingId
      * @param msg internal Msg class to copy into Zframe
      */
-    protected ZFrame(zmq.Msg msg)
+    protected ZFrame(Msg msg)
     {
         if (msg == null) {
             return;
         }
-        this.data = msg.data();
+        this.data = msg.buf();
         this.more = msg.hasMore();
         this.routingId = msg.getRoutingId();
     }
@@ -133,7 +147,29 @@ public class ZFrame
      */
     public byte[] getData()
     {
-        return data;
+        if (data == null) {
+            return null;
+        }
+        else if (data.hasArray() && data.arrayOffset() == 0 && data.array().length == data.limit()) {
+            // If the backing array is exactly what we need, return it without copy.
+            return data.array();
+        }
+        else {
+            // No backing array -> use ByteBuffer#get().
+            byte[] array = new byte[data.limit()];
+            data.mark();
+            data.get(array);
+            data.reset();
+            return array;
+        }
+    }
+
+    /**
+     * @return the data
+     */
+    public ByteBuffer getDataBuffer()
+    {
+        return data == null ? null : data.duplicate();
     }
 
     public String getString(Charset charset)
@@ -141,7 +177,10 @@ public class ZFrame
         if (!hasData()) {
             return "";
         }
-        return new String(data, charset);
+        data.mark();
+        String content = charset.decode(data).toString();
+        data.reset();
+        return content;
     }
 
     /**
@@ -160,7 +199,7 @@ public class ZFrame
     public int size()
     {
         if (hasData()) {
-            return data.length;
+            return data.limit();
         }
         else {
             return 0;
@@ -190,7 +229,7 @@ public class ZFrame
     {
         Utils.checkArgument(socket != null, "socket parameter must be set");
         final SocketBase base = socket.base();
-        final zmq.Msg msg = new Msg(data);
+        final Msg msg = data == null ? new Msg() : new Msg(data);
 
         if (group != null) {
             msg.setGroup(group);
@@ -274,7 +313,7 @@ public class ZFrame
      */
     public ZFrame duplicate()
     {
-        return new ZFrame(this.data);
+        return new ZFrame(data);
     }
 
     /**
@@ -289,11 +328,15 @@ public class ZFrame
         if (other == null) {
             return false;
         }
-
-        if (size() == other.size()) {
-            return Arrays.equals(data, other.data);
+        else if (data == null) {
+            return other.data == null;
         }
-        return false;
+        else if (size() == other.size()) {
+            return data.equals(other.data);
+        }
+        else {
+            return false;
+        }
     }
 
     /**
@@ -303,7 +346,7 @@ public class ZFrame
      */
     public void reset(String data)
     {
-        this.data = data.getBytes(ZMQ.CHARSET);
+        this.data = ZMQ.CHARSET.encode(data);
     }
 
     /**
@@ -313,7 +356,7 @@ public class ZFrame
      */
     public void reset(byte[] data)
     {
-        this.data = data;
+        this.data = ByteBuffer.wrap(data);
     }
 
     /**
@@ -347,13 +390,16 @@ public class ZFrame
             return false;
         }
         ZFrame zFrame = (ZFrame) o;
-        return Arrays.equals(data, zFrame.data);
+        if (data == null) {
+            return zFrame.data == null;
+        }
+        return data.equals(zFrame.data);
     }
 
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(data);
+        return data.hashCode();
     }
 
     /**
@@ -395,7 +441,7 @@ public class ZFrame
     public static ZFrame recvFrame(Socket socket, int flags)
     {
         final SocketBase base = socket.base();
-        zmq.Msg msg = base.recv(flags);
+        Msg msg = base.recv(flags);
         if (msg == null) {
             // Check to see if there was an error in recv
             socket.mayRaise();
@@ -408,6 +454,6 @@ public class ZFrame
 
     public void print(String prefix)
     {
-        ZData.print(System.out, prefix, getData(), size());
+        ZData.print(System.out, prefix, getDataBuffer());
     }
 }

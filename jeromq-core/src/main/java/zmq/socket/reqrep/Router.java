@@ -229,7 +229,7 @@ public class Router extends SocketBase
                 //  Find the pipe associated with the identity stored in the prefix.
                 //  If there's no such pipe just silently ignore the message, unless
                 //  mandatory is set.
-                Blob identity = Blob.createBlob(msg);
+                Blob identity = new Blob(msg);
                 Outpipe op = outpipes.get(identity);
 
                 if (op != null) {
@@ -335,7 +335,7 @@ public class Router extends SocketBase
             prefetched = true;
 
             Blob identity = pipe.get().getIdentity();
-            msg = new Msg(identity.data());
+            msg = new Msg(identity.buf());
             msg.setFlags(Msg.MORE);
             identitySent = true;
         }
@@ -388,7 +388,7 @@ public class Router extends SocketBase
         assert (pipe.get() != null);
 
         Blob identity = pipe.get().getIdentity();
-        prefetchedId = new Msg(identity.data());
+        prefetchedId = new Msg(identity.buf());
         prefetchedId.setFlags(Msg.MORE);
 
         prefetched = true;
@@ -417,7 +417,7 @@ public class Router extends SocketBase
         Blob identity;
 
         if (connectRid != null && !connectRid.isEmpty() && isLocallyInitiated) {
-            identity = Blob.createBlob(connectRid.getBytes(ZMQ.CHARSET));
+            identity = new Blob(connectRid);
             connectRid = null;
             Outpipe outpipe = outpipes.get(identity);
             assert (outpipe == null); //  Not allowed to duplicate an existing rid
@@ -428,7 +428,8 @@ public class Router extends SocketBase
                 ByteBuffer buffer = ByteBuffer.allocate(5);
                 buffer.put((byte) 0);
                 Wire.putUInt32(buffer, nextRid++);
-                identity = Blob.createBlob(buffer.array());
+                buffer.flip();
+                identity = new Blob(buffer);
             }
             else {
                 //  Pick up handshake cases and also case where next identity is set
@@ -439,13 +440,14 @@ public class Router extends SocketBase
 
                 if (msg.size() == 0) {
                     //  Fall back on the auto-generation
-                    ByteBuffer buf = ByteBuffer.allocate(5);
-                    buf.put((byte) 0);
-                    Wire.putUInt32(buf, nextRid++);
-                    identity = Blob.createBlob(buf.array());
+                    ByteBuffer buffer = ByteBuffer.allocate(5);
+                    buffer.put((byte) 0);
+                    Wire.putUInt32(buffer, nextRid++);
+                    buffer.flip();
+                    identity = new Blob(buffer);
                 }
                 else {
-                    identity = Blob.createBlob(msg);
+                    identity = new Blob(msg);
 
                     if (outpipes.containsKey(identity)) {
                         if (!handover) {
@@ -458,7 +460,8 @@ public class Router extends SocketBase
                         ByteBuffer buf = ByteBuffer.allocate(5);
                         buf.put((byte) 0);
                         Wire.putUInt32(buf, nextRid++);
-                        Blob newIdentity = Blob.createBlob(buf.array());
+                        buf.flip();
+                        Blob newIdentity = new Blob(buf);
 
                         //  Remove the existing identity entry to allow the new
                         //  connection to take the identity.

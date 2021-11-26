@@ -1,14 +1,14 @@
 package zmq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.function.Function;
 
 import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestMsg
 {
@@ -34,11 +34,12 @@ public class TestMsg
     public void shouldWorkForFlippedBuffers()
     {
         ByteBuffer buffer = ByteBuffer.allocate(10);
-        buffer.putChar('a');
-        buffer.putChar('b');
-        buffer.putChar('c');
+        buffer.put((byte) 'a');
+        buffer.put((byte) 'b');
+        buffer.put((byte) 'c');
         buffer.flip();
-        new Msg(buffer);
+        Msg msg = new Msg(buffer);
+        assertThat(msg.data(), is(new byte[] {'a', 'b', 'c'}));
     }
 
     @Test

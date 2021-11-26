@@ -1,5 +1,6 @@
 package zmq.socket.radiodish;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
@@ -216,8 +217,8 @@ public class Dish extends SocketBase
 
     public static class DishSession extends SessionBase
     {
-        static final byte[] JOIN_BYTES = "\4JOIN".getBytes(StandardCharsets.US_ASCII);
-        static final byte[] LEAVE_BYTES = "\5LEAVE".getBytes(StandardCharsets.US_ASCII);
+        static final ByteBuffer JOIN_BYTES = ZMQ.CHARSET.encode("\4JOIN");
+        static final ByteBuffer LEAVE_BYTES = ZMQ.CHARSET.encode("\5LEAVE");
 
         enum State
         {
@@ -252,7 +253,7 @@ public class Dish extends SocketBase
                     return false;
                 }
 
-                group = new String(msg.data(), StandardCharsets.US_ASCII);
+                group = ZMQ.CHARSET.decode(msg.buf()).toString();
                 state = State.BODY;
 
                 return true;
@@ -295,12 +296,12 @@ public class Dish extends SocketBase
             byte[] groupBytes = msg.getGroup().getBytes(StandardCharsets.US_ASCII);
 
             if (msg.isJoin()) {
-                command = new Msg(groupBytes.length + 5);
-                command.put(JOIN_BYTES);
+                command = options.allocator.allocate(groupBytes.length + 5);
+                command.put(JOIN_BYTES.duplicate());
             }
             else {
-                command = new Msg(groupBytes.length + 6);
-                command.put(LEAVE_BYTES);
+                command = options.allocator.allocate(groupBytes.length + 6);
+                command.put(LEAVE_BYTES.duplicate());
             }
 
             command.setFlags(Msg.COMMAND);

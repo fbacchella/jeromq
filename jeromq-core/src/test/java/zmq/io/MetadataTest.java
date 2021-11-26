@@ -169,7 +169,7 @@ class MetadataTest
         byte[] array = stream.toByteArray();
 
         Metadata dst = new Metadata();
-        dst.read(ByteBuffer.wrap(array), 0, null);
+        dst.read(ByteBuffer.wrap(array), 0);
 
         Assertions.assertEquals(src, dst);
         Assertions.assertEquals("", dst.get("keyEmpty"));

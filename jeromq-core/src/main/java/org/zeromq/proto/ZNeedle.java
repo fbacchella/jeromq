@@ -26,12 +26,7 @@ public class ZNeedle
 
     public ZNeedle(ZFrame frame)
     {
-        this(frame.getData());
-    }
-
-    private ZNeedle(byte[] data)
-    {
-        needle = ByteBuffer.wrap(data);
+        needle = frame.getDataBuffer();
     }
 
     private void checkAvailable(int size)

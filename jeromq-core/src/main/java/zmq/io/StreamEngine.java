@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.zeromq.Errors;
-
 import zmq.Config;
 import zmq.Msg;
 import zmq.Options;
@@ -25,7 +23,6 @@ import zmq.io.coder.v1.V1Encoder;
 import zmq.io.coder.v2.V2Decoder;
 import zmq.io.coder.v2.V2Encoder;
 import zmq.io.mechanism.Mechanism;
-import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 import zmq.io.net.SocketWrapper;
 import zmq.poll.IPollEvents;
@@ -1043,8 +1040,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
         Blob credential = mechanism.getUserId();
         if (credential != null && credential.size() > 0) {
-            Msg cred = new Msg(credential.size());
-            cred.put(credential.data(), 0, credential.size());
+            Msg cred = new Msg(credential.buf());
             cred.setFlags(Msg.CREDENTIAL);
 
             boolean rc = session.pushMsg(cred);

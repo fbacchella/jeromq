@@ -782,7 +782,6 @@ public class ZMQ
             }
         }
         return rc;
-
     }
 
     public static boolean sendMsg(SocketBase socket, byte[]... data)

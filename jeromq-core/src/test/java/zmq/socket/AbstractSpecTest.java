@@ -1,12 +1,12 @@
 package zmq.socket;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import zmq.Msg;
 import zmq.SocketBase;
 import zmq.ZMQ;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class AbstractSpecTest
 {
@@ -24,7 +24,7 @@ public class AbstractSpecTest
                 assertThat(rc < 0, is(false));
             }
             else {
-                Msg msg = new Msg(payload.getBytes(ZMQ.CHARSET));
+                Msg msg = new Msg(ZMQ.CHARSET.encode(payload));
                 rc = ZMQ.send(socket, msg, idx == data.length - 1 ? 0 : ZMQ.ZMQ_SNDMORE);
                 assertThat(rc < 0, is(false));
             }

@@ -1,11 +1,7 @@
 package zmq.io.mechanism;
 
-import static zmq.io.Metadata.IDENTITY;
-import static zmq.io.Metadata.SOCKET_TYPE;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import zmq.Msg;
@@ -19,6 +15,9 @@ import zmq.io.net.Address;
 import zmq.socket.Sockets;
 import zmq.util.Blob;
 import zmq.util.Wire;
+
+import static zmq.io.Metadata.IDENTITY;
+import static zmq.io.Metadata.SOCKET_TYPE;
 
 // Abstract class representing security mechanism.
 // Different mechanism extends this class.
@@ -56,31 +55,28 @@ public abstract class Mechanism
 
     public abstract Status status();
 
-    private void setPeerIdentity(byte[] data)
+    private void setPeerIdentity(ByteBuffer data)
     {
-        identity = Blob.createBlob(data);
+        identity = new Blob(data);
     }
 
     public Msg peerIdentity()
     {
-        byte[] data = new byte[0];
-        int size = 0;
+        Msg msg;
         if (identity != null) {
-            data = identity.data();
-            size = identity.size();
+            msg = new Msg(identity.buf());
         }
-
-        Msg msg = new Msg(size);
-        msg.put(data, 0, size);
+        else {
+            msg = new Msg(0);
+        }
         msg.setFlags(Msg.IDENTITY);
-
         return msg;
     }
 
-    private void setUserId(byte[] data)
+    private void setUserId(Msg data)
     {
-        userId = Blob.createBlob(data);
-        zapProperties.put(Metadata.USER_ID, new String(data, ZMQ.CHARSET));
+        userId = new Blob(data);
+        zapProperties.set(Metadata.USER_ID, ZMQ.CHARSET.decode(data.buf()).toString());
     }
 
     public Blob getUserId()
@@ -140,26 +136,29 @@ public abstract class Mechanism
     protected int parseMetadata(ByteBuffer msg, int offset, boolean zapFlag)
     {
         Metadata meta = zapFlag ? zapProperties : zmtpProperties;
-        return meta.read(msg, offset, (name, value, valueAsString) -> {
-            int type = options.asType != -1 ? options.asType : options.type;
+        return meta.read(msg, offset, this::parseMedatavalue);
+    }
 
-            if (IDENTITY.equals(name) && options.recvIdentity) {
-                setPeerIdentity(value);
+    private int parseMedatavalue(String name, ByteBuffer value, String valueAsString)
+    {
+        int type = options.asType != -1 ? options.asType : options.type;
+
+        if (IDENTITY.equals(name) && options.recvIdentity) {
+            setPeerIdentity(value);
+        }
+        else if (SOCKET_TYPE.equals(name)) {
+            if (!Sockets.compatible(type, valueAsString)) {
+                return ZError.EINVAL;
             }
-            else if (SOCKET_TYPE.equals(name)) {
-                if (!Sockets.compatible(type, valueAsString)) {
-                    return ZError.EINVAL;
-                }
+        }
+        else {
+            int rc = property(name, value);
+            if (rc == -1) {
+                return -1;
             }
-            else {
-                int rc = property(name, value);
-                if (rc == -1) {
-                    return -1;
-                }
-            }
-            // continue
-            return 0;
-        });
+        }
+        // continue
+        return 0;
     }
 
     protected int property(String name, byte[] value)
@@ -169,7 +168,14 @@ public abstract class Mechanism
         return 0;
     }
 
-    protected String socketType()
+    protected int property(String name, ByteBuffer value)
+    {
+        //  Default implementation does not check
+        //  property values and returns 0 to signal success.
+        return 0;
+    }
+
+    protected final String socketType()
     {
         if (options.asType != -1) {
             return Sockets.name(options.asType);
@@ -231,13 +237,13 @@ public abstract class Mechanism
             }
             // triple digit status code
             if (msg.size() == 10) {
-                byte[] statusBuffer = Arrays.copyOfRange(msg.data(), 7, 10);
-                String statusCode = new String(statusBuffer, ZMQ.CHARSET);
+                ByteBuffer buffer = msg.buf();
+                buffer.position(7);
+                String statusCode = ZMQ.CHARSET.decode(buffer).toString();
                 if (handleErrorReason(statusCode) < 0) {
                     return ZError.EPROTO;
                 }
             }
-
         }
         return 0;
     }
@@ -368,10 +374,10 @@ public abstract class Mechanism
         }
 
         //  Save status code
-        statusCode = new String(msgs.get(3).data(), ZMQ.CHARSET);
+        statusCode = ZMQ.CHARSET.decode(msgs.get(3).buf()).toString();
 
         //  Save user id
-        setUserId(msgs.get(5).data());
+        setUserId(msgs.get(5));
 
         //  Process metadata frame
 

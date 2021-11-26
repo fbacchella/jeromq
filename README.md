@@ -96,7 +96,7 @@ import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZContext;
 
-public class hwserver
+public class Hwserver
 {
     public static void main(String[] args) throws Exception
     {
@@ -107,16 +107,16 @@ public class hwserver
 
             while (!Thread.currentThread().isInterrupted()) {
                 // Block until a message is received
-                byte[] reply = socket.recv(0);
+                ByteBuffer reply = socket.recvByteBuffer(0);
 
                 // Print the message
                 System.out.println(
-                    "Received: [" + new String(reply, ZMQ.CHARSET) + "]"
+                    "Received: [" + ZMQ.CHARSET.decode(reply) + "]"
                 );
 
                 // Send a response
                 String response = "Hello, world!";
-                socket.send(response.getBytes(ZMQ.CHARSET), 0);
+                socket.sendByteBuffer(response.getBytes(ZMQ.CHARSET), 0);
             }
         }
     }

@@ -1,55 +1,98 @@
 package zmq.util;
 
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 import zmq.Msg;
+import zmq.ZMQ;
 
 public class Blob
 {
-    private final byte[] buf;
+    private final ByteBuffer buf;
 
-    private Blob(byte[] data)
+    public Blob(byte[] data)
     {
-        buf = data;
+        buf = ByteBuffer.wrap(data);
     }
 
-    private static Blob createBlob(byte[] data, boolean copy)
+    public Blob(ByteBuffer data)
     {
-        if (copy) {
-            byte[] b = new byte[data.length];
-            System.arraycopy(data, 0, b, 0, data.length);
-            return new Blob(b);
-        }
-        else {
-            return new Blob(data);
-        }
+        buf = data.duplicate();
     }
 
+    public Blob(Msg msg)
+    {
+        buf = msg.buf();
+    }
+
+    public Blob(String str)
+    {
+        buf = ZMQ.CHARSET.encode(str);
+    }
+
+    /**
+     * @deprecated use the constructor directly
+     * @param msg
+     * @return
+     */
+    @Deprecated
     public static Blob createBlob(Msg msg)
     {
-        return createBlob(msg.data(), true);
+        return new Blob(msg.buf());
     }
 
+    /**
+     * @deprecated use the constructor directly
+     * @param data
+     * @return
+     */
+    @Deprecated
     public static Blob createBlob(byte[] data)
     {
-        return createBlob(data, false);
+        return new Blob(ByteBuffer.wrap(data));
+    }
+
+    /**
+     * @deprecated use the constructor directly
+     * @param data
+     * @return
+     */
+    @Deprecated
+    public static Blob createBlob(String data)
+    {
+        return new Blob(ZMQ.CHARSET.encode(data));
     }
 
     public int size()
     {
-        return buf.length;
+        return buf.remaining();
     }
 
     public byte[] data()
     {
-        return buf;
+        if (buf.hasArray() && buf.arrayOffset() == 0 && buf.array().length == buf.limit()) {
+            // If the backing array is exactly the buffer content, return it without copy.
+            return buf.array();
+        }
+        else {
+            // No backing array -> use ByteBuffer#get().
+            byte[] array = new byte[buf.remaining()];
+            buf.mark();
+            buf.get(array);
+            buf.reset();
+            return array;
+        }
+    }
+
+    public ByteBuffer buf()
+    {
+        return buf.duplicate();
     }
 
     @Override
     public boolean equals(Object t)
     {
         if (t instanceof Blob) {
-            return Arrays.equals(buf, ((Blob) t).buf);
+            return buf.equals(((Blob) t).buf);
         }
         return false;
     }
@@ -57,6 +100,6 @@ public class Blob
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(buf);
+        return buf.hashCode();
     }
 }

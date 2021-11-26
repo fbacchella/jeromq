@@ -1,8 +1,5 @@
 package zmq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +16,9 @@ import zmq.io.net.Address;
 import zmq.io.net.NetProtocol;
 import zmq.pipe.Pipe;
 import zmq.util.Errno;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class Helper
 {
@@ -232,7 +232,7 @@ public class Helper
     {
         Msg msg = ZMQ.recv(socket, 0);
         assert (msg != null);
-        return new String(msg.data(), ZMQ.CHARSET);
+        return ZMQ.CHARSET.decode(msg.buf()).toString();
     }
 
     //  Sends a message composed of frames that are C strings or null frames.
