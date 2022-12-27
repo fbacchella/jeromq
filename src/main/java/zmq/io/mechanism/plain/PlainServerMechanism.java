@@ -1,5 +1,6 @@
 package zmq.io.mechanism.plain;
 
+import static zmq.ZMQ.ZAP_SUCCESS;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -107,7 +108,7 @@ public class PlainServerMechanism extends Mechanism
 
         int rc = receiveAndProcessZapReply();
         if (rc == 0) {
-            state = "200".equals(statusCode) ? State.SENDING_WELCOME : State.SENDING_ERROR;
+            state = Integer.toString(ZAP_SUCCESS).equals(statusCode) ? State.SENDING_WELCOME : State.SENDING_ERROR;
         }
         return rc;
     }
@@ -158,7 +159,7 @@ public class PlainServerMechanism extends Mechanism
             sendZapRequest(username, password);
             rc = receiveAndProcessZapReply();
             if (rc == 0) {
-                state = "200".equals(statusCode) ? State.SENDING_WELCOME : State.SENDING_ERROR;
+                state = Integer.toString(ZAP_SUCCESS).equals(statusCode) ? State.SENDING_WELCOME : State.SENDING_ERROR;
             }
             else if (rc == ZError.EAGAIN) {
                 state = State.WAITING_FOR_ZAP_REPLY;

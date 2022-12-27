@@ -1,5 +1,6 @@
 package zmq.io.mechanism.curve;
 
+import static zmq.ZMQ.ZAP_SUCCESS;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
@@ -231,7 +232,7 @@ public class CurveServerMechanism extends Mechanism
 
         int rc = receiveAndProcessZapReply();
         if (rc == 0) {
-            state = "200".equals(statusCode) ? State.SEND_READY : State.SEND_ERROR;
+            state = Integer.toString(ZAP_SUCCESS).equals(statusCode) ? State.SEND_READY : State.SEND_ERROR;
         }
         return rc;
     }
@@ -452,7 +453,7 @@ public class CurveServerMechanism extends Mechanism
             sendZapRequest(clientKey);
             rc = receiveAndProcessZapReply();
             if (rc == 0) {
-                state = "200".equals(statusCode) ? State.SEND_READY : State.SEND_ERROR;
+                state = Integer.toString(ZAP_SUCCESS).equals(statusCode) ? State.SEND_READY : State.SEND_ERROR;
             }
             else if (rc == ZError.EAGAIN) {
                 state = State.EXPECT_ZAP_REPLY;

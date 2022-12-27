@@ -19,6 +19,10 @@ import org.zeromq.util.ZMetadata;
 
 import zmq.util.Objects;
 
+import static zmq.ZMQ.ZAP_AUTHENTICATION_FAILURE;
+import static zmq.ZMQ.ZAP_ENDPOINT;
+import static zmq.ZMQ.ZAP_SUCCESS;
+
 /**
  * A ZAuth actor takes over authentication for all incoming connections in
  *  its context. You can whitelist or blacklist peers based on IP address,
@@ -240,13 +244,13 @@ public class ZAuth implements Closeable
         public final String    address;    // not part of the ZAP protocol, but handy information for user
         public final String    identity;   // not part of the ZAP protocol, but handy information for user
 
-        private ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
+        public ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
                          ZMetadata metadata)
         {
             this(version, sequence, statusCode, statusText, userId, metadata, null, null);
         }
 
-        private ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
+        public ZapReply(String version, String sequence, int statusCode, String statusText, String userId,
                          ZMetadata metadata, String address, String identity)
         {
             assert (ZAP_VERSION.equals(version));
@@ -260,7 +264,7 @@ public class ZAuth implements Closeable
             this.identity = identity;
         }
 
-        private ZMsg msg()
+        public ZMsg msg()
         {
             ZMsg msg = new ZMsg();
             msg.add(version);
@@ -282,17 +286,7 @@ public class ZAuth implements Closeable
                     + (metadata != null ? "metadata=" + metadata : "") + "]";
         }
 
-        private static ZapReply recv(ZAgent agent, boolean wait)
-        {
-            return received(agent.recv(wait));
-        }
-
-        private static ZapReply recv(ZAgent agent, int timeout)
-        {
-            return received(agent.recv(timeout));
-        }
-
-        private static ZapReply received(ZMsg msg)
+        public static ZapReply received(ZMsg msg)
         {
             if (msg == null) {
                 return null;
@@ -331,7 +325,7 @@ public class ZAuth implements Closeable
         public String       userId;    //  User-Id to return in the ZAP Response
         public ZMetadata    metadata;  // metadata to eventually return
 
-        private ZapRequest(Socket handler, ZMsg request)
+        public ZapRequest(Socket handler, ZMsg request)
         {
             //  Store handler socket so we can send a reply easily
             this.handler = handler;
@@ -376,7 +370,7 @@ public class ZAuth implements Closeable
             }
         }
 
-        private static ZapRequest recvRequest(Socket handler, boolean wait)
+        public static ZapRequest recvRequest(Socket handler, boolean wait)
         {
             ZMsg request = ZMsg.recvMsg(handler, wait);
             if (request == null) {
@@ -395,7 +389,7 @@ public class ZAuth implements Closeable
         /**
          * Send a zap reply to the handler socket
          */
-        private void reply(int statusCode, String statusText, Socket replies)
+        public void reply(int statusCode, String statusText, Socket replies)
         {
             ZapReply reply = new ZapReply(ZAP_VERSION, sequence, statusCode, statusText, userId, metadata);
             ZMsg msg = reply.msg();
@@ -569,7 +563,7 @@ public class ZAuth implements Closeable
             System.out.println("ZAuth: replies are disabled. Please use replies(true);");
             return null;
         }
-        return ZapReply.recv(replies, wait);
+        return ZapReply.received(replies.recv(wait));
     }
 
     /**
@@ -583,7 +577,7 @@ public class ZAuth implements Closeable
             System.out.println("ZAuth: replies are disabled. Please use replies(true);");
             return null;
         }
-        return ZapReply.recv(replies, timeout);
+        return ZapReply.received(replies.recv(timeout));
     }
 
     /**
@@ -684,7 +678,7 @@ public class ZAuth implements Closeable
                 rc = replies.bind(repliesAddress);
                 assert (rc);
                 Socket handler = sockets.get(0);
-                rc = handler.bind("inproc://zeromq.zap.01");
+                rc = handler.bind(ZAP_ENDPOINT);
                 assert (rc);
                 rc = poller.register(handler, ZPoller.POLLIN);
                 assert (rc);
@@ -831,11 +825,11 @@ public class ZAuth implements Closeable
 
             final Socket reply = repliesEnabled ? replies : null;
             if (allowed) {
-                request.reply(200, OK, reply);
+                request.reply(ZAP_SUCCESS, OK, reply);
             }
             else {
                 request.metadata = null;
-                request.reply(400, "NO ACCESS", reply);
+                request.reply(ZAP_AUTHENTICATION_FAILURE, "NO ACCESS", reply);
             }
             return true;
         }

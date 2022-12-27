@@ -51,8 +51,9 @@ public class Ctx
             this.socket = socket;
             this.options = options;
         }
-
     }
+
+    private static final Endpoint EMPTY_ENDPOINT = new Endpoint(null, new Options());
 
     private static class PendingConnection
     {
@@ -701,7 +702,7 @@ public class Ctx
         try {
             endpoint = endpoints.get(addr);
             if (endpoint == null) {
-                return new Endpoint(null, new Options());
+                return EMPTY_ENDPOINT;
             }
 
             //  Increment the command sequence number of the peer so that it won't

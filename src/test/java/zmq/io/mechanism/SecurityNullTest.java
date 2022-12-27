@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static zmq.ZMQ.ZAP_ENDPOINT;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -92,7 +93,7 @@ public class SecurityNullTest
         //  where child thread does not start up fast enough.
         SocketBase handler = ZMQ.socket(ctx, ZMQ.ZMQ_REP);
         assertThat(handler, notNullValue());
-        boolean rc = ZMQ.bind(handler, "inproc://zeromq.zap.01");
+        boolean rc = ZMQ.bind(handler, ZAP_ENDPOINT);
         assertThat(rc, is(true));
 
         Thread thread = new Thread(new ZapHandler(handler));

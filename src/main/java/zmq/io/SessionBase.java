@@ -25,6 +25,8 @@ import zmq.io.net.tipc.TipcConnecter;
 import zmq.pipe.Pipe;
 import zmq.poll.IPollEvents;
 
+import static zmq.ZMQ.ZAP_ENDPOINT;
+
 public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
 {
     //  If true, this session (re)connects to the peer. Otherwise, it's
@@ -304,7 +306,7 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
     {
         assert (zapPipe == null);
 
-        Ctx.Endpoint peer = findEndpoint("inproc://zeromq.zap.01");
+        Ctx.Endpoint peer = findEndpoint(ZAP_ENDPOINT);
         if (peer.socket == null) {
             errno.set(ZError.ECONNREFUSED);
             return ZError.ECONNREFUSED;

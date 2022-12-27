@@ -251,6 +251,14 @@ public class ZMQ
     public static final byte[] PROXY_RESUME    = "RESUME".getBytes(ZMQ.CHARSET);
     public static final byte[] PROXY_TERMINATE = "TERMINATE".getBytes(ZMQ.CHARSET);
 
+    // ZAP constants
+    public static final String ZAP_ENDPOINT = "inproc://zeromq.zap.01";
+    public static final int ZAP_SUCCESS = 200;
+    public static final int ZAP_TEMPORARY_FAILURE = 200;
+    public static final int ZAP_TEMPORARY_ERROR = 300;
+    public static final int ZAP_AUTHENTICATION_FAILURE = 400;
+    public static final int ZAP_INTERNAL_ERROR = 500;
+
     public static final boolean PREFER_IPV6;
     static {
         String preferIPv4Stack = System.getProperty("java.net.preferIPv4Stack");
