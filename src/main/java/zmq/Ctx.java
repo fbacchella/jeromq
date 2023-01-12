@@ -7,20 +7,22 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.zeromq.ZMQException;
 
@@ -28,7 +30,6 @@ import zmq.io.IOThread;
 import zmq.pipe.Pipe;
 import zmq.socket.Sockets;
 import zmq.util.Errno;
-import zmq.util.MultiMap;
 
 //Context object encapsulates all the global state associated with
 //  the library.
@@ -81,7 +82,7 @@ public class Ctx
     //  Sockets belonging to this context. We need the list so that
     //  we can notify the sockets when zmq_term() is called. The sockets
     //  will return ETERM then.
-    private final List<SocketBase> sockets;
+    private final Set<SocketBase> sockets;
 
     //  List of unused thread slots.
     private final Deque<Integer> emptySlots;
@@ -93,16 +94,13 @@ public class Ctx
     //  If true, zmq_term was already called.
     private boolean terminating;
 
-    //  Synchronization of accesses to global slot-related data:
-    //  sockets, emptySlots, terminating. It also synchronizes
-    //  access to zombie sockets as such (as opposed to slots) and provides
-    //  a memory barrier to ensure that all CPU cores see the same data.
-    private final Lock slotSync;
+    //  A read-write lock to ensure that initSlots locks all access
+    private final ReadWriteLock slotSync;
 
     // A list of poll selectors opened under this context. When the context is
     // destroyed, each of the selectors is closed to ensure resource
     // deallocation.
-    private final List<Selector> selectors = new ArrayList<>();
+    private final Set<Selector> selectors;
 
     //  The reaper thread.
     private Reaper reaper;
@@ -110,9 +108,8 @@ public class Ctx
     //  I/O threads.
     private final List<IOThread> ioThreads;
 
-    //  Array of pointers to mailboxes for both application and I/O threads.
-    private int       slotCount;
-    private IMailbox[] slots;
+    // Using AtomicReference to ensure consistent view between threads
+    private AtomicReference<IMailbox>[] slots;
 
     //  Mailbox for zmq_term thread.
     private final Mailbox termMailbox;
@@ -120,11 +117,8 @@ public class Ctx
     //  List of inproc endpoints within this context.
     private final Map<String, Endpoint> endpoints;
 
-    //  Synchronization of access to the list of inproc endpoints.
-    private final Lock endpointsSync;
-
     //  Maximum socket ID.
-    private static AtomicInteger maxSocketId = new AtomicInteger(0);
+    private static final AtomicInteger maxSocketId = new AtomicInteger(0);
 
     //  Maximum number of sockets that can be opened at the same time.
     private int maxSockets;
@@ -138,13 +132,10 @@ public class Ctx
     //  Synchronization of access to context options.
     private final Lock optSync;
 
-    //  Synchronization of access to selectors.
-    private final Lock selectorSync = new ReentrantLock();
-
     static final int         TERM_TID   = 0;
     private static final int REAPER_TID = 1;
 
-    private final MultiMap<String, PendingConnection> pendingConnections = new MultiMap<>();
+    private final Map<String, Set<PendingConnection>> pendingConnections;
 
     private boolean ipv6;
 
@@ -181,23 +172,22 @@ public class Ctx
         active = true;
         terminating = false;
         reaper = null;
-        slotCount = 0;
         slots = null;
         maxSockets = ZMQ.ZMQ_MAX_SOCKETS_DFLT;
         ioThreadCount = ZMQ.ZMQ_IO_THREADS_DFLT;
 
         ipv6 = false;
         blocky = true;
-        slotSync = new ReentrantLock();
-        endpointsSync = new ReentrantLock();
+        slotSync = new ReentrantReadWriteLock();
         optSync = new ReentrantLock();
 
-        termMailbox = new Mailbox(this, "terminater", -1);
-
-        emptySlots = new ArrayDeque<>();
+        emptySlots = new ConcurrentLinkedDeque<>();
         ioThreads = new ArrayList<>();
-        sockets = new ArrayList<>();
-        endpoints = new HashMap<>();
+        sockets = ConcurrentHashMap.newKeySet();
+        endpoints = new ConcurrentHashMap<>();
+        selectors = ConcurrentHashMap.newKeySet();
+        pendingConnections = new ConcurrentHashMap<>();
+        termMailbox = new Mailbox(this, "terminater", -1);
     }
 
     private void destroy() throws IOException
@@ -212,17 +202,12 @@ public class Ctx
         }
         ioThreads.clear();
 
-        selectorSync.lock();
-        try {
-            for (Selector selector : selectors) {
-                if (selector != null) {
-                    selector.close();
-                }
+        for (Iterator<Selector> it = selectors.iterator(); it.hasNext(); ) {
+            Selector selector = it.next();
+            if (selector != null) {
+                selector.close();
+                it.remove();
             }
-            selectors.clear();
-        }
-        finally {
-            selectorSync.unlock();
         }
 
         //  Deallocate the reaper thread object.
@@ -262,14 +247,14 @@ public class Ctx
 
     public void terminate()
     {
-        slotSync.lock();
+        slotSync.writeLock().lock();
         try {
             // Connect up any pending inproc connections, otherwise we will hang
-            for (Entry<PendingConnection, String> pending : pendingConnections.entries()) {
+            for (String pending : pendingConnections.keySet()) {
                 SocketBase s = createSocket(ZMQ.ZMQ_PAIR);
                 // create_socket might fail eg: out of memory/sockets limit reached
                 assert (s != null);
-                s.bind(pending.getValue());
+                s.bind(pending);
                 s.close();
             }
 
@@ -294,7 +279,7 @@ public class Ctx
             }
         }
         finally {
-            slotSync.unlock();
+            slotSync.writeLock().unlock();
         }
 
         if (!starting.get()) {
@@ -305,13 +290,7 @@ public class Ctx
             }
             assert (cmd.type == Command.Type.DONE) : cmd;
 
-            slotSync.lock();
-            try {
-                assert (sockets.isEmpty());
-            }
-            finally {
-                slotSync.unlock();
-            }
+            assert sockets.isEmpty();
         }
 
         //  Deallocate the resources.
@@ -325,7 +304,7 @@ public class Ctx
 
     final void shutdown()
     {
-        slotSync.lock();
+        slotSync.writeLock().lock();
         try {
             if (!starting.get() && !terminating) {
                 terminating = true;
@@ -342,7 +321,7 @@ public class Ctx
             }
         }
         finally {
-            slotSync.unlock();
+            slotSync.writeLock().unlock();
         }
     }
 
@@ -456,48 +435,55 @@ public class Ctx
 
     public SocketBase createSocket(int type)
     {
-        SocketBase s = null;
-        slotSync.lock();
+        // This section use the write lock as the ReentrantReadWriteLock can't be upgraded from read to write
+        slotSync.writeLock().lock();
         try {
             if (starting.compareAndSet(true, false)) {
                 initSlots();
             }
-
+        }
+        finally {
+            slotSync.writeLock().unlock();
+        }
+        slotSync.readLock().lock();
+        try {
             //  Once zmq_term() was called, we can't create new sockets.
             if (terminating) {
                 throw new ZError.CtxTerminatedException();
             }
 
+            //  Choose a slot for the socket.
+            Integer slot = emptySlots.pollLast();
             //  If maxSockets limit was reached, return error.
-            if (emptySlots.isEmpty()) {
+            if (slot == null) {
                 throw new ZMQException(ZError.EMFILE);
             }
-
-            //  Choose a slot for the socket.
-            int slot = emptySlots.pollLast();
 
             //  Generate new unique socket ID.
             int sid = maxSocketId.incrementAndGet();
 
             //  Create the socket and register its mailbox.
-            s = Sockets.create(type, this, slot, sid);
+            SocketBase s = Sockets.create(type, this, slot, sid);
             if (s == null) {
                 emptySlots.addLast(slot);
                 return null;
             }
-            sockets.add(s);
-            slots[slot] = s.getMailbox();
+            else {
+                sockets.add(s);
+                slots[slot].set(s.getMailbox());
+                return s;
+            }
         }
         finally {
-            slotSync.unlock();
+            slotSync.readLock().unlock();
         }
 
-        return s;
     }
 
     private void initSlots()
     {
-        slotSync.lock();
+        int slotCount;
+        slotSync.writeLock().lock();
         try {
             //  Initialize the array of mailboxes. Additional two slots are for
             //  zmq_term thread and reaper thread.
@@ -510,45 +496,44 @@ public class Ctx
             finally {
                 optSync.unlock();
             }
-            slots = new IMailbox[slotCount];
+            slots = new AtomicReference[slotCount];
 
             //  Initialize the infrastructure for zmq_term thread.
-            slots[TERM_TID] = termMailbox;
+            slots[TERM_TID] = new AtomicReference<>(termMailbox);
 
             //  Create the reaper thread.
             reaper = new Reaper(this, REAPER_TID);
-            slots[REAPER_TID] = reaper.getMailbox();
+            slots[REAPER_TID] = new AtomicReference<>(reaper.getMailbox());
             reaper.start();
 
             //  Create I/O thread objects and launch them.
             for (int i = 2; i != ios + 2; i++) {
                 IOThread ioThread = new IOThread(this, i);
-                //alloc_assert (io_thread);
                 ioThreads.add(ioThread);
-                slots[i] = ioThread.getMailbox();
+                slots[i] = new AtomicReference<>(ioThread.getMailbox());
                 ioThread.start();
             }
 
             //  In the unused part of the slot array, create a list of empty slots.
             for (int i = slotCount - 1; i >= ios + 2; i--) {
                 emptySlots.add(i);
-                slots[i] = null;
+                slots[i] = new AtomicReference<>(null);
             }
         }
         finally {
-            slotSync.unlock();
+            slotSync.writeLock().unlock();
         }
     }
 
     void destroySocket(SocketBase socket)
     {
-        slotSync.lock();
+        slotSync.readLock().lock();
 
         //  Free the associated thread slot.
         try {
             int tid = socket.getTid();
+            slots[tid].set(null);
             emptySlots.add(tid);
-            slots[tid] = null;
 
             //  Remove the socket from the list of sockets.
             sockets.remove(socket);
@@ -560,14 +545,13 @@ public class Ctx
             }
         }
         finally {
-            slotSync.unlock();
+            slotSync.readLock().unlock();
         }
     }
 
     // Creates a Selector that will be closed when the context is destroyed.
     public Selector createSelector()
     {
-        selectorSync.lock();
         try {
             Selector selector = Selector.open();
             assert (selector != null);
@@ -577,29 +561,20 @@ public class Ctx
         catch (IOException e) {
             throw new ZError.IOException(e);
         }
-        finally {
-            selectorSync.unlock();
-        }
     }
 
     public boolean closeSelector(Selector selector)
     {
-        selectorSync.lock();
-        try {
-            boolean rc = selectors.remove(selector);
-            if (rc) {
-                try {
-                    selector.close();
-                }
-                catch (IOException e) {
-                    throw new ZError.IOException(e);
-                }
+        boolean rc = selectors.remove(selector);
+        if (rc) {
+            try {
+                selector.close();
             }
-            return rc;
+            catch (IOException e) {
+                throw new ZError.IOException(e);
+            }
         }
-        finally {
-            selectorSync.unlock();
-        }
+        return rc;
     }
 
     //  Returns reaper thread object.
@@ -611,8 +586,7 @@ public class Ctx
     //  Send command to the destination thread.
     void sendCommand(int tid, final Command command)
     {
-        //        System.out.println(Thread.currentThread().getName() + ": Sending command " + command);
-        slots[tid].send(command);
+        slots[tid].get().send(command);
     }
 
     //  Returns the I/O thread that is the least busy at the moment.
@@ -643,113 +617,85 @@ public class Ctx
     //  Management of inproc endpoints.
     boolean registerEndpoint(String addr, Endpoint endpoint)
     {
-        endpointsSync.lock();
+         Endpoint inserted = endpoints.put(addr, endpoint);
 
-        Endpoint inserted = null;
-        try {
-            inserted = endpoints.put(addr, endpoint);
-        }
-        finally {
-            endpointsSync.unlock();
-        }
-        if (inserted != null) {
-            return false;
-        }
-        return true;
+        return inserted == null;
     }
 
     boolean unregisterEndpoint(String addr, SocketBase socket)
     {
-        endpointsSync.lock();
-
-        try {
-            Endpoint endpoint = endpoints.get(addr);
-            if (endpoint != null && socket == endpoint.socket) {
-                endpoints.remove(addr);
-                return true;
+        AtomicReference<Endpoint> endpoint = new AtomicReference<>();
+        endpoints.compute(addr, (k, v) -> {
+            if (v != null && socket == v.socket) {
+                endpoint.set(v);
+                return null;
             }
-        }
-        finally {
-            endpointsSync.unlock();
-        }
-        return false;
+            else {
+                endpoint.set(null);
+                return v;
+            }
+        });
+
+        return endpoint.get() != null;
     }
 
     void unregisterEndpoints(SocketBase socket)
     {
-        endpointsSync.lock();
-
-        try {
-            Iterator<Entry<String, Endpoint>> it = endpoints.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, Endpoint> e = it.next();
-                if (e.getValue().socket == socket) {
-                    it.remove();
-                }
+        for (Iterator<Entry<String, Endpoint>> it = endpoints.entrySet().iterator(); it.hasNext(); ) {
+            Entry<String, Endpoint> e = it.next();
+            if (e.getValue().socket == socket) {
+                it.remove();
             }
         }
-        finally {
-            endpointsSync.unlock();
-        }
-    }
+     }
 
     Endpoint findEndpoint(String addr)
     {
-        Endpoint endpoint = null;
-        endpointsSync.lock();
-
-        try {
-            endpoint = endpoints.get(addr);
-            if (endpoint == null) {
-                return new Endpoint(null, new Options());
+        AtomicReference<Endpoint> endpoint = new AtomicReference<>();
+        endpoints.compute(addr, (k, v) -> {
+            if (v == null) {
+                endpoint.set(new Endpoint(null, new Options()));
+                return null;
             }
-
-            //  Increment the command sequence number of the peer so that it won't
-            //  get deallocated until "bind" command is issued by the caller.
-            //  The subsequent 'bind' has to be called with inc_seqnum parameter
-            //  set to false, so that the seqnum isn't incremented twice.
-            endpoint.socket.incSeqnum();
-        }
-        finally {
-            endpointsSync.unlock();
-        }
-        return endpoint;
+            else {
+                //  Increment the command sequence number of the peer so that it won't
+                //  get deallocated until "bind" command is issued by the caller.
+                //  The subsequent 'bind' has to be called with inc_seqnum parameter
+                //  set to false, so that the seqnum isn't incremented twice.
+                v.socket.incSeqnum();
+                endpoint.set(v);
+                return v;
+            }
+        });
+        return endpoint.get();
     }
 
     void pendConnection(String addr, Endpoint endpoint, Pipe[] pipes)
     {
         PendingConnection pendingConnection = new PendingConnection(endpoint, pipes[0], pipes[1]);
-        endpointsSync.lock();
-        try {
-            Endpoint existing = endpoints.get(addr);
-            if (existing == null) {
+
+        endpoints.compute(addr, (k, v) -> {
+            if (v == null) {
                 // Still no bind.
                 endpoint.socket.incSeqnum();
-                pendingConnections.insert(addr, pendingConnection);
+                pendingConnections.computeIfAbsent(addr, p -> ConcurrentHashMap.newKeySet()).add(pendingConnection);
             }
             else {
-                // Bind has happened in the mean time, connect directly
-                connectInprocSockets(existing.socket, existing.options, pendingConnection, Side.CONNECT);
+                // Bind has happened in the meantime, connect directly
+                connectInprocSockets(v.socket, v.options, pendingConnection, Side.CONNECT);
             }
-        }
-        finally {
-            endpointsSync.unlock();
-        }
+            return v;
+        });
     }
 
     void connectPending(String addr, SocketBase bindSocket)
     {
-        endpointsSync.lock();
-        try {
-            Collection<PendingConnection> pendings = pendingConnections.remove(addr);
-            if (pendings != null) {
-                for (PendingConnection pending : pendings) {
-                    connectInprocSockets(bindSocket, endpoints.get(addr).options, pending, Side.BIND);
-                }
+        Endpoint endpoint = endpoints.get(addr);
+        Set<PendingConnection> pendings = pendingConnections.remove(addr);
+        if (pendings != null) {
+            for (PendingConnection pending : pendings) {
+                connectInprocSockets(bindSocket, endpoint.options, pending, Side.BIND);
             }
-        }
-        finally {
-            endpointsSync.unlock();
         }
     }
 
@@ -834,7 +780,7 @@ public class Ctx
                 forwardHolder = new ChannelForwardHolder();
             }
         }
-        WeakReference<SelectableChannel> ref = new WeakReference<SelectableChannel>(channel, forwardHolder.queue);
+        WeakReference<SelectableChannel> ref = new WeakReference<>(channel, forwardHolder.queue);
         int handle = forwardHolder.handleSource.getAndIncrement();
         forwardHolder.map.put(handle, ref);
         forwardHolder.reversemap.put(ref, handle);
@@ -845,8 +791,8 @@ public class Ctx
     /**
      * Retrieve a channel, using the handle returned by {@link #forwardChannel(SelectableChannel)}. As WeakReference are used, if the channel was discarded
      * and a GC ran, it will not be found and this method will return null.
-     * @param handle
-     * @return
+     * @param handle a channel identifier
+     * @return the channel found
      */
     SelectableChannel getForwardedChannel(Integer handle)
     {
