@@ -1,8 +1,5 @@
 package zmq.pipe;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import zmq.Msg;
 
 class DBuffer<T extends Msg>
@@ -10,72 +7,45 @@ class DBuffer<T extends Msg>
     private T back;
     private T front;
 
-    private final Lock sync = new ReentrantLock();
-
     private boolean hasMsg;
 
-    public T back()
+    public synchronized T back()
     {
         return back;
     }
 
-    public T front()
+    public synchronized T front()
     {
         return front;
     }
 
-    void write(T msg)
+    synchronized void write(T msg)
     {
         assert (msg.check());
-        sync.lock();
-        try {
-            back = front;
-            front = msg;
-            hasMsg = true;
-        }
-        finally {
-            sync.unlock();
-        }
+        back = front;
+        front = msg;
+        hasMsg = true;
     }
 
-    T read()
+    synchronized T read()
     {
-        sync.lock();
-        try {
-            if (!hasMsg) {
-                return null;
-            }
-
-            assert (front.check());
-            // TODO front->init ();     // avoid double free
-            hasMsg = false;
-
-            return front;
+        if (!hasMsg) {
+            return null;
         }
-        finally {
-            sync.unlock();
-        }
+
+        assert (front.check());
+        hasMsg = false;
+
+        return front;
     }
 
-    boolean checkRead()
+    synchronized boolean checkRead()
     {
-        sync.lock();
-        try {
-            return hasMsg;
-        }
-        finally {
-            sync.unlock();
-        }
+        return hasMsg;
     }
 
-    T probe()
+    synchronized T probe()
     {
-        sync.lock();
-        try {
-            return front;
-        }
-        finally {
-            sync.unlock();
-        }
+        return front;
     }
 }
