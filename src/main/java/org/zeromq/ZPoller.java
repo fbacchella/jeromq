@@ -8,19 +8,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
 import zmq.poll.PollItem;
-import zmq.util.Objects;
-import zmq.util.function.BiFunction;
-import zmq.util.function.Function;
 
 /**
  * Rewritten poller for ØMQ.
@@ -296,12 +296,7 @@ public class ZPoller implements Closeable
 
         private int ops()
         {
-            int ops = 0;
-            for (ItemHolder holder : holders) {
-                int interest = holder.item().zinterestOps();
-                ops |= interest;
-            }
-            return ops;
+            return holders.stream().map(holder -> holder.item().zinterestOps()).reduce(this::or).orElse(0);
         }
 
         @Override
@@ -325,26 +320,26 @@ public class ZPoller implements Closeable
         @Override
         public boolean events(SelectableChannel channel, int events)
         {
-            return doEvent(h -> h.events(channel, events), events);
+            return holders.stream().filter(holder -> holder.item().hasEvent(events))
+                           .map(holder -> holder.handler() == null ? currentGlobalHandler.get() : holder.handler()).filter(Objects::nonNull)
+                           .map(handler -> handler.events(channel, events)).reduce(this::and).orElse(false);
         }
 
         private boolean doEvent(Function<EventsHandler, Boolean> handle, int events)
         {
-            boolean has = false;
-            boolean first = true;
-            for (ItemHolder holder : holders) {
-                if (holder.item().hasEvent(events)) {
-                    if (first) {
-                        first = false;
-                        has = true;
-                    }
-                    EventsHandler handler = holder.handler() == null ? currentGlobalHandler.get() : holder.handler();
-                    if (handler != null) {
-                        has &= handle.apply(handler);
-                    }
-                }
-            }
-            return has;
+            return holders.stream().filter(holder -> holder.item().hasEvent(events))
+                           .map(holder -> holder.handler() == null ? currentGlobalHandler.get() : holder.handler()).filter(Objects::nonNull)
+                           .map(handler -> handle.apply(handler)).reduce(this::and).orElse(false);
+        }
+
+        private Boolean and(Boolean b0, Boolean b1)
+        {
+            return b0 & b1;
+        }
+
+        private Integer or(Integer ops1, Integer ops2)
+        {
+            return ops1 | ops2;
         }
     }
 

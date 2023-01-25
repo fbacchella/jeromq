@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZPoller.EventsHandler;
-
-import zmq.util.Objects;
 
 /**
  * <p>First implementation of a background actor remotely controlled for ØMQ.</p>

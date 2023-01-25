@@ -9,14 +9,9 @@ package zmq.util.function;
  * @param <T> the type of the input to the function
  * @param <R> the type of the result of the function
  *
+ * @deprecated Use {@link java.util.function.Function} instead
  */
-public interface Function<T, R>
+@Deprecated
+public interface Function<T, R> extends java.util.function.Function<T, R>
 {
-    /**
-     * Applies this function to the given argument.
-     *
-     * @param t the function argument
-     * @return the function result
-     */
-    R apply(T t);
 }

@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
+import java.util.concurrent.ThreadLocalRandom;
 
 import zmq.ZError;
 import zmq.io.net.Address;
@@ -32,18 +33,18 @@ public class Utils
 
     public static int randomInt()
     {
-        return random.get().nextInt();
+        return ThreadLocalRandom.current().nextInt();
     }
 
     public static int randomInt(int bound)
     {
-        return random.get().nextInt(bound);
+        return ThreadLocalRandom.current().nextInt(bound);
     }
 
     public static byte[] randomBytes(int length)
     {
         byte[] bytes = new byte[length];
-        random.get().nextBytes(bytes);
+        ThreadLocalRandom.current().nextBytes(bytes);
         return bytes;
     }
 

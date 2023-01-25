@@ -1,5 +1,7 @@
 package zmq.util.function;
 
+import java.util.function.Function;
+
 /**
  * Represents a function that accepts two arguments and produces a result.
  * This is the two-arity specialization of {@link Function}.
@@ -11,16 +13,11 @@ package zmq.util.function;
  * @param <U> the type of the second argument to the function
  * @param <R> the type of the result of the function
  *
- * @see Function
+ * @see java.util.function.BiFunction
+ * @deprecated Use {@link java.util.function.BiFunction} instead
  */
-public interface BiFunction<T, U, R>
+@Deprecated
+public interface BiFunction<T, U, R> extends java.util.function.BiFunction<T, U, R>
 {
-    /**
-     * Applies this function to the given arguments.
-     *
-     * @param t the first function argument
-     * @param u the second function argument
-     * @return the function result
-     */
     R apply(T t, U u);
 }

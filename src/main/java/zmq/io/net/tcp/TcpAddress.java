@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 import org.zeromq.ZMQException;
 
@@ -138,23 +139,10 @@ public class TcpAddress implements Address.IZAddress
             InetAddress[] addresses = InetAddress.getAllByName(addrStr);
             if (ipv6) {
                 // prefer IPv6: return the first ipv6 or the first value if not found
-                for (InetAddress addr : addresses) {
-                    if (addr instanceof Inet6Address) {
-                        addrNet = addr;
-                        break;
-                    }
-                }
-                if (addrNet == null) {
-                    addrNet = addresses[0];
-                }
+                addrNet = Arrays.stream(addresses).filter(Inet6Address.class::isInstance).findFirst().orElseGet(() -> addresses[0]);
             }
             else {
-                for (InetAddress addr : addresses) {
-                    if (addr instanceof Inet4Address) {
-                        addrNet = addr;
-                        break;
-                    }
-                }
+                addrNet = Arrays.stream(addresses).filter(Inet4Address.class::isInstance).findFirst().orElseGet(() -> null);
             }
         }
         catch (UnknownHostException e) {

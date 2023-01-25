@@ -9,14 +9,10 @@ package zmq.util.function;
  * whose functional method is {@link #accept(Object)}.
  *
  * @param <T> the type of the input to the operation
+ * @deprecated Use {@link java.util.function.Consumer} instead
  *
  */
-public interface Consumer<T>
+@Deprecated
+public interface Consumer<T> extends java.util.function.Consumer<T>
 {
-    /**
-     * Performs this operation on the given argument.
-     *
-     * @param t the input argument
-     */
-    void accept(T t);
 }

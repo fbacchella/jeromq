@@ -1,5 +1,9 @@
 package zmq.util;
 
+/**
+ * @deprecated Uses {@link java.util.Objects}
+ */
+@Deprecated
 public class Objects
 {
     private Objects()
@@ -9,7 +13,6 @@ public class Objects
 
     public static <T> T requireNonNull(T object, String msg)
     {
-        Utils.checkArgument(object != null, msg);
-        return object;
+        return java.util.Objects.requireNonNull(object, msg);
     }
 }

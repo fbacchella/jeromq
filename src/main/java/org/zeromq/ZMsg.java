@@ -9,10 +9,10 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.zeromq.ZMQ.Socket;
 import zmq.util.Draft;
-import zmq.util.function.Consumer;
 
 /**
  * The ZMsg class provides methods to send and receive multipart messages

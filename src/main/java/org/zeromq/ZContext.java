@@ -8,13 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
 import zmq.util.Draft;
-import zmq.util.function.BiFunction;
 
 /**
  * ZContext provides a high-level ZeroMQ context management class
@@ -104,9 +104,8 @@ public class ZContext implements Closeable
             this.shadows = parent.shadows;
             this.shadows.add(this);
         }
-        // Android compatibility: not using ConcurrentHashMap.newKeySet()
-        this.sockets = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.selectors = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.sockets = ConcurrentHashMap.newKeySet();
+        this.selectors = ConcurrentHashMap.newKeySet();
         this.ioThreads = ioThreads;
         this.linger = 0;
         this.pipehwm = 1000;

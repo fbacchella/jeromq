@@ -13,12 +13,12 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import org.junit.Test;
 
 import zmq.util.AndroidProblematic;
 import zmq.util.TestUtils;
-import zmq.util.function.BiFunction;
 
 public class HeartbeatsTest
 {

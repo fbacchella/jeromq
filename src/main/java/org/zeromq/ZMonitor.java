@@ -6,12 +6,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.proto.ZNeedle;
-
-import zmq.util.Objects;
 
 /**
  * The ZMonitor actor provides an API for obtaining socket events such as

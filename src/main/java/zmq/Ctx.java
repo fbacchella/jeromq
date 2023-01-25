@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiFunction;
 
 import org.zeromq.ZMQException;
 
@@ -29,7 +30,6 @@ import zmq.pipe.Pipe;
 import zmq.socket.Sockets;
 import zmq.util.Errno;
 import zmq.util.MultiMap;
-import zmq.util.function.BiFunction;
 
 /**
  * Context object encapsulates all the global state associated with

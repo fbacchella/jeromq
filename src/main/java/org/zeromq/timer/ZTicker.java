@@ -1,10 +1,11 @@
 package org.zeromq.timer;
 
+import java.util.function.Supplier;
+
 import org.zeromq.timer.ZTicket.Ticket;
 import org.zeromq.timer.ZTimer.Timer;
 
 import zmq.util.Draft;
-import zmq.util.function.Supplier;
 
 /**
  * Manages set of tickets and timers.

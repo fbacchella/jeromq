@@ -8,13 +8,16 @@ import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import org.zeromq.proto.ZPicture;
+
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -28,7 +31,6 @@ import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
 import zmq.util.Z85;
-import zmq.util.function.BiFunction;
 
 /**
  * <p>The ØMQ lightweight messaging kernel is a library which extends the standard socket interfaces
@@ -3186,8 +3188,9 @@ public class ZMQ
         public int bindToRandomPort(String addr, int min, int max)
         {
             int port;
+            ThreadLocalRandom rand = ThreadLocalRandom.current();
             for (int i = 0; i < 100; i++) { // hardcoded to 100 tries. should this be parametrised
-                port = zmq.util.Utils.randomInt(max - min + 1) + min;
+                port = rand.nextInt(min, max + 1);
                 if (base.bind(String.format("%s:%s", addr, port))) {
                     base.errno.set(0);
                     return port;
@@ -3850,6 +3853,41 @@ public class ZMQ
         }
 
         /**
+         * Stream of incoming messages
+         * <p>
+         * This API is in DRAFT state and is subject to change at ANY time until declared stable
+         *
+         * @return infinite stream of the incoming messages
+         */
+        @Draft
+        public Stream<byte[]> recvStream()
+        {
+            return Stream.generate(this::recv);
+        }
+
+        /**
+         * This API is in DRAFT state and is subject to change at ANY time until declared stable
+         *
+         * @return infinite stream of the incoming messages as a String object
+         */
+        @Draft
+        public Stream<String> recvStrStream()
+        {
+            return Stream.generate(this::recvStr);
+        }
+
+        /**
+         * This API is in DRAFT state and is subject to change at ANY time until declared stable
+         *
+         * @return infinite stream of the incoming messages as a String object
+         */
+        @Draft
+        public Stream<Msg> recvMsgStream()
+        {
+            return Stream.generate(this::recvMsg);
+        }
+
+        /**
          * Start a monitoring socket where events can be received.
          * <p>
          * Lets an application thread track socket events (like connects) on a ZeroMQ socket.
@@ -4097,12 +4135,7 @@ public class ZMQ
          */
         private void unregisterInternal(Object socket)
         {
-            for (Iterator<PollItem> it = items.iterator(); it.hasNext(); ) {
-                PollItem item = it.next();
-                if (item.socket == socket || item.getRawSocket() == socket) {
-                    it.remove();
-                }
-            }
+            items.removeIf(item -> item.socket == socket || item.getRawSocket() == socket);
         }
 
         /**

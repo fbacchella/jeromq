@@ -17,6 +17,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 
 import org.junit.Test;
 import org.zeromq.ZMQ.Socket;
@@ -25,7 +26,6 @@ import org.zeromq.ZPoller.ItemCreator;
 import org.zeromq.ZPoller.ItemHolder;
 
 import zmq.ZError;
-import zmq.util.function.BiFunction;
 
 public class TestZPoller
 {

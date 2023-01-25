@@ -11,13 +11,9 @@ package zmq.util.function;
  *
  * @param <T> the type of results supplied by this supplier
  *
+ * @deprecated  Use {@link java.util.function.Supplier} instead
  */
-public interface Supplier<T>
+@Deprecated
+public interface Supplier<T> extends java.util.function.Supplier<T>
 {
-    /**
-     * Gets a result.
-     *
-     * @return a result
-     */
-    T get();
 }
