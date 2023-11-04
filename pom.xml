@@ -25,6 +25,8 @@
     <project.build.outputTimestamp>0</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jdk.target>8</jdk.target>
+    <pax-exam.version>4.13.5</pax-exam.version>
+    <log4j2.version>2.21.1</log4j2.version>
     <!-- Indirection needed to keep optional jacoco settings and external argument lines-->
     <arg.line />
     <argLine>${arg.line}</argLine>
@@ -40,6 +42,61 @@
       <groupId>eu.neilalexander</groupId>
       <artifactId>jnacl</artifactId>
       <version>1.0.0</version>
+    </dependency>
+    <!-- Test dependencies for OSGi setup -->
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-native</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-junit4</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>7.0.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-1.2-api</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <distributionManagement>
@@ -89,26 +146,13 @@
       <plugin>
         <groupId>biz.aQute.bnd</groupId>
         <artifactId>bnd-maven-plugin</artifactId>
-        <version>6.4.0</version>
         <extensions>true</extensions>
         <executions>
           <execution>
-            <id>default-jar</id>
+            <id>bnd-process</id>
             <goals>
-              <goal>jar</goal>
+              <goal>bnd-process</goal>
             </goals>
-            <configuration>
-              <bnd>
-                Bundle-SymbolicName: $[project.groupId].$[project.artifactId]
-                Export-Package: \
-                  zmq.*, \
-                  org.zeromq.*
-                Import-Package: \
-                  com.neilalexander.*;resolution:=optional, \
-                  *
-                -jpms-module-info: $[Bundle-SymbolicName];access=0
-              </bnd>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -132,7 +176,7 @@
           <version>3.4.1</version>
           <configuration>
             <detectJavaApiLink>true</detectJavaApiLink>
-            <source>${maven.compiler.source}</source>
+            <source>${jdk.target}</source>
             <tags>
               <tag>
                 <name>api.note</name>
@@ -165,7 +209,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.10.1</version>
+          <version>3.11.0</version>
         </plugin>
         <plugin>
             <groupId>org.jacoco</groupId>
@@ -205,7 +249,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>5.1.8</version>
+          <version>5.1.9</version>
         </plugin>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -259,6 +303,11 @@
           <artifactId>maven-release-plugin</artifactId>
           <version>3.0.0-M6</version>
         </plugin>
+        <plugin>
+          <groupId>biz.aQute.bnd</groupId>
+          <artifactId>bnd-maven-plugin</artifactId>
+          <version>6.4.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -280,6 +329,17 @@
         <maven.compiler.source>${jdk.target}</maven.compiler.source>
         <maven.compiler.target>${jdk.target}</maven.compiler.target>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <useModulePath>false</useModulePath>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>jdk9+</id>
