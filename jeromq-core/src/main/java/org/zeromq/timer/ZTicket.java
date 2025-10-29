@@ -6,11 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import zmq.util.Clock;
 import zmq.util.Draft;
 import zmq.util.Utils;
-import zmq.util.function.Supplier;
 
 /**
  * Manages set of tickets.

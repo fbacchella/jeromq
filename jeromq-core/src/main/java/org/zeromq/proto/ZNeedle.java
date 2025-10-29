@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BiFunction;
 
 import org.zeromq.ZFrame;
 
 import zmq.util.Draft;
 import zmq.util.Utils;
 import zmq.util.Wire;
-import zmq.util.function.BiFunction;
 
 /**
  * Needle for de/serialization of data within a frame.

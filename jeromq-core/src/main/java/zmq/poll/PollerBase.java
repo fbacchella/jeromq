@@ -2,10 +2,10 @@ package zmq.poll;
 
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 import zmq.util.Clock;
 import zmq.util.MultiMap;
-import zmq.util.function.BiFunction;
 
 abstract class PollerBase implements Runnable
 {

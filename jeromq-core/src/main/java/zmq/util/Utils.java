@@ -9,11 +9,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
+import java.util.function.Supplier;
 
 import zmq.ZError;
 import zmq.io.net.Address;
 import zmq.io.net.tcp.TcpUtils;
-import zmq.util.function.Supplier;
 
 public class Utils
 {

@@ -2,9 +2,9 @@ package zmq.util;
 
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import zmq.ZMQ;
-import zmq.util.function.Supplier;
 
 /**
  * Manages set of timers.

@@ -2,7 +2,8 @@ package org.zeromq.timer;
 
 import zmq.util.Draft;
 import zmq.util.Timers;
-import zmq.util.function.Supplier;
+
+import java.util.function.Supplier;
 
 /**
  * Manages set of timers.

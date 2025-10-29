@@ -6,10 +6,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.function.Function;
 
 import org.junit.Test;
-
-import zmq.util.function.Function;
 
 public class TestMsg
 {

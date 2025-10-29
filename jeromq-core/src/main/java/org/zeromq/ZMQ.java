@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import org.zeromq.proto.ZPicture;
 
@@ -28,8 +30,6 @@ import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
 import zmq.util.Z85;
-import zmq.util.function.BiFunction;
-import zmq.util.function.Consumer;
 
 /**
  * <p>The ØMQ lightweight messaging kernel is a library which extends the standard socket interfaces

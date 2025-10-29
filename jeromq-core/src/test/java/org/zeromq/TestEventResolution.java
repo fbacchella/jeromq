@@ -6,6 +6,7 @@ import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +15,6 @@ import org.zeromq.ZMonitor.ProtocolCode;
 
 import zmq.SocketBase;
 import zmq.ZError;
-import zmq.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;

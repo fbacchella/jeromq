@@ -8,13 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
 import zmq.util.Draft;
-import zmq.util.function.BiFunction;
 
 /**
  * ZContext provides a high-level ZeroMQ context management class

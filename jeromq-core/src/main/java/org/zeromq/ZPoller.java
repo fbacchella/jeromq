@@ -11,6 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.zeromq.ZMQ.Poller;
@@ -18,8 +20,6 @@ import org.zeromq.ZMQ.Socket;
 
 import zmq.poll.PollItem;
 import zmq.util.Objects;
-import zmq.util.function.BiFunction;
-import zmq.util.function.Function;
 
 /**
  * Rewritten poller for ØMQ.

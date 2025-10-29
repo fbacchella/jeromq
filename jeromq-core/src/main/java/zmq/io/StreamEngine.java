@@ -5,6 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import zmq.Config;
 import zmq.Msg;
@@ -31,8 +33,6 @@ import zmq.util.Errno;
 import zmq.util.Utils;
 import zmq.util.ValueReference;
 import zmq.util.Wire;
-import zmq.util.function.Function;
-import zmq.util.function.Supplier;
 
 // This engine handles any socket with SOCK_STREAM semantics,
 // e.g. TCP socket or an UNIX domain socket.
