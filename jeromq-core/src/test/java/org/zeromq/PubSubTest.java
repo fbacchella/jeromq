@@ -124,7 +124,7 @@ public class PubSubTest
             ctx.close();
             return true;
         };
-        final Callable<Integer> sub = new Callable<Integer>()
+        final Callable<Integer> sub = new Callable<>()
         {
             @Override
             public Integer call()
