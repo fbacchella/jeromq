@@ -87,7 +87,7 @@ public class kvsimple
         int result = 1;
         result = prime * result + Arrays.hashCode(body);
         result = prime * result + ((key == null) ? 0 : key.hashCode());
-        result = prime * result + (int) (sequence ^ (sequence >>> 32));
+        result = prime * result + Long.hashCode(sequence);
         return result;
     }
 
