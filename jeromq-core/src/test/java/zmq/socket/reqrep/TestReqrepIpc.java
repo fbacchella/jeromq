@@ -16,7 +16,7 @@ import zmq.ZMQ;
 public class TestReqrepIpc
 {
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void testReqrepIpc()

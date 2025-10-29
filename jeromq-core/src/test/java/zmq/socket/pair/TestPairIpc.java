@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 public class TestPairIpc
 {
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     //  Create REQ/ROUTER wiring.
 

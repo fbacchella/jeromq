@@ -11,7 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestUnsupported
 {
-    Ctx ctx = ZMQ.init(1);
+    final Ctx ctx = ZMQ.init(1);
 
     @After
     public void close()

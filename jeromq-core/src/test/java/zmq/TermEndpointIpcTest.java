@@ -8,7 +8,7 @@ import org.junit.rules.TemporaryFolder;
 public class TermEndpointIpcTest extends TestTermEndpoint
 {
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public final TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Override
     protected String endpointWildcard()
