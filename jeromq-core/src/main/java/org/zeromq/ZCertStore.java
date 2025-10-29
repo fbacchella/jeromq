@@ -63,19 +63,14 @@ public class ZCertStore
         {
             InputStream input = stream(path);
             if (input != null) {
-                try {
-                    return new ZDigest(buffer).update(input).data();
-                }
-                catch (IOException e) {
-                    return null;
-                }
-                finally {
+                try (input) {
                     try {
-                        input.close();
+                        return new ZDigest(buffer).update(input).data();
+                    } catch (IOException e) {
+                        return null;
                     }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
             return null;

@@ -59,19 +59,14 @@ public class TestZMQ
         ZMQ.Context context = ZMQ.context(1);
 
         ZMQ.Socket socket1 = context.socket(SocketType.REQ);
-        ZMQ.Socket socket2 = context.socket(SocketType.REQ);
         socket1.bind("tcp://*:" + port);
-        try {
+        try (socket1; Socket socket2 = context.socket(SocketType.REQ)) {
             socket2.bind("tcp://*:" + port);
             fail("Exception not thrown");
-        }
-        catch (ZMQException e) {
+        } catch (ZMQException e) {
             assertEquals(e.getErrorCode(), ZMQ.Error.EADDRINUSE.getCode());
             throw e;
-        }
-        finally {
-            socket1.close();
-            socket2.close();
+        } finally {
 
             context.term();
         }
@@ -730,13 +725,10 @@ public class TestZMQ
     public void testSocketMulticastHops()
     {
         final Socket socket = ctx.socket(SocketType.STREAM);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.setMulticastHops(42);
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -757,13 +749,10 @@ public class TestZMQ
     public void testSocketMulticastLoop()
     {
         final Socket socket = ctx.socket(SocketType.STREAM);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.setMulticastLoop(true);
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -862,13 +851,10 @@ public class TestZMQ
     public void testSocketRate()
     {
         final Socket socket = ctx.socket(SocketType.ROUTER);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.setRate(42);
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -1031,13 +1017,10 @@ public class TestZMQ
     public void testSocketRecoveryInterval()
     {
         final Socket socket = ctx.socket(SocketType.REP);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.setRecoveryInterval(42L);
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -1072,13 +1055,10 @@ public class TestZMQ
     public void testSocketGetReqCorrelate()
     {
         final Socket socket = ctx.socket(SocketType.REQ);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.getReqCorrelate();
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -1101,13 +1081,10 @@ public class TestZMQ
     public void testSocketGetReqRelaxed()
     {
         final Socket socket = ctx.socket(SocketType.REQ);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.getReqRelaxed();
-        }
-        finally {
-            socket.close();
         }
     }
 
@@ -1173,13 +1150,10 @@ public class TestZMQ
     public void testSocketSwap()
     {
         final Socket socket = ctx.socket(SocketType.REQ);
-        assertThat(socket, notNullValue());
 
-        try {
+        try (socket) {
+            assertThat(socket, notNullValue());
             socket.setSwap(42L);
-        }
-        finally {
-            socket.close();
         }
     }
 

@@ -215,8 +215,7 @@ public class TestZPoller
     public void testZPollerNew()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             ZPoller other = new ZPoller(poller);
             other.close();
 
@@ -224,26 +223,17 @@ public class TestZPoller
             other = new ZPoller(itemCreator, poller);
             other.close();
         }
-        finally {
-            poller.close();
-            ctx.close();
-        }
     }
 
     @Test(timeout = 5000)
     public void testGlobalHandler()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             assertThat(poller.getGlobalHandler(), nullValue());
             EventsHandler handler = new EventsHandlerAdapter();
             poller.setGlobalHandler(handler);
             assertThat(poller.getGlobalHandler(), is(handler));
-        }
-        finally {
-            poller.close();
-            ctx.close();
         }
     }
 
@@ -308,8 +298,7 @@ public class TestZPoller
     public void testReadable()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             Socket socket = ctx.createSocket(SocketType.XPUB);
             poller.register(socket, new EventsHandlerAdapter());
 
@@ -322,18 +311,13 @@ public class TestZPoller
             rc = poller.pollin(socket);
             assertThat(rc, is(false));
         }
-        finally {
-            poller.close();
-            ctx.close();
-        }
     }
 
     @Test(timeout = 5000)
     public void testWritable()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             Socket socket = ctx.createSocket(SocketType.XPUB);
             poller.register(socket, ZPoller.OUT);
 
@@ -346,18 +330,13 @@ public class TestZPoller
             rc = poller.pollout(socket);
             assertThat(rc, is(false));
         }
-        finally {
-            poller.close();
-            ctx.close();
-        }
     }
 
     @Test(timeout = 5000)
     public void testError()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             Socket socket = ctx.createSocket(SocketType.XPUB);
             poller.register(socket, ZPoller.ERR);
 
@@ -370,26 +349,17 @@ public class TestZPoller
             rc = poller.pollerr(socket);
             assertThat(rc, is(false));
         }
-        finally {
-            poller.close();
-            ctx.close();
-        }
     }
 
     @Test(timeout = 5000)
     public void testRegister()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             Socket socket = ctx.createSocket(SocketType.XPUB);
             ItemHolder holder = poller.create(socket, null, 0);
             boolean rc = poller.register(holder);
             assertThat(rc, is(true));
-        }
-        finally {
-            poller.close();
-            ctx.close();
         }
     }
 
@@ -397,8 +367,7 @@ public class TestZPoller
     public void testItems()
     {
         ZContext ctx = new ZContext();
-        ZPoller poller = new ZPoller(ctx);
-        try {
+        try (ctx; ZPoller poller = new ZPoller(ctx)) {
             Socket socket = ctx.createSocket(SocketType.XPUB);
             Iterable<ItemHolder> items = poller.items(null);
             assertThat(items, notNullValue());
@@ -407,10 +376,6 @@ public class TestZPoller
             poller.register(holder);
             items = poller.items(socket);
             assertThat(items, hasItem(holder));
-        }
-        finally {
-            poller.close();
-            ctx.close();
         }
     }
 
