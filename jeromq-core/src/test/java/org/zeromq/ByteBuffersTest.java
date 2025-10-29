@@ -268,29 +268,35 @@ public class ByteBuffersTest
             String newMsg = new String(pull.recv(), ZMQ.CHARSET);
             assertEquals("PONG", newMsg);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             Assert.fail();
-        } finally {
+        }
+        finally {
             try {
                 push.close();
-            } catch (Exception ignore) {
+            }
+            catch (Exception ignore) {
                 ignore.printStackTrace();
             }
             try {
                 pull.close();
-            } catch (Exception ignore) {
+            }
+            catch (Exception ignore) {
                 ignore.printStackTrace();
             }
             try {
                 context.term();
-            } catch (Exception ignore) {
+            }
+            catch (Exception ignore) {
                 ignore.printStackTrace();
             }
         }
     }
 
-    public void writeExploitPayload(int port) throws IOException {
+    public void writeExploitPayload(int port) throws IOException
+    {
         byte[] greeting = {
                 (byte) 0xFF, /* Indicates 'versioned' in zmq::stream_engine_t::receive_greeting */
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* Unused */

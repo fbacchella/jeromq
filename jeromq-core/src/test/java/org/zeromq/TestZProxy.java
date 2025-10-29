@@ -1,14 +1,13 @@
 package org.zeromq;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.ZMQ.Socket;
+
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 public class TestZProxy
 {
@@ -92,7 +91,8 @@ public class TestZProxy
     }
 
     //    @Test
-    public void testRepeated() {
+    public void testRepeated()
+    {
         for (int idx = 0; idx < 2500; ++idx) {
             System.out.println("+++++++++++ " + idx);
             testAllOptionsAsync();

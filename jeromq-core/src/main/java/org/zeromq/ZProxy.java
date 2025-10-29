@@ -1,18 +1,16 @@
 package org.zeromq;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.zeromq.ZActor.Actor;
 import org.zeromq.ZAgent.SelectorCreator;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZStar.Exit;
-
 import zmq.Msg;
 import zmq.SocketBase;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of a remotely controlled  proxy for 0MQ, using {@link ZActor}.

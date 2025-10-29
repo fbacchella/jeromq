@@ -63,11 +63,12 @@ public class TestZMQ
         try (socket1; Socket socket2 = context.socket(SocketType.REQ)) {
             socket2.bind("tcp://*:" + port);
             fail("Exception not thrown");
-        } catch (ZMQException e) {
+        }
+        catch (ZMQException e) {
             assertEquals(e.getErrorCode(), ZMQ.Error.EADDRINUSE.getCode());
             throw e;
-        } finally {
-
+        }
+        finally {
             context.term();
         }
     }

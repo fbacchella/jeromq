@@ -985,8 +985,9 @@ public class ZPoller implements Closeable
         if (ch == null && socket == null) {
             throw new IllegalArgumentException("Needs a socket or a channel to register");
         }
-        else
+        else {
             return java.util.Objects.requireNonNullElse(socket, ch);
+        }
     }
 
     /**

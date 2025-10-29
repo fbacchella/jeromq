@@ -52,7 +52,7 @@ public class V2Decoder extends Decoder
         tmpbuf.position(0);
         tmpbuf.limit(8);
         final long size = Wire.getUInt64(tmpbuf, 0);
-        if ( size <= 0 ) {
+        if (size <= 0) {
             errno(ZError.EPROTO);
             return Step.Result.ERROR;
         }

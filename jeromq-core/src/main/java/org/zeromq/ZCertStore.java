@@ -66,10 +66,12 @@ public class ZCertStore
                 try (input) {
                     try {
                         return new ZDigest(buffer).update(input).data();
-                    } catch (IOException e) {
+                    }
+                    catch (IOException e) {
                         return null;
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
             }

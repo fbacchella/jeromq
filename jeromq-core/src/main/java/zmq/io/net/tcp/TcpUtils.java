@@ -20,7 +20,8 @@ public class TcpUtils
     }
 
     // The explicit IOException is useless, but kept for API compatibility
-    public static void tuneTcpSocket(Channel channel) {
+    public static void tuneTcpSocket(Channel channel)
+    {
         // Disable Nagle's algorithm. We are doing data batching on 0MQ level,
         // so using Nagle wouldn't improve throughput in any way, but it would
         // hurt latency.
