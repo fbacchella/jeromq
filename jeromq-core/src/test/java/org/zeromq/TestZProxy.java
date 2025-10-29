@@ -92,8 +92,7 @@ public class TestZProxy
     }
 
     //    @Test
-    public void testRepeated() throws IOException
-    {
+    public void testRepeated() {
         for (int idx = 0; idx < 2500; ++idx) {
             System.out.println("+++++++++++ " + idx);
             testAllOptionsAsync();

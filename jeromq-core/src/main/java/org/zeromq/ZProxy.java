@@ -148,7 +148,7 @@ public class ZProxy
          * @param args    the optional array of arguments that has been passed at the creation of the ZProxy.
          * @return true if successfully configured, otherwise false
          */
-        boolean configure(Socket socket, Plug place, Object... args) throws IOException;
+        boolean configure(Socket socket, Plug place, Object... args);
 
         /**
          * Performs a hot restart of the given socket.
@@ -161,7 +161,7 @@ public class ZProxy
          * @return true to perform a cold restart instead, false to do nothing. All the results will be collected from calls for all plugs.
          * If any of them returns true, the cold restart is performed.
          */
-        boolean restart(ZMsg cfg, Socket socket, Plug place, Object... args) throws IOException;
+        boolean restart(ZMsg cfg, Socket socket, Plug place, Object... args);
 
         /**
          * Configures the proxy with a custom message.
@@ -944,7 +944,7 @@ public class ZProxy
                     success |= provider.configure(capture, Plug.CAPTURE, args);
                     state.started = true;
                 }
-                catch (RuntimeException | IOException e) {
+                catch (RuntimeException e) {
                     e.printStackTrace();
                     // unable to configure proxy, exit
                     state.restart = false;
@@ -1051,7 +1051,7 @@ public class ZProxy
                         dup.destroy();
                         cfg.destroy();
                     }
-                    catch (RuntimeException | IOException e) {
+                    catch (RuntimeException e) {
                         e.printStackTrace();
                         state.restart = false;
                         return false;

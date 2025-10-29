@@ -258,16 +258,14 @@ public interface ZAgent
          * Creates and opens a selector.
          *
          * @return the opened selector.
-         * @throws IOException
          */
-        Selector create() throws IOException;
+        Selector create();
 
         /**
          * Destroys the previously opened selector.
          *
          * @param selector the selector to close
-         * @throws IOException
          */
-        void destroy(Selector selector) throws IOException;
+        void destroy(Selector selector);
     }
 }
