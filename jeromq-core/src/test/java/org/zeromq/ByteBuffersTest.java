@@ -306,8 +306,8 @@ public class ByteBuffersTest
         byte[] prePayload = new byte[8183];
 
         ByteBuffer contentTReplacement = ByteBuffer.allocate(32);
-        contentTReplacement.putLong(0, (long) System.identityHashCode(new byte[8]));
-        contentTReplacement.putLong(16, (long) System.identityHashCode("ping google.com".getBytes()));
+        contentTReplacement.putLong(0, System.identityHashCode(new byte[8]));
+        contentTReplacement.putLong(16, System.identityHashCode("ping google.com".getBytes()));
         contentTReplacement.putLong(24, 0L);
 
         // Total size of all components
