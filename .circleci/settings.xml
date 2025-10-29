@@ -1,9 +1,9 @@
 <settings>
     <servers>
         <server>
-            <id>ossrh</id>
-            <username>${env.SONATYPE_USERNAME}</username>
-            <password>${env.SONATYPE_PASSWORD}</password>
+            <id>central</id>
+            <username>${env.MAVENCENTRAL_USERNAME}</username>
+            <password>${env.MAVENCENTRAL_PASSWORD}</password>
         </server>
     </servers>
     <profiles>
@@ -11,8 +11,9 @@
             <id>sonar</id>
             <properties>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-                <sonar.organization>${env.SONARCLOUD_ORG}</sonar.organization>
-                <sonar.login>${env.SONARCLOUD_LOGIN}</sonar.login>
+                <sonar.organization>fbacchella-github</sonar.organization>
+                <sonar.projectKey>fr.loghub:jeromq</sonar.projectKey>
+                <sonar.token>${env.SONARCLOUD_LOGIN}</sonar.token>
             </properties>
         </profile>
         <profile>
@@ -20,7 +21,6 @@
             <properties>
                 <maven.resources.skip>true</maven.resources.skip>
                 <maven.main.skip>true</maven.main.skip>
-                <maven.javadoc.skip>true</maven.javadoc.skip>
             </properties>
         </profile>
     </profiles>
