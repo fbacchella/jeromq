@@ -13,7 +13,7 @@ public interface IDecoder
         {
             MORE_DATA,
             DECODED,
-            ERROR;
+            ERROR
         }
 
         Result apply();
