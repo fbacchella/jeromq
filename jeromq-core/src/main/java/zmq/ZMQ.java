@@ -746,12 +746,7 @@ public class ZMQ
         Msg msg = new Msg(len);
         msg.put(buf, 0, len);
 
-        int rc = sendMsg(s, msg, flags);
-        if (rc < 0) {
-            return -1;
-        }
-
-        return rc;
+        return send(s, msg, flags);
     }
 
     // Send multiple messages.
