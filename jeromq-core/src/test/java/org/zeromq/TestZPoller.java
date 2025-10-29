@@ -450,8 +450,8 @@ public class TestZPoller
     }
 
     @SafeVarargs
-    private final Pipe pipe(ZPoller poller, BiFunction<SelectableChannel, Integer, Boolean> errors,
-                            BiFunction<SelectableChannel, Integer, Boolean>... ins)
+    private Pipe pipe(ZPoller poller, BiFunction<SelectableChannel, Integer, Boolean> errors,
+                      BiFunction<SelectableChannel, Integer, Boolean>... ins)
                                     throws IOException
     {
         Pipe pipe = Pipe.open();
