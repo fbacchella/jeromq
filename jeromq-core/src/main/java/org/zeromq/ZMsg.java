@@ -770,6 +770,6 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
     public String toString()
     {
         String joined = frames.stream().map(ZFrame::toString).collect(Collectors.joining(", "));
-        return new StringBuilder("[ ").append(joined).append(" ]").toString();
+        return "[ " + joined + " ]";
     }
 }
