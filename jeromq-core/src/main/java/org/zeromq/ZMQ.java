@@ -4241,10 +4241,7 @@ public class ZMQ
          */
         public int poll()
         {
-            long tout = -1L;
-            if (this.timeout > -1L) {
-                tout = this.timeout;
-            }
+            long tout = Math.max(this.timeout, -1L);
             return poll(tout);
         }
 
