@@ -3,6 +3,7 @@ package org.zeromq;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.zeromq.ZActor.Actor;
@@ -816,13 +817,8 @@ public class ZProxy
         // creates a new Proxy actor.
         public ProxyActor(String name, Pump transport, int id)
         {
-            if (name == null) {
-                // default basic name
-                this.name = String.format("ZProxy-%sd", id);
-            }
-            else {
-                this.name = name;
-            }
+            // default basic name
+            this.name = Objects.requireNonNullElseGet(name, () -> String.format("ZProxy-%sd", id));
             this.transport = transport;
         }
 

@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -181,12 +182,7 @@ public class Metadata
      */
     public void put(String property, String value)
     {
-        if (value != null) {
-            dictionary.put(property, value);
-        }
-        else {
-            dictionary.put(property, "");
-        }
+        dictionary.put(property, Objects.requireNonNullElse(value, ""));
     }
 
     @Override
