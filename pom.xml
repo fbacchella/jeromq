@@ -41,8 +41,6 @@
     </developer>
   </developers>
   <properties>
-    <!-- Required by reproducible builds: https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
-    <project.build.outputTimestamp>0</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
     <!-- Indirection needed to keep optional jacoco settings and external argument lines-->
