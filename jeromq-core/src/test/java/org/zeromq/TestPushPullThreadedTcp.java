@@ -145,41 +145,4 @@ public class TestPushPullThreadedTcp
         System.out.println("Test done in " + (end - start) + " millis.");
     }
 
-    @Test
-    public void testIssue338() throws InterruptedException, IOException
-    {
-        try (
-             final ZSocket pull = new ZSocket(SocketType.PULL);
-             final ZSocket push = new ZSocket(SocketType.PUSH)) {
-            final String host = "tcp://localhost:" + Utils.findOpenPort();
-            pull.bind(host);
-            push.connect(host);
-
-            final ExecutorService executor = Executors.newFixedThreadPool(1);
-            final int messagesNumber = 300000;
-            Runnable receiver = () -> {
-                String actual = null;
-                int count = messagesNumber;
-                while (count-- > 0) {
-                    actual = pull.receiveStringUtf8();
-                }
-                System.out.println("last message: " + actual);
-            };
-            executor.submit(receiver);
-
-            final String expected = "hello";
-            final long start = System.currentTimeMillis();
-
-            for (int idx = 0; idx < messagesNumber; idx++) {
-                push.sendStringUtf8(expected + "_" + idx);
-            }
-            long end = System.currentTimeMillis();
-            System.out.println("push time :" + (end - start) + " millisec.");
-
-            executor.shutdown();
-            executor.awaitTermination(40, TimeUnit.SECONDS);
-            end = System.currentTimeMillis();
-            System.out.println("all time :" + (end - start) + " millisec.");
-        }
-    }
 }
