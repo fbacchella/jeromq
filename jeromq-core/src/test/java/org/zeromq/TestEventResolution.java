@@ -30,8 +30,8 @@ public class TestEventResolution
     private ZEvent run1(SendEvent sender, int eventFilter) throws IOException
     {
         try (ZContext zctx = new ZContext(1);
-            ZMQ.Socket s = zctx.createSocket(SocketType.PUB);
-            ZMQ.Socket m = zctx.createSocket(SocketType.PAIR)) {
+             ZMQ.Socket s = zctx.createSocket(SocketType.PUB);
+             ZMQ.Socket m = zctx.createSocket(SocketType.PAIR)) {
             s.monitor("inproc://TestEventResolution", eventFilter);
             m.connect("inproc://TestEventResolution");
             sender.send(s.base(), "tcp://127.0.0.1:" + Utils.findOpenPort());

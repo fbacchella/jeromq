@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.util.ZData;
 
@@ -33,10 +32,10 @@ public class TestProxy
         @Override
         public void run()
         {
-            Context ctx = ZMQ.context(1);
+            ZContext ctx = new ZContext(1);
             assertThat(ctx, notNullValue());
 
-            Socket socket = ctx.socket(SocketType.REQ);
+            Socket socket = ctx.createSocket(SocketType.REQ);
             boolean rc;
             rc = socket.setIdentity(id(name));
             assertThat(rc, is(true));
@@ -92,13 +91,13 @@ public class TestProxy
         @Override
         public void run()
         {
-            Context ctx = ZMQ.context(1);
+            ZContext ctx = new ZContext(1);
             assertThat(ctx, notNullValue());
 
             Thread.currentThread().setName(name);
             System.out.println("Start " + name);
 
-            Socket socket = ctx.socket(SocketType.DEALER);
+            Socket socket = ctx.createSocket(SocketType.DEALER);
             boolean rc;
             rc = socket.setIdentity(id(name));
             assertThat(rc, is(true));
@@ -169,20 +168,20 @@ public class TestProxy
         @Override
         public void run()
         {
-            Context ctx = ZMQ.context(1);
+            ZContext ctx = new ZContext(1);
             assert (ctx != null);
 
             setName("Proxy");
-            Socket frontend = ctx.socket(SocketType.ROUTER);
+            Socket frontend = ctx.createSocket(SocketType.ROUTER);
 
             assertThat(frontend, notNullValue());
             frontend.bind(this.frontend);
 
-            Socket backend = ctx.socket(SocketType.DEALER);
+            Socket backend = ctx.createSocket(SocketType.DEALER);
             assertThat(backend, notNullValue());
             backend.bind(this.backend);
 
-            Socket control = ctx.socket(SocketType.PAIR);
+            Socket control = ctx.createSocket(SocketType.PAIR);
             assertThat(control, notNullValue());
             control.bind(this.control);
 
@@ -230,8 +229,8 @@ public class TestProxy
         executor.shutdown();
         executor.awaitTermination(40, TimeUnit.SECONDS);
 
-        Context ctx = ZMQ.context(1);
-        Socket control = ctx.socket(SocketType.PAIR);
+        ZContext ctx = new ZContext(1);
+        Socket control = ctx.createSocket(SocketType.PAIR);
         control.connect(controlEndpoint);
         control.send(ZMQ.PROXY_TERMINATE);
         proxy.join();

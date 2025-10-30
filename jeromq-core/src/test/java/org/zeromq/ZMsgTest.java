@@ -32,8 +32,8 @@ public class ZMsgTest
     @Test
     public void testRecvFrame()
     {
-        ZMQ.Context ctx = ZMQ.context(0);
-        ZMQ.Socket socket = ctx.socket(SocketType.PULL);
+        ZContext ctx = new ZContext(0);
+        ZMQ.Socket socket = ctx.createSocket(SocketType.PULL);
 
         ZFrame frame = ZFrame.recvFrame(socket, ZMQ.NOBLOCK);
         assertThat(frame, nullValue());
@@ -45,8 +45,8 @@ public class ZMsgTest
     @Test
     public void testRecvMsg()
     {
-        ZMQ.Context ctx = ZMQ.context(0);
-        ZMQ.Socket socket = ctx.socket(SocketType.PULL);
+        ZContext ctx = new ZContext(0);
+        ZMQ.Socket socket = ctx.createSocket(SocketType.PULL);
 
         ZMsg.recvMsg(socket, ZMQ.NOBLOCK, (msg)-> assertThat(msg, nullValue()));
 
@@ -57,9 +57,9 @@ public class ZMsgTest
     @Test
     public void testRecvNullByteMsg()
     {
-        ZMQ.Context ctx = ZMQ.context(0);
-        ZMQ.Socket sender = ctx.socket(SocketType.PUSH);
-        ZMQ.Socket receiver = ctx.socket(SocketType.PULL);
+        ZContext ctx = new ZContext(0);
+        ZMQ.Socket sender = ctx.createSocket(SocketType.PUSH);
+        ZMQ.Socket receiver = ctx.createSocket(SocketType.PULL);
 
         receiver.bind("inproc://" + this.hashCode());
         sender.connect("inproc://" + this.hashCode());

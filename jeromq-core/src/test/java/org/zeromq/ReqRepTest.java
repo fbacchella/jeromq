@@ -61,9 +61,8 @@ public class ReqRepTest
         public Integer call()
         {
             int messagesReplied = 0;
-            try (
-                 ZMQ.Context context = ZMQ.context(1);
-                 ZMQ.Socket responder = context.socket(SocketType.REP)) {
+            try (ZContext context = new ZContext(1);
+                 ZMQ.Socket responder = context.createSocket(SocketType.REP)) {
                 assertThat(responder, notNullValue());
                 boolean rc = responder.bind(address);
                 assertThat(rc, is(true));
@@ -121,9 +120,9 @@ public class ReqRepTest
         @Override
         public Integer call()
         {
-            try (
-                 ZMQ.Context context = ZMQ.context(10);
-                 ZMQ.Socket socket = context.socket(SocketType.REQ)) {
+            try (ZContext context = new ZContext(10);
+                 ZMQ.Socket socket = context.createSocket(SocketType.REQ)
+            ) {
                 boolean rc = socket.connect(address);
                 assertThat(rc, is(true));
                 int idx;
@@ -199,7 +198,7 @@ public class ReqRepTest
     public void testDisconnectOnLargeMessageIssue334() throws Exception
     {
         final int msgSizeMB = 100;
-        final ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
         final int oneMb = 1024 * 1024;
         final byte[] payloadBytes = new byte[msgSizeMB * oneMb];
@@ -218,7 +217,7 @@ public class ReqRepTest
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         // simulates a server reply
         final Future<Boolean> senderf = executorService.submit(() -> {
-            final Socket rep = context.socket(SocketType.REP);
+            final Socket rep = context.createSocket(SocketType.REP);
             rep.bind(addr);
             latch.countDown();
 
@@ -235,8 +234,7 @@ public class ReqRepTest
 
         // wait till server socket is bound
         latch.await();
-        try (
-             final ZMQ.Socket req = context.socket(SocketType.REQ)) {
+        try (ZMQ.Socket req = context.createSocket(SocketType.REQ)) {
             req.connect(addr);
             request.send(req);
             final ZMsg response = ZMsg.recvMsg(req);

@@ -1,7 +1,6 @@
 package org.zeromq;
 
 import java.io.Closeable;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.zeromq.proto.ZPicture;
@@ -351,17 +349,6 @@ public class ZMQ
     {
     }
 
-    /**
-     * Create a new Context.
-     *
-     * @param ioThreads Number of threads to use, usually 1 is sufficient for most use cases.
-     * @return the Context
-     */
-    public static Context context(int ioThreads)
-    {
-        return new Context(ioThreads);
-    }
-
     @Deprecated
     public static boolean device(int type, Socket frontend, Socket backend)
     {
@@ -568,281 +555,6 @@ public class ZMQ
     }
 
     /**
-     * Container for all sockets in a single process,
-     * acting as the transport for inproc sockets,
-     * which are the fastest way to connect threads in one process.
-     */
-    public static class Context implements Closeable
-    {
-        private final AtomicBoolean closed = new AtomicBoolean(false);
-        private final Ctx           ctx;
-
-        /**
-         * Class constructor.
-         *
-         * @param ioThreads size of the threads pool to handle I/O operations.
-         */
-        protected Context(int ioThreads)
-        {
-            ctx = zmq.ZMQ.init(ioThreads);
-        }
-
-        /**
-         * Returns true if terminate() has been called on ctx.
-         */
-        public boolean isTerminated()
-        {
-            return !ctx.isActive();
-        }
-
-        /**
-         * The size of the 0MQ thread pool to handle I/O operations.
-         */
-        public int getIOThreads()
-        {
-            return ctx.get(zmq.ZMQ.ZMQ_IO_THREADS);
-        }
-
-        /**
-         * Set the size of the 0MQ thread pool to handle I/O operations.
-         * @throws IllegalStateException If context was already initialized by the creation of a socket
-         */
-        public boolean setIOThreads(int ioThreads)
-        {
-            return ctx.set(zmq.ZMQ.ZMQ_IO_THREADS, ioThreads);
-        }
-
-        /**
-         * The maximum number of sockets allowed on the context
-         */
-        public int getMaxSockets()
-        {
-            return ctx.get(zmq.ZMQ.ZMQ_MAX_SOCKETS);
-        }
-
-        /**
-         * Sets the maximum number of sockets allowed on the context
-         * @throws IllegalStateException If context was already initialized by the creation of a socket
-         */
-        public boolean setMaxSockets(int maxSockets)
-        {
-            return ctx.set(zmq.ZMQ.ZMQ_MAX_SOCKETS, maxSockets);
-        }
-
-        /**
-         * @deprecated use {@link #isBlocky()} instead
-         */
-        @Deprecated
-        public boolean getBlocky()
-        {
-            return isBlocky();
-        }
-
-        public boolean isBlocky()
-        {
-            return ctx.get(zmq.ZMQ.ZMQ_BLOCKY) != 0;
-        }
-
-        public boolean setBlocky(boolean block)
-        {
-            return ctx.set(zmq.ZMQ.ZMQ_BLOCKY, block ? 1 : 0);
-        }
-
-        public boolean isIPv6()
-        {
-            return ctx.get(zmq.ZMQ.ZMQ_IPV6) != 0;
-        }
-
-        public boolean getIPv6()
-        {
-            return isIPv6();
-        }
-
-        public boolean setIPv6(boolean ipv6)
-        {
-            return ctx.set(zmq.ZMQ.ZMQ_IPV6, ipv6 ? 1 : 0);
-        }
-
-        /**
-         * Set the handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.<p>
-         * It default to the value of {@link Thread#getDefaultUncaughtExceptionHandler()}
-         * @param handler The object to use as this thread's uncaught exception handler. If null then this thread has no explicit handler.
-         * @throws IllegalStateException If context was already initialized by the creation of a socket
-         */
-        public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler)
-        {
-            ctx.setUncaughtExceptionHandler(handler);
-        }
-
-        /**
-         * @return The handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.
-         */
-        public UncaughtExceptionHandler getUncaughtExceptionHandler()
-        {
-            return ctx.getUncaughtExceptionHandler();
-        }
-
-        /**
-         * In {@link zmq.poll.Poller#run()}, some non-fatal exceptions can be thrown. This handler will be notified, so they can
-         * be logged.<p>
-         * Default to {@link Throwable#printStackTrace()}
-         * @param handler The object to use as this thread's handler for recoverable exceptions notifications.
-         * @throws IllegalStateException If context was already initialized by the creation of a socket
-         */
-        public void setNotificationExceptionHandler(UncaughtExceptionHandler handler)
-        {
-            ctx.setNotificationExceptionHandler(handler);
-        }
-
-        /**
-         * @return The handler invoked when a non-fatal exceptions is thrown in zmq.poll.Poller#run()
-         */
-        public UncaughtExceptionHandler getNotificationExceptionHandler()
-        {
-            return ctx.getNotificationExceptionHandler();
-        }
-
-        /**
-         * Used to define a custom thread factory. It can be used to create thread that will be bounded to a CPU for
-         * performance or tweaks the created thread. It the UncaughtExceptionHandler is not set, the created thread UncaughtExceptionHandler
-         * will not be changed, so the factory can also be used to set it.
-         *
-         * @param threadFactory the thread factory used by {@link zmq.poll.Poller}
-         * @throws IllegalStateException If context was already initialized by the creation of a socket
-         */
-        public void setThreadFactor(BiFunction<Runnable, String, Thread> threadFactory)
-        {
-            ctx.setThreadFactory(threadFactory);
-        }
-
-        /**
-         * @return the current thread factory
-         */
-        public BiFunction<Runnable, String, Thread> getThreadFactory()
-        {
-            return ctx.getThreadFactory();
-        }
-
-        /**
-         * This is an explicit "destructor". It can be called to ensure the corresponding 0MQ
-         * Context has been disposed of.
-         */
-        public void term()
-        {
-            if (closed.compareAndSet(false, true)) {
-                ctx.terminate();
-            }
-        }
-
-        public boolean isClosed()
-        {
-            return closed.get();
-        }
-
-        /**
-         * Creates a ØMQ socket within the specified context and return an opaque handle to the newly created socket.
-         * <br>
-         * The type argument specifies the socket type, which determines the semantics of communication over the socket.
-         * <br>
-         * The newly created socket is initially unbound, and not associated with any endpoints.
-         * <br>
-         * In order to establish a message flow a socket must first be connected
-         * to at least one endpoint with {@link org.zeromq.ZMQ.Socket#connect(String)},
-         * or at least one endpoint must be created for accepting incoming connections with {@link org.zeromq.ZMQ.Socket#bind(String)}.
-         *
-         * @param type the socket type.
-         * @return the newly created Socket.
-         */
-        public Socket socket(SocketType type)
-        {
-            return new Socket(this, type);
-        }
-
-        @Deprecated
-        public Socket socket(int type)
-        {
-            return socket(SocketType.type(type));
-        }
-
-        /**
-         * Create a new Selector within this context.
-         *
-         * @return the newly created Selector.
-         */
-        public Selector selector()
-        {
-            return ctx.createSelector();
-        }
-
-        /**
-         * Closes a Selector that was created within this context.
-         *
-         * @param selector the Selector to close.
-         * @return true if the selector was closed. otherwise false
-         * (mostly because it was not created by the context).
-         */
-        public boolean close(Selector selector)
-        {
-            return ctx.closeSelector(selector);
-        }
-
-        /**
-         * Create a new Poller within this context, with a default size.
-         * DO NOT FORGET TO CLOSE THE POLLER AFTER USE with {@link Poller#close()}
-         *
-         * @return the newly created Poller.
-         */
-        public Poller poller()
-        {
-            return new Poller(this);
-        }
-
-        /**
-         * Create a new Poller within this context, with a specified initial size.
-         * DO NOT FORGET TO CLOSE THE POLLER AFTER USE with {@link Poller#close()}
-         *
-         * @param size the poller initial size.
-         * @return the newly created Poller.
-         */
-        public Poller poller(int size)
-        {
-            return new Poller(this, size);
-        }
-
-        /**
-         * Destroys the ØMQ context context.
-         * Context termination is performed in the following steps:
-         * <ul>
-         * <li>Any blocking operations currently in progress on sockets open within context
-         * shall return immediately with an error code of ETERM.
-         * With the exception of {@link ZMQ.Socket#close()}, any further operations on sockets
-         * open within context shall fail with an error code of ETERM.</li>
-         * <li>After interrupting all blocking calls, this method shall block until the following conditions are satisfied:
-         * <ul>
-         * <li>All sockets open within context have been closed with {@link ZMQ.Socket#close()}.</li>
-         * <li>For each socket within context, all messages sent by the application with {@link ZMQ.Socket#send} have either
-         * been physically transferred to a network peer,
-         * or the socket's linger period set with the {@link ZMQ.Socket#setLinger(int)} socket option has expired.</li>
-         * </ul>
-         * </li>
-         * </ul>
-         * <strong>Warning</strong>
-         * <br>
-         * As ZMQ_LINGER defaults to "infinite", by default this method will block indefinitely if there are any pending connects or sends.
-         * We strongly recommend to
-         * <ul>
-         * <li>set ZMQ_LINGER to zero on all sockets </li>
-         * <li>close all sockets, before calling this method</li>
-         * </ul>
-         */
-        @Override
-        public void close()
-        {
-            term();
-        }
-    }
-
-    /**
      * Abstracts an asynchronous message queue, with the exact queuing semantics depending on the socket type in use.
      * <br>
      * Where conventional sockets transfer streams of bytes or discrete datagrams, ØMQ sockets transfer discrete messages.
@@ -913,18 +625,7 @@ public class ZMQ
         private final SocketBase    base;
         private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-        /**
-         * Class constructor.
-         *
-         * @param context a 0MQ context previously created.
-         * @param type    the socket type.
-         */
-        protected Socket(Context context, SocketType type)
-        {
-            this(context.ctx, type.type, null);
-        }
-
-        /**
+       /**
          * Class constructor.
          *
          * @param context a 0MQ context previously created.
@@ -932,20 +633,7 @@ public class ZMQ
          */
         protected Socket(ZContext context, SocketType type)
         {
-            this(context.getContext().ctx, type.type, context::closeSocket);
-        }
-
-        /**
-         * Class constructor.
-         *
-         * @param context a 0MQ context previously created.
-         * @param type    the socket type.
-         * @deprecated use {@link Socket#Socket(Context, SocketType)}
-         */
-        @Deprecated
-        protected Socket(Context context, int type)
-        {
-            this(context.ctx, type, null);
+            this(context.getCtx(), type.type, context::closeSocket);
         }
 
         /**
@@ -4009,7 +3697,7 @@ public class ZMQ
         private static final int SIZE_INCREMENT = 16;
 
         private final Selector selector;
-        private final Context  context;
+        private final Ctx ctx;
 
         private final List<PollItem> items;
 
@@ -4018,35 +3706,29 @@ public class ZMQ
         /**
          * Class constructor.
          *
-         * @param context a 0MQ context previously created.
+         * @param ctx a 0MQ context previously created.
          * @param size    the number of Sockets this poller will contain.
          */
-        protected Poller(Context context, int size)
+        protected Poller(Ctx ctx, int size)
         {
-            assert (context != null);
-            this.context = context;
+            assert (ctx != null);
+            this.ctx = ctx;
 
-            selector = context.selector();
+            selector = ctx.createSelector();
             assert (selector != null);
 
             items = new ArrayList<>(size);
             timeout = -1L;
         }
 
-        /**
-         * Class constructor.
-         *
-         * @param context a 0MQ context previously created.
-         */
-        protected Poller(Context context)
+        protected Poller(Ctx ctx)
         {
-            this(context, SIZE_DEFAULT);
+            this(ctx, SIZE_DEFAULT);
         }
-
         @Override
         public void close()
         {
-            context.close(selector);
+            ctx.closeSelector(selector);
         }
 
         /**
@@ -4278,11 +3960,11 @@ public class ZMQ
                 return zmq.ZMQ.poll(selector, pollItems, items.size(), tout);
             }
             catch (ZError.IOException e) {
-                if (context.isTerminated()) {
+                if (!ctx.isActive()) {
                     return 0;
                 }
                 else {
-                    throw (e);
+                    throw e;
                 }
             }
         }

@@ -1,6 +1,5 @@
 package org.zeromq;
 
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 public class ZMQQueue implements Runnable
@@ -11,14 +10,12 @@ public class ZMQQueue implements Runnable
     /**
      * Class constructor.
      *
-     * @param context
-     *            a 0MQ context previously created.
      * @param inSocket
      *            input socket
      * @param outSocket
      *            output socket
      */
-    public ZMQQueue(Context context, Socket inSocket, Socket outSocket)
+    public ZMQQueue(Socket inSocket, Socket outSocket)
     {
         this.inSocket = inSocket;
         this.outSocket = outSocket;

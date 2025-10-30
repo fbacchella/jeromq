@@ -31,9 +31,9 @@ public class PushPullTest
         {
             String address = "tcp://*:" + port;
 
-            ZMQ.Context context = ZMQ.context(1);
+            ZContext context = new ZContext(1);
             assertThat(context, notNullValue());
-            ZMQ.Socket socket = context.socket(SocketType.PUSH);
+            ZMQ.Socket socket = context.createSocket(SocketType.PUSH);
             assertThat(socket, notNullValue());
 
             // Socket options
@@ -77,9 +77,9 @@ public class PushPullTest
         {
             String address = "tcp://localhost:" + port;
 
-            ZMQ.Context context = ZMQ.context(1);
+            ZContext context = new ZContext(1);
             assertThat(context, notNullValue());
-            ZMQ.Socket socket = context.socket(SocketType.PULL);
+            ZMQ.Socket socket = context.createSocket(SocketType.PULL);
             assertThat(socket, notNullValue());
 
             // Options Section

@@ -31,8 +31,8 @@ public class TestPoller
         @Override
         public void run()
         {
-            ZMQ.Context context = ZMQ.context(1);
-            Socket pullConnect = context.socket(SocketType.PULL);
+            ZContext context = new ZContext(1);
+            Socket pullConnect = context.createSocket(SocketType.PULL);
 
             pullConnect.connect(address);
 
@@ -60,14 +60,14 @@ public class TestPoller
 
         Client client = new Client(addr);
 
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
         //  Socket to send messages to
-        ZMQ.Socket sender = context.socket(SocketType.PUSH);
+        ZMQ.Socket sender = context.createSocket(SocketType.PUSH);
         sender.setImmediate(false);
         sender.bind(addr);
 
-        ZMQ.Poller outItems = context.poller();
+        ZMQ.Poller outItems = context.createPoller();
         outItems.register(sender, ZMQ.Poller.POLLOUT);
 
         ExecutorService executor;
@@ -96,7 +96,7 @@ public class TestPoller
         sender.close();
         System.out.println("Poller test done");
         assertThat(client.received.get(), is(true));
-        context.term();
+        context.close();
     }
 
     @Test(timeout = 5000)

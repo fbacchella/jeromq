@@ -21,14 +21,14 @@ public class PubSubTest
     @Ignore
     public void testRaceConditionIssue322() throws IOException, InterruptedException
     {
-        final ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         final String address = "tcp://localhost:" + Utils.findOpenPort();
         final byte[] msg = "abc".getBytes();
 
         final int messagesNumber = 1000;
         //run publisher
         Runnable pub = () -> {
-            Socket publisher = context.socket(SocketType.PUB);
+            Socket publisher = context.createSocket(SocketType.PUB);
             publisher.bind(address);
             int count = messagesNumber;
             while (count-- > 0) {
@@ -39,7 +39,7 @@ public class PubSubTest
         };
         //run subscriber
         Runnable sub = () -> {
-            Socket subscriber = context.socket(SocketType.SUB);
+            Socket subscriber = context.createSocket(SocketType.SUB);
             subscriber.connect(address);
             subscriber.subscribe(ZMQ.SUBSCRIPTION_ALL);
             int count = messagesNumber;
@@ -68,11 +68,11 @@ public class PubSubTest
     @Ignore
     public void testPubConnectSubBindIssue289and342() throws IOException
     {
-        ZMQ.Context context = ZMQ.context(1);
-        Socket pub = context.socket(SocketType.XPUB);
+        ZContext context = new ZContext(1);
+        Socket pub = context.createSocket(SocketType.XPUB);
         assertThat(pub, notNullValue());
 
-        Socket sub = context.socket(SocketType.SUB);
+        Socket sub = context.createSocket(SocketType.SUB);
         assertThat(sub, notNullValue());
         boolean rc = sub.subscribe(new byte[0]);
         assertThat(rc, is(true));
@@ -93,7 +93,7 @@ public class PubSubTest
 
         pub.close();
         sub.close();
-        context.term();
+        context.close();
     }
 
     @Test
@@ -103,9 +103,9 @@ public class PubSubTest
         final ExecutorService service = Executors.newFixedThreadPool(2);
 
         final Callable<Boolean> pub = () -> {
-            final ZMQ.Context ctx = ZMQ.context(1);
+            ZContext ctx = new ZContext(1);
             assertThat(ctx, notNullValue());
-            final Socket pubsocket = ctx.socket(SocketType.PUB);
+            final Socket pubsocket = ctx.createSocket(SocketType.PUB);
             assertThat(pubsocket, notNullValue());
 
             boolean rc = pubsocket.bind("tcp://*:" + port);
@@ -129,9 +129,9 @@ public class PubSubTest
             @Override
             public Integer call()
             {
-                final ZMQ.Context ctx = ZMQ.context(1);
+                ZContext ctx = new ZContext(1);
                 assertThat(ctx, notNullValue());
-                final ZMQ.Socket sub = ctx.socket(SocketType.SUB);
+                final ZMQ.Socket sub = ctx.createSocket(SocketType.SUB);
                 assertThat(sub, notNullValue());
 
                 boolean rc = sub.setReceiveTimeOut(3000);

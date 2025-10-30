@@ -24,7 +24,7 @@ public class TestZContext
     }
 
     @Test(timeout = 5000)
-    public void testZContextSocketCloseBeforeContextClose()
+    public void testZContextCreateSocketCloseBeforeContextClose()
     {
         ZContext ctx = new ZContext();
         Socket s1 = ctx.createSocket(SocketType.PUSH);
@@ -50,7 +50,7 @@ public class TestZContext
     {
         ZContext ctx = new ZContext();
         assertThat(ctx, notNullValue());
-        assertThat(ctx.getContext(), notNullValue());
+        assertThat(ctx.getCtx(), notNullValue());
         assertThat(ctx.isClosed(), is(false));
         assertThat(ctx.getIoThreads(), is(1));
         assertThat(ctx.getLinger(), is(0));
@@ -73,7 +73,7 @@ public class TestZContext
         Socket s = ctx1.createSocket(SocketType.PAIR);
         ctx1.close();
         assertThat(ctx1.getSockets().isEmpty(), is(true));
-        assertThat(ctx1.getContext(), notNullValue());
+        assertThat(ctx1.getCtx(), notNullValue());
     }
 
     @Test(timeout = 5000)

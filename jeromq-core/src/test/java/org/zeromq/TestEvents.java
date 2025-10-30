@@ -3,7 +3,6 @@ package org.zeromq;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 import static org.junit.Assert.assertEquals;
@@ -15,10 +14,10 @@ public class TestEvents
     @Test
     public void testEventConnectedContext()
     {
-        try (Context context = new Context(1);
-             Socket helper = context.socket(SocketType.REQ);
-             Socket socket = context.socket(SocketType.REP);
-             Socket monitor = context.socket(SocketType.PAIR)
+        try (ZContext context = new ZContext(1);
+             Socket helper = context.createSocket(SocketType.REQ);
+             Socket socket = context.createSocket(SocketType.REP);
+             Socket monitor = context.createSocket(SocketType.PAIR)
         ) {
             int port = helper.bindToRandomPort("tcp://127.0.0.1");
 
@@ -38,9 +37,9 @@ public class TestEvents
     public void testEventConnected()
     {
         try (ZContext context = new ZContext(1);
-            Socket helper = context.createSocket(SocketType.REQ);
-            Socket socket = context.createSocket(SocketType.REP);
-            Socket monitor = context.createSocket(SocketType.PAIR)
+             Socket helper = context.createSocket(SocketType.REQ);
+             Socket socket = context.createSocket(SocketType.REP);
+             Socket monitor = context.createSocket(SocketType.PAIR)
         ) {
             int port = helper.bindToRandomPort("tcp://127.0.0.1");
 
@@ -59,10 +58,10 @@ public class TestEvents
     @Test
     public void testEventConnectDelayed() throws IOException
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket socket = context.socket(SocketType.REP);
-        Socket monitor = context.socket(SocketType.PAIR);
+        Socket socket = context.createSocket(SocketType.REP);
+        Socket monitor = context.createSocket(SocketType.PAIR);
         monitor.setReceiveTimeOut(100);
 
         assertTrue(socket.monitor("inproc://monitor.socket", ZMQ.EVENT_CONNECT_DELAYED));
@@ -77,17 +76,17 @@ public class TestEvents
 
         socket.close();
         monitor.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testEventConnectRetried() throws InterruptedException, IOException
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         ZMQ.Event event;
 
-        Socket socket = context.socket(SocketType.REP);
-        Socket monitor = context.socket(SocketType.PAIR);
+        Socket socket = context.createSocket(SocketType.REP);
+        Socket monitor = context.createSocket(SocketType.PAIR);
         monitor.setReceiveTimeOut(100);
 
         assertTrue(socket.monitor("inproc://monitor.socket", ZMQ.EVENT_CONNECT_RETRIED));
@@ -103,15 +102,15 @@ public class TestEvents
 
         socket.close();
         monitor.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testEventListening()
     {
         try (ZContext context = new ZContext(1);
-                Socket socket = context.createSocket(SocketType.REP);
-                Socket monitor = context.createSocket(SocketType.PAIR)
+             Socket socket = context.createSocket(SocketType.REP);
+             Socket monitor = context.createSocket(SocketType.PAIR)
         ) {
             monitor.setReceiveTimeOut(100);
 
@@ -129,9 +128,9 @@ public class TestEvents
     public void testEventBindFailed()
     {
         try (ZContext context = new ZContext(1);
-                Socket helper = context.createSocket(SocketType.REP);
-                Socket socket = context.createSocket(SocketType.REP);
-                Socket monitor = context.createSocket(SocketType.PAIR)
+             Socket helper = context.createSocket(SocketType.REP);
+             Socket socket = context.createSocket(SocketType.REP);
+             Socket monitor = context.createSocket(SocketType.PAIR)
         ) {
             ZMQ.Event event;
 
@@ -152,9 +151,9 @@ public class TestEvents
     public void testEventAccepted()
     {
         try (ZContext context = new ZContext(1);
-                Socket helper = context.createSocket(SocketType.REP);
-                Socket socket = context.createSocket(SocketType.REP);
-                Socket monitor = context.createSocket(SocketType.PAIR)
+             Socket helper = context.createSocket(SocketType.REP);
+             Socket socket = context.createSocket(SocketType.REP);
+             Socket monitor = context.createSocket(SocketType.PAIR)
         ) {
             ZMQ.Event event;
             monitor.setReceiveTimeOut(100);
@@ -224,11 +223,11 @@ public class TestEvents
     @Test
     public void testEventMonitorStopped()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         ZMQ.Event event;
 
-        Socket socket = context.socket(SocketType.REP);
-        Socket monitor = context.socket(SocketType.PAIR);
+        Socket socket = context.createSocket(SocketType.REP);
+        Socket monitor = context.createSocket(SocketType.PAIR);
         monitor.setReceiveTimeOut(100);
 
         assertTrue(socket.monitor("inproc://monitor.socket", ZMQ.EVENT_MONITOR_STOPPED));
@@ -241,6 +240,6 @@ public class TestEvents
 
         socket.close();
         monitor.close();
-        context.term();
+        context.close();
     }
 }

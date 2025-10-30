@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.zeromq.SocketType;
+import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 public class ZHelper
@@ -46,13 +46,13 @@ public class ZHelper
         sock.setIdentity(identity.getBytes(ZMQ.CHARSET));
     }
 
-    public static List<Socket> buildZPipe(Context ctx)
+    public static List<Socket> buildZPipe(ZContext ctx)
     {
-        Socket socket1 = ctx.socket(SocketType.PAIR);
+        Socket socket1 = ctx.createSocket(SocketType.PAIR);
         socket1.setLinger(0);
         socket1.setHWM(1);
 
-        Socket socket2 = ctx.socket(SocketType.PAIR);
+        Socket socket2 = ctx.createSocket(SocketType.PAIR);
         socket2.setLinger(0);
         socket2.setHWM(1);
 

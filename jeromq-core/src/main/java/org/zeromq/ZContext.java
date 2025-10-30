@@ -8,12 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
+import zmq.Ctx;
 import zmq.util.Draft;
 
 /**
@@ -27,10 +28,9 @@ import zmq.util.Draft;
 
 public class ZContext implements Closeable
 {
-    /**
-     * Reference to underlying Context object
-     */
-    private final Context context;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private final Ctx ctx;
 
     /**
      * List of sockets managed by this ZContext
@@ -95,12 +95,12 @@ public class ZContext implements Closeable
     {
         if (parent == null) {
             this.main = true;
-            this.context = ZMQ.context(ioThreads);
+            this.ctx = zmq.ZMQ.init(ioThreads);
             this.shadows = Collections.newSetFromMap(new ConcurrentHashMap<>());
         }
         else {
             this.main = false;
-            this.context = parent.context;
+            this.ctx = parent.ctx;
             this.shadows = parent.shadows;
             this.shadows.add(this);
         }
@@ -125,7 +125,7 @@ public class ZContext implements Closeable
         sockets.clear();
 
         for (Selector selector : selectors) {
-            context.close(selector);
+            ctx.closeSelector(selector);
         }
         selectors.clear();
 
@@ -134,7 +134,9 @@ public class ZContext implements Closeable
             for (ZContext child : shadows) {
                 child.close();
             }
-            context.term();
+            if (closed.compareAndSet(false, true)) {
+                ctx.terminate();
+            }
         }
         else {
             shadows.remove(this);
@@ -238,7 +240,7 @@ public class ZContext implements Closeable
      */
     Selector selector()
     {
-        Selector selector = context.selector();
+        Selector selector = ctx.createSelector();
         selectors.add(selector);
         return selector;
     }
@@ -255,16 +257,21 @@ public class ZContext implements Closeable
     public void closeSelector(Selector selector)
     {
         if (selectors.remove(selector)) {
-            context.close(selector);
+            ctx.closeSelector(selector);
         }
     }
 
     public Poller createPoller(int size)
     {
-        return new Poller(context, size);
+        return new Poller(ctx, size);
     }
 
-    /**
+    public Poller  createPoller()
+    {
+        return new Poller(ctx);
+    }
+
+     /**
      * Creates new shadow context.
      * Shares same underlying org.zeromq.Context instance but has own list
      * of managed sockets, io thread count etc.
@@ -367,6 +374,16 @@ public class ZContext implements Closeable
         this.sndhwm = sndhwm;
     }
 
+    public boolean isBlocky()
+    {
+        return ctx.get(zmq.ZMQ.ZMQ_BLOCKY) != 0;
+    }
+
+    public boolean setBlocky(boolean block)
+    {
+        return ctx.set(zmq.ZMQ.ZMQ_BLOCKY, block ? 1 : 0);
+    }
+
     /**
      * Set the handler invoked when a {@link zmq.poll.Poller} abruptly terminates due to an uncaught exception.<p>
      * It default to the value of {@link Thread#getDefaultUncaughtExceptionHandler()}
@@ -375,7 +392,7 @@ public class ZContext implements Closeable
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler)
     {
-        context.setUncaughtExceptionHandler(handler);
+        ctx.setUncaughtExceptionHandler(handler);
     }
 
     /**
@@ -383,7 +400,7 @@ public class ZContext implements Closeable
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler()
     {
-        return context.getUncaughtExceptionHandler();
+        return ctx.getUncaughtExceptionHandler();
     }
 
     /**
@@ -395,7 +412,7 @@ public class ZContext implements Closeable
      */
     public void setNotificationExceptionHandler(UncaughtExceptionHandler handler)
     {
-        context.setNotificationExceptionHandler(handler);
+        ctx.setNotificationExceptionHandler(handler);
     }
 
     /**
@@ -403,7 +420,7 @@ public class ZContext implements Closeable
      */
     public UncaughtExceptionHandler getNotificationExceptionHandler()
     {
-        return context.getNotificationExceptionHandler();
+        return ctx.getNotificationExceptionHandler();
     }
 
     /**
@@ -414,9 +431,9 @@ public class ZContext implements Closeable
      * @param threadFactory the thread factory used by {@link zmq.poll.Poller}
      * @throws IllegalStateException If context was already initialized by the creation of a socket
      */
-    public void setThreadFactor(BiFunction<Runnable, String, Thread> threadFactory)
+    public void setThreadFactory(BiFunction<Runnable, String, Thread> threadFactory)
     {
-        context.setThreadFactor(threadFactory);
+        ctx.setThreadFactory(threadFactory);
     }
 
     /**
@@ -424,7 +441,7 @@ public class ZContext implements Closeable
      */
     public BiFunction<Runnable, String, Thread> getThreadFactory()
     {
-        return context.getThreadFactory();
+        return ctx.getThreadFactory();
     }
 
     /**
@@ -453,23 +470,6 @@ public class ZContext implements Closeable
     }
 
     /**
-     * @return the context
-     */
-    public Context getContext()
-    {
-        return context;
-    }
-
-    /**
-     * @param ctx sets the underlying zmq.Context associated with this ZContext wrapper object
-     * @deprecated This value should not be changed after the ZContext is initialized.
-     */
-    @Deprecated
-    public void setContext(Context ctx)
-    {
-    }
-
-    /**
      * Return a copy of the list of currently open sockets. Order is not meaningful.
      * @return the sockets
      */
@@ -486,6 +486,11 @@ public class ZContext implements Closeable
 
     public boolean isClosed()
     {
-        return context.isClosed();
+        return closed.get();
+    }
+
+    Ctx getCtx()
+    {
+        return ctx;
     }
 }

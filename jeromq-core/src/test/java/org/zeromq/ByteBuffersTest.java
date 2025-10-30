@@ -27,8 +27,8 @@ public class ByteBuffersTest
         public void run()
         {
             System.out.println("Start client thread ");
-            ZMQ.Context context = ZMQ.context(1);
-            Socket pullConnect = context.socket(SocketType.PULL);
+            ZContext context = new ZContext(1);
+            Socket pullConnect = context.createSocket(SocketType.PULL);
 
             pullConnect.connect("tcp://127.0.0.1:" + port);
             pullConnect.recv(0);
@@ -43,9 +43,9 @@ public class ByteBuffersTest
     public void testByteBufferSend() throws InterruptedException, IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         ByteBuffer bb = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder());
-        try (Socket push = context.socket(SocketType.PUSH); Socket pull = context.socket(SocketType.PULL)) {
+        try (Socket push = context.createSocket(SocketType.PUSH); Socket pull = context.createSocket(SocketType.PULL)) {
             pull.bind("tcp://*:" + port);
             push.connect("tcp://localhost:" + port);
 
@@ -60,7 +60,7 @@ public class ByteBuffersTest
         }
         finally {
             try {
-                context.term();
+                context.close();
             }
             catch (Exception ignore) {
             }
@@ -71,13 +71,13 @@ public class ByteBuffersTest
     public void testByteBufferRecv() throws InterruptedException, IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         ByteBuffer bb = ByteBuffer.allocate(6).order(ByteOrder.nativeOrder());
         ZMQ.Socket push = null;
         ZMQ.Socket pull = null;
         try {
-            push = context.socket(SocketType.PUSH);
-            pull = context.socket(SocketType.PULL);
+            push = context.createSocket(SocketType.PUSH);
+            pull = context.createSocket(SocketType.PULL);
             pull.bind("tcp://*:" + port);
             push.connect("tcp://localhost:" + port);
 
@@ -105,7 +105,7 @@ public class ByteBuffersTest
                 ignore.printStackTrace();
             }
             try {
-                context.term();
+                context.close();
             }
             catch (Exception ignore) {
                 ignore.printStackTrace();
@@ -118,7 +118,7 @@ public class ByteBuffersTest
     public void testByteBufferLarge() throws IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         int[] array = new int[2048 * 2000];
         for (int i = 0; i < array.length; ++i) {
             array[i] = i;
@@ -133,8 +133,8 @@ public class ByteBuffersTest
         ZMQ.Socket push = null;
         ZMQ.Socket pull = null;
         try {
-            push = context.socket(SocketType.PUSH);
-            pull = context.socket(SocketType.PULL);
+            push = context.createSocket(SocketType.PUSH);
+            pull = context.createSocket(SocketType.PULL);
             pull.bind("tcp://*:" + port);
             push.connect("tcp://localhost:" + port);
 
@@ -166,7 +166,7 @@ public class ByteBuffersTest
                 ignore.printStackTrace();
             }
             try {
-                context.term();
+                context.close();
             }
             catch (Exception ignore) {
                 ignore.printStackTrace();
@@ -178,7 +178,7 @@ public class ByteBuffersTest
     public void testByteBufferLargeDirect() throws IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         int[] array = new int[2048 * 2000];
         for (int i = 0; i < array.length; ++i) {
             array[i] = i;
@@ -194,8 +194,8 @@ public class ByteBuffersTest
         ZMQ.Socket push = null;
         ZMQ.Socket pull = null;
         try {
-            push = context.socket(SocketType.PUSH);
-            pull = context.socket(SocketType.PULL);
+            push = context.createSocket(SocketType.PUSH);
+            pull = context.createSocket(SocketType.PULL);
             pull.bind("tcp://*:" + port);
             push.connect("tcp://localhost:" + port);
 
@@ -229,7 +229,7 @@ public class ByteBuffersTest
                 ignore.printStackTrace();
             }
             try {
-                context.term();
+                context.close();
             }
             catch (Exception ignore) {
                 ignore.printStackTrace();
@@ -241,14 +241,14 @@ public class ByteBuffersTest
     public void testByteBufferZMQExploitPayload() throws IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = new ZMQ.Context(1);
+        ZContext context = new ZContext(1);
 
         ZMQ.Socket push = null;
         ZMQ.Socket pull = null;
         ByteBuffer bb = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder());
         try {
-            push = context.socket(SocketType.PUSH);
-            pull = context.socket(SocketType.PULL);
+            push = context.createSocket(SocketType.PUSH);
+            pull = context.createSocket(SocketType.PULL);
             pull.bind("tcp://*:" + port);
             push.connect("tcp://localhost:" + port);
 
@@ -287,7 +287,7 @@ public class ByteBuffersTest
                 ignore.printStackTrace();
             }
             try {
-                context.term();
+                context.close();
             }
             catch (Exception ignore) {
                 ignore.printStackTrace();

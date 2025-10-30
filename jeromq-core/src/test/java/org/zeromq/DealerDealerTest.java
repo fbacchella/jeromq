@@ -12,13 +12,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.zeromq.ZMQ.Context;
 
 public class DealerDealerTest
 {
     private static final class Client implements Runnable
     {
-        private final Context       context;
+        private final ZContext       context;
         private final boolean       verbose;
         private final String        host;
         private final int           messagesCount;
@@ -29,7 +28,7 @@ public class DealerDealerTest
         private int count      = 0;
         private int received   = 0;
 
-        private Client(Context context, boolean verbose, String host, int messagesCount, Deque<String> queue)
+        private Client(ZContext context, boolean verbose, String host, int messagesCount, Deque<String> queue)
         {
             this.context = context;
             this.verbose = verbose;
@@ -41,7 +40,7 @@ public class DealerDealerTest
         @Override
         public void run()
         {
-            ZMQ.Socket worker = context.socket(SocketType.DEALER);
+            ZMQ.Socket worker = context.createSocket(SocketType.DEALER);
             worker.connect(host);
 
             int msg = messagesCount;
@@ -69,7 +68,7 @@ public class DealerDealerTest
                         System.out.println("Reconnecting...");
                     }
                     worker.close();
-                    worker = context.socket(SocketType.DEALER);
+                    worker = context.createSocket(SocketType.DEALER);
                     worker.connect(host);
                 }
 
@@ -90,12 +89,12 @@ public class DealerDealerTest
         final boolean verbose = false;
         final int messagesCount = 1000;
 
-        final ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
         final Deque<String> queue = new LinkedBlockingDeque<>();
         final String host = "tcp://localhost:" + Utils.findOpenPort();
 
         final Runnable server = () -> {
-            final ZMQ.Socket server1 = context.socket(SocketType.DEALER);
+            final ZMQ.Socket server1 = context.createSocket(SocketType.DEALER);
             server1.bind(host);
             int msg = messagesCount;
 

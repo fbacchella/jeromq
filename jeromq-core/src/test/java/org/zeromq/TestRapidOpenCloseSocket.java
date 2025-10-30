@@ -35,7 +35,7 @@ public class TestRapidOpenCloseSocket
       workerSocks.add(workerSock);
     }
 
-    ZMQQueue queue = new ZMQQueue(ctx.getContext(), recvMsgSock, processMsgSock);
+    ZMQQueue queue = new ZMQQueue(recvMsgSock, processMsgSock);
     Thread proxyThr = new Thread(queue);
     proxyThr.setName("Proxy thr");
     proxyThr.start();

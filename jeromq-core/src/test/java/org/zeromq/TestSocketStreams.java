@@ -13,9 +13,9 @@ public class TestSocketStreams
     {
         int port = Utils.findOpenPort();
         try (
-                final ZMQ.Context ctx = new ZMQ.Context(1);
-                final ZMQ.Socket pull = ctx.socket(SocketType.PULL);
-                final ZMQ.Socket push = ctx.socket(SocketType.PUSH)) {
+                ZContext ctx = new ZContext(1);
+                final ZMQ.Socket pull = ctx.createSocket(SocketType.PULL);
+                final ZMQ.Socket push = ctx.createSocket(SocketType.PUSH)) {
             pull.bind("tcp://*:" + port);
             push.connect("tcp://127.0.0.1:" + port);
 
@@ -29,9 +29,9 @@ public class TestSocketStreams
     {
         int port = Utils.findOpenPort();
         try (
-                final ZMQ.Context ctx = new ZMQ.Context(1);
-                final ZMQ.Socket pull = ctx.socket(SocketType.PULL);
-                final ZMQ.Socket push = ctx.socket(SocketType.PUSH)) {
+                ZContext ctx = new ZContext(1);
+                final ZMQ.Socket pull = ctx.createSocket(SocketType.PULL);
+                final ZMQ.Socket push = ctx.createSocket(SocketType.PUSH)) {
             pull.bind("tcp://*:" + port);
             push.connect("tcp://127.0.0.1:" + port);
 

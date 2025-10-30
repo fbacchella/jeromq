@@ -6,9 +6,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
 import org.zeromq.SocketType;
+import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
@@ -66,10 +66,10 @@ public class ZPictureTest
     @Test
     public void testSocketSendRecvPicture()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -115,16 +115,16 @@ public class ZPictureTest
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testSocketSendRecvBinaryPicture()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -169,6 +169,6 @@ public class ZPictureTest
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 }

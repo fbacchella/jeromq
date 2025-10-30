@@ -16,7 +16,6 @@ import java.util.Arrays;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMQ.Socket.Mechanism;
 
@@ -27,12 +26,12 @@ import zmq.util.Errno;
 
 public class TestZMQ
 {
-    private Context ctx;
+    private ZContext ctx;
 
     @Before
     public void setUp()
     {
-        ctx = ZMQ.context(1);
+        ctx = new ZContext(1);
         assertThat(ctx, notNullValue());
         new Errno().set(0);
     }
@@ -46,7 +45,7 @@ public class TestZMQ
     @Test
     public void testErrno()
     {
-        Socket socket = ctx.socket(SocketType.DEALER);
+        Socket socket = ctx.createSocket(SocketType.DEALER);
         assertThat(socket.errno(), is(0));
 
         socket.close();
@@ -56,11 +55,11 @@ public class TestZMQ
     public void testBindSameAddress() throws IOException
     {
         int port = Utils.findOpenPort();
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        ZMQ.Socket socket1 = context.socket(SocketType.REQ);
+        ZMQ.Socket socket1 = context.createSocket(SocketType.REQ);
         socket1.bind("tcp://*:" + port);
-        try (socket1; Socket socket2 = context.socket(SocketType.REQ)) {
+        try (socket1; Socket socket2 = context.createSocket(SocketType.REQ)) {
             socket2.bind("tcp://*:" + port);
             fail("Exception not thrown");
         }
@@ -69,17 +68,17 @@ public class TestZMQ
             throw e;
         }
         finally {
-            context.term();
+            context.close();
         }
     }
 
     @Test(expected = ZMQException.class)
     public void testBindInprocSameAddress()
     {
-        ZMQ.Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        ZMQ.Socket socket1 = context.socket(SocketType.REQ);
-        ZMQ.Socket socket2 = context.socket(SocketType.REQ);
+        ZMQ.Socket socket1 = context.createSocket(SocketType.REQ);
+        ZMQ.Socket socket2 = context.createSocket(SocketType.REQ);
         socket1.bind("inproc://address.already.in.use");
 
         socket2.bind("inproc://address.already.in.use");
@@ -88,16 +87,16 @@ public class TestZMQ
         socket1.close();
         socket2.close();
 
-        context.term();
+        context.close();
     }
 
     @Test
     public void testSocketUnbind()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -121,16 +120,16 @@ public class TestZMQ
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testSocketSendRecvArray()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -155,16 +154,16 @@ public class TestZMQ
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testSocketSendRecvPicture()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -205,16 +204,16 @@ public class TestZMQ
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testSocketSendRecvBinaryPicture()
     {
-        Context context = ZMQ.context(1);
+        ZContext context = new ZContext(1);
 
-        Socket push = context.socket(SocketType.PUSH);
-        Socket pull = context.socket(SocketType.PULL);
+        Socket push = context.createSocket(SocketType.PUSH);
+        Socket pull = context.createSocket(SocketType.PULL);
 
         boolean rc = pull.setReceiveTimeOut(50);
         assertThat(rc, is(true));
@@ -256,20 +255,20 @@ public class TestZMQ
 
         push.close();
         pull.close();
-        context.term();
+        context.close();
     }
 
     @Test
     public void testContextBlocky()
     {
-        Socket router = ctx.socket(SocketType.ROUTER);
+        Socket router = ctx.createSocket(SocketType.ROUTER);
         long rc = router.getLinger();
         assertThat(rc, is(-1L));
 
         router.close();
         ctx.setBlocky(false);
 
-        router = ctx.socket(SocketType.ROUTER);
+        router = ctx.createSocket(SocketType.ROUTER);
 
         rc = router.getLinger();
         assertThat(rc, is(0L));
@@ -280,7 +279,7 @@ public class TestZMQ
     @Test(timeout = 1000)
     public void testSocketDoubleClose()
     {
-        Socket socket = ctx.socket(SocketType.PUSH);
+        Socket socket = ctx.createSocket(SocketType.PUSH);
         socket.close();
         socket.close();
     }
@@ -288,7 +287,7 @@ public class TestZMQ
     @Test
     public void testSubscribe()
     {
-        ZMQ.Socket socket = ctx.socket(SocketType.SUB);
+        ZMQ.Socket socket = ctx.createSocket(SocketType.SUB);
 
         boolean rc = socket.subscribe("abc");
         assertThat(rc, is(true));
@@ -305,7 +304,7 @@ public class TestZMQ
     @Test
     public void testSocketAffinity()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
         socket.setAffinity(42);
         long rc = socket.getAffinity();
@@ -318,7 +317,7 @@ public class TestZMQ
     @Test
     public void testSocketBacklog()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setBacklog(42L);
@@ -332,7 +331,7 @@ public class TestZMQ
     @Test
     public void testSocketConflate()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setConflate(true);
@@ -351,7 +350,7 @@ public class TestZMQ
     @Test
     public void testSocketConnectRid()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setConnectRid("rid");
@@ -367,7 +366,7 @@ public class TestZMQ
     @Test
     public void testSocketCurveAsServer()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
         boolean rc = socket.setCurveServer(true);
         assertThat(rc, is(true));
@@ -390,7 +389,7 @@ public class TestZMQ
     @Test
     public void testSocketCurveSecret()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         byte[] key = new byte[32];
@@ -414,7 +413,7 @@ public class TestZMQ
     @Test
     public void testSocketCurvePublic()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         Mechanism mechanism = socket.getMechanism();
@@ -440,7 +439,7 @@ public class TestZMQ
     @Test
     public void testSocketCurveServer()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         byte[] key = new byte[32];
@@ -464,7 +463,7 @@ public class TestZMQ
     @Test
     public void testSocketHandshake()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setHandshakeIvl(42);
@@ -478,7 +477,7 @@ public class TestZMQ
     @Test
     public void testSocketHeartbeatIvl()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setHeartbeatIvl(42);
@@ -492,7 +491,7 @@ public class TestZMQ
     @Test
     public void testSocketHeartbeatTtl()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setHeartbeatTtl(420);
@@ -506,7 +505,7 @@ public class TestZMQ
     @Test
     public void testSocketHeartbeatTimeout()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setHeartbeatTimeout(42);
@@ -520,7 +519,7 @@ public class TestZMQ
     @Test
     public void testSocketHeartbeatContext()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         byte[] context = new byte[3];
@@ -539,7 +538,7 @@ public class TestZMQ
     @Test
     public void testSocketHWM()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setHWM(42);
@@ -567,7 +566,7 @@ public class TestZMQ
     @Test
     public void testSocketIdentity()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         byte[] identity = new byte[42];
@@ -584,7 +583,7 @@ public class TestZMQ
     @Test
     public void testSocketImmediate()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setImmediate(false);
@@ -626,7 +625,7 @@ public class TestZMQ
     @Test
     public void testSocketIPv6()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setIPv6(true);
@@ -664,7 +663,7 @@ public class TestZMQ
     @Test
     public void testSocketLinger()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setLinger(42);
@@ -683,7 +682,7 @@ public class TestZMQ
     @Test
     public void testSocketMaxMsgSize()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setMaxMsgSize(42);
@@ -697,7 +696,7 @@ public class TestZMQ
     @Test
     public void testSocketMsgAllocationThreshold()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
         assertThat(socket, notNullValue());
 
         boolean set = socket.setMsgAllocationHeapThreshold(42);
@@ -711,7 +710,7 @@ public class TestZMQ
     @Test
     public void testSocketMsgAllocator()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
         assertThat(socket, notNullValue());
 
         MsgAllocator allocator = new MsgAllocatorDirect();
@@ -725,7 +724,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketMulticastHops()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -736,7 +735,7 @@ public class TestZMQ
     @Test
     public void testSocketGetMulticastHops()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
         assertThat(socket, notNullValue());
 
         long rc = socket.getMulticastHops();
@@ -749,7 +748,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketMulticastLoop()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -761,7 +760,7 @@ public class TestZMQ
     @Test
     public void testSocketHasMulticastLoop()
     {
-        final Socket socket = ctx.socket(SocketType.STREAM);
+        final Socket socket = ctx.createSocket(SocketType.STREAM);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.hasMulticastLoop();
@@ -772,7 +771,7 @@ public class TestZMQ
     @Test
     public void testSocketPlainPassword()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setPlainPassword("password");
@@ -793,7 +792,7 @@ public class TestZMQ
     @Test
     public void testSocketPlainUsername()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setPlainUsername("username");
@@ -815,7 +814,7 @@ public class TestZMQ
     @Test
     public void testSocketPlainServer()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setPlainServer(true);
@@ -839,7 +838,7 @@ public class TestZMQ
     @Test
     public void testSocketProbeRouter()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setProbeRouter(true);
@@ -851,7 +850,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketRate()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -862,7 +861,7 @@ public class TestZMQ
     @Test
     public void testSocketGetRate()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         long rate = socket.getRate();
@@ -874,7 +873,7 @@ public class TestZMQ
     @Test
     public void testSocketRcvHwm()
     {
-        final Socket socket = ctx.socket(SocketType.DEALER);
+        final Socket socket = ctx.createSocket(SocketType.DEALER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setRcvHWM(42L);
@@ -893,7 +892,7 @@ public class TestZMQ
     @Test
     public void testSocketSndHwm()
     {
-        final Socket socket = ctx.socket(SocketType.DEALER);
+        final Socket socket = ctx.createSocket(SocketType.DEALER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setSndHWM(42L);
@@ -912,7 +911,7 @@ public class TestZMQ
     @Test
     public void testSocketReceiveBufferSize()
     {
-        final Socket socket = ctx.socket(SocketType.DEALER);
+        final Socket socket = ctx.createSocket(SocketType.DEALER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReceiveBufferSize(42L);
@@ -931,7 +930,7 @@ public class TestZMQ
     @Test
     public void testSocketSendBufferSize()
     {
-        final Socket socket = ctx.socket(SocketType.DEALER);
+        final Socket socket = ctx.createSocket(SocketType.DEALER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setSendBufferSize(42L);
@@ -949,7 +948,7 @@ public class TestZMQ
     @Test
     public void testSocketReceiveTimeOut()
     {
-        final Socket socket = ctx.socket(SocketType.PAIR);
+        final Socket socket = ctx.createSocket(SocketType.PAIR);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReceiveTimeOut(42);
@@ -967,7 +966,7 @@ public class TestZMQ
     @Test
     public void testSocketSendTimeOut()
     {
-        final Socket socket = ctx.socket(SocketType.PAIR);
+        final Socket socket = ctx.createSocket(SocketType.PAIR);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setSendTimeOut(42);
@@ -986,7 +985,7 @@ public class TestZMQ
     @Test
     public void testSocketReconnectIVL()
     {
-        final Socket socket = ctx.socket(SocketType.REP);
+        final Socket socket = ctx.createSocket(SocketType.REP);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReconnectIVL(42L);
@@ -1002,7 +1001,7 @@ public class TestZMQ
     @Test
     public void testSocketReconnectIVLMax()
     {
-        final Socket socket = ctx.socket(SocketType.REP);
+        final Socket socket = ctx.createSocket(SocketType.REP);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReconnectIVLMax(42L);
@@ -1017,7 +1016,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketRecoveryInterval()
     {
-        final Socket socket = ctx.socket(SocketType.REP);
+        final Socket socket = ctx.createSocket(SocketType.REP);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -1028,7 +1027,7 @@ public class TestZMQ
     @Test
     public void testSocketgetRecoveryInterval()
     {
-        final Socket socket = ctx.socket(SocketType.REP);
+        final Socket socket = ctx.createSocket(SocketType.REP);
         assertThat(socket, notNullValue());
 
         long reconnect = socket.getRecoveryInterval();
@@ -1040,7 +1039,7 @@ public class TestZMQ
     @Test
     public void testSocketReqCorrelate()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReqCorrelate(true);
@@ -1055,7 +1054,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketGetReqCorrelate()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -1066,7 +1065,7 @@ public class TestZMQ
     @Test
     public void testSocketReqRelaxed()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setReqRelaxed(true);
@@ -1081,7 +1080,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketGetReqRelaxed()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -1092,7 +1091,7 @@ public class TestZMQ
     @Test
     public void testSocketRouterHandover()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setRouterHandover(true);
@@ -1104,7 +1103,7 @@ public class TestZMQ
     @Test
     public void testSocketRouterMandatory()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setRouterMandatory(true);
@@ -1116,7 +1115,7 @@ public class TestZMQ
     @Test
     public void testSocketRouterRaw()
     {
-        final Socket socket = ctx.socket(SocketType.ROUTER);
+        final Socket socket = ctx.createSocket(SocketType.ROUTER);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setRouterRaw(true);
@@ -1128,7 +1127,7 @@ public class TestZMQ
     @Test
     public void testSocketSocksProxy()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setSocksProxy("abc");
@@ -1150,7 +1149,7 @@ public class TestZMQ
     @Test(expected = UnsupportedOperationException.class)
     public void testSocketSwap()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
 
         try (socket) {
             assertThat(socket, notNullValue());
@@ -1162,7 +1161,7 @@ public class TestZMQ
     @Test
     public void testSocketGetSwap()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         long rc = socket.getSwap();
@@ -1175,7 +1174,7 @@ public class TestZMQ
     @Test
     public void testSocketTCPKeepAlive()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setTCPKeepAlive(1L);
@@ -1193,7 +1192,7 @@ public class TestZMQ
     @Test
     public void testSocketTCPKeepAliveCount()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setTCPKeepAliveCount(42);
@@ -1208,7 +1207,7 @@ public class TestZMQ
     @Test
     public void testSocketTCPKeepAliveInterval()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setTCPKeepAliveInterval(42);
@@ -1223,7 +1222,7 @@ public class TestZMQ
     @Test
     public void testSocketTCPKeepAliveIdle()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setTCPKeepAliveIdle(42);
@@ -1238,7 +1237,7 @@ public class TestZMQ
     @Test
     public void testSocketTos()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setTos(42);
@@ -1253,7 +1252,7 @@ public class TestZMQ
     @Test
     public void testSocketType()
     {
-        final Socket socket = ctx.socket(SocketType.REQ);
+        final Socket socket = ctx.createSocket(SocketType.REQ);
         assertThat(socket, notNullValue());
 
         SocketType rc = socket.getSocketType();
@@ -1265,7 +1264,7 @@ public class TestZMQ
     @Test
     public void testSocketXpubNoDrop()
     {
-        final Socket socket = ctx.socket(SocketType.XPUB);
+        final Socket socket = ctx.createSocket(SocketType.XPUB);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setXpubNoDrop(true);
@@ -1277,7 +1276,7 @@ public class TestZMQ
     @Test
     public void testSocketXpubVerbose()
     {
-        final Socket socket = ctx.socket(SocketType.XPUB);
+        final Socket socket = ctx.createSocket(SocketType.XPUB);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setXpubVerbose(true);
@@ -1289,7 +1288,7 @@ public class TestZMQ
     @Test
     public void testSocketZAPDomain()
     {
-        final Socket socket = ctx.socket(SocketType.XPUB);
+        final Socket socket = ctx.createSocket(SocketType.XPUB);
         assertThat(socket, notNullValue());
 
         boolean rc = socket.setZAPDomain("abc");
@@ -1334,7 +1333,7 @@ public class TestZMQ
     @Test
     public void testSocketLocalAddressPropertyName()
     {
-        try (final Socket socket = ctx.socket(SocketType.XPUB)) {
+        try (final Socket socket = ctx.createSocket(SocketType.XPUB)) {
             assertThat(socket, notNullValue());
 
             boolean rc = socket.setSelfAddressPropertyName("X-LocalAddress");
