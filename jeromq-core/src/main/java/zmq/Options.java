@@ -1,5 +1,8 @@
 package zmq;
 
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -150,7 +153,7 @@ public class Options
     public Msg disconnectMsg = ZMQ.DEFAULT_DISCONNECT_MSG;
     public boolean canReceiveDisconnectMsg = false;
 
-    // Hiccup message to receive when the connecting peer experience an hiccup in the connection
+    // Hiccup message to receive when the connecting peer experience a hiccup in the connection
     public Msg hiccupMsg = ZMQ.DEFAULT_HICCUP_MSG;
     public boolean canReceiveHiccupMsg = false;
 
@@ -188,65 +191,73 @@ public class Options
     public Class<? extends IDecoder> decoder = null;
     public Class<? extends IEncoder> encoder = null;
 
+    /**
+     * <p>Set an option with the given object.</p>
+     * <p>When an option expect a duration, it can be given as an integer number of milliseconds, a floating
+     * number of seconds or a duration object.</p>
+     * <p>When it expects a boolean, it can be a boolean or a numerical value, 0 meaning false, other values meaning true.</p>
+     * <p>When an object instance is expected, it can be that object, a class of that object that will be instantiated or
+     * a class name as a String. The instantiation use a zero argument constructor.</p>
+     * <p>a bytes array or a string that needs conversions will use UTF-8 as the default charset.</p>
+     */
     @SuppressWarnings("deprecation")
     public boolean setSocketOpt(int option, Object optval)
     {
-        final ValueReference<Boolean> result = new ValueReference<>(false);
         switch (option) {
         case ZMQ.ZMQ_SNDHWM:
-            sendHwm = (Integer) optval;
+            sendHwm = ((Number) optval).intValue();
             if (sendHwm < 0) {
                 throw new IllegalArgumentException("sendHwm " + optval);
             }
             return true;
 
         case ZMQ.ZMQ_RCVHWM:
-            recvHwm = (Integer) optval;
+            recvHwm = ((Number) optval).intValue();
             if (recvHwm < 0) {
                 throw new IllegalArgumentException("recvHwm " + optval);
             }
             return true;
 
         case ZMQ.ZMQ_AFFINITY:
-            affinity = (Long) optval;
+            affinity = ((Number) optval).longValue();
             return true;
 
         case ZMQ.ZMQ_IDENTITY:
             byte[] val = parseBytes(option, optval);
 
-            if (val == null || val.length > 255) {
-                throw new IllegalArgumentException("identity must not be null or less than 255 " + optval);
+            if (val.length > 255) {
+                throw new IllegalArgumentException("Identity length must not be null or less than 255: " + val.length);
             }
             identity = Arrays.copyOf(val, val.length);
             identitySize = (short) identity.length;
             return true;
 
         case ZMQ.ZMQ_RATE:
-            rate = (Integer) optval;
+            rate = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_RECOVERY_IVL:
-            recoveryIvl = (Integer) optval;
+            recoveryIvl = (int) parseDuration(optval).toMillis();
             return true;
 
         case ZMQ.ZMQ_SNDBUF:
-            sndbuf = (Integer) optval;
+            sndbuf = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_RCVBUF:
-            rcvbuf = (Integer) optval;
+            rcvbuf = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_TOS:
-            tos = (Integer) optval;
+            tos = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_LINGER:
-            linger = (Integer) optval;
+            linger = (int) parseDuration(optval).toMillis();
             return true;
 
         case ZMQ.ZMQ_RECONNECT_IVL:
-            reconnectIvl = (Integer) optval;
+            reconnectIvl = (int) parseDuration(optval).toMillis();
 
             if (reconnectIvl < -1) {
                 throw new IllegalArgumentException("reconnectIvl " + optval);
@@ -255,7 +266,7 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_RECONNECT_IVL_MAX:
-            reconnectIvlMax = (Integer) optval;
+            reconnectIvlMax = (int) parseDuration(optval).toMillis();
 
             if (reconnectIvlMax < 0) {
                 throw new IllegalArgumentException("reconnectIvlMax " + optval);
@@ -264,23 +275,23 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_BACKLOG:
-            backlog = (Integer) optval;
+            backlog = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_MAXMSGSIZE:
-            maxMsgSize = (Long) optval;
+            maxMsgSize = ((Number) optval).longValue();
             return true;
 
         case ZMQ.ZMQ_MULTICAST_HOPS:
-            multicastHops = (Integer) optval;
+            multicastHops = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_RCVTIMEO:
-            recvTimeout = (Integer) optval;
+            recvTimeout = (int) parseDuration(optval).toMillis();
             return true;
 
         case ZMQ.ZMQ_SNDTIMEO:
-            sendTimeout = (Integer) optval;
+            sendTimeout = (int) parseDuration(optval).toMillis();
             return true;
 
         /*  Deprecated in favor of ZMQ_IPV6  */
@@ -307,10 +318,10 @@ public class Options
             this.tcpKeepAliveCnt = ((Number) optval).intValue();
             return true;
         case ZMQ.ZMQ_TCP_KEEPALIVE_IDLE:
-            this.tcpKeepAliveIdle = ((Number) optval).intValue();
+            tcpKeepAliveIdle = (int) parseDuration(optval).toMillis();
             return true;
         case ZMQ.ZMQ_TCP_KEEPALIVE_INTVL:
-            this.tcpKeepAliveIntvl = ((Number) optval).intValue();
+            tcpKeepAliveIntvl = (int) parseDuration(optval).toMillis();
             return true;
 
         case ZMQ.ZMQ_IMMEDIATE:
@@ -323,15 +334,15 @@ public class Options
 
         case ZMQ.ZMQ_TCP_ACCEPT_FILTER:
             String filterStr = parseString(option, optval);
-            if (filterStr == null) {
+            if (filterStr.isBlank()) {
                 tcpAcceptFilters.clear();
             }
-            else if (filterStr.isEmpty() || filterStr.length() > 255) {
+            else if (filterStr.length() > 255) {
                 throw new IllegalArgumentException("tcp_accept_filter " + optval);
             }
             else {
-                TcpAddressMask filter = new TcpAddressMask(filterStr, ipv6);
-                tcpAcceptFilters.add(filter);
+                TcpAddressMask tcpFilter = new TcpAddressMask(filterStr, ipv6);
+                tcpAcceptFilters.add(tcpFilter);
             }
             return true;
 
@@ -364,31 +375,39 @@ public class Options
 
         case ZMQ.ZMQ_ZAP_DOMAIN:
             String domain = parseString(option, optval);
-            if (domain != null && domain.length() < 256) {
+            if (domain.length() < 256) {
                 zapDomain = domain;
                 return true;
             }
-            throw new IllegalArgumentException("zap domain length shall be < 256 : " + optval);
+            else {
+                throw new IllegalArgumentException("zap domain length shall be < 256 : " + optval);
+            }
 
         case ZMQ.ZMQ_CURVE_SERVER:
             asServer = parseBoolean(option, optval);
             mechanism = (asServer ? Mechanisms.CURVE : Mechanisms.NULL);
             return true;
 
-        case ZMQ.ZMQ_CURVE_PUBLICKEY:
+        case ZMQ.ZMQ_CURVE_PUBLICKEY: {
+            ValueReference<Boolean> result = new ValueReference<>(false);
             curvePublicKey = setCurveKey(option, optval, result);
             return result.get();
+        }
 
-        case ZMQ.ZMQ_CURVE_SECRETKEY:
+        case ZMQ.ZMQ_CURVE_SECRETKEY: {
+            ValueReference<Boolean> result = new ValueReference<>(false);
             curveSecretKey = setCurveKey(option, optval, result);
             return result.get();
+        }
 
-        case ZMQ.ZMQ_CURVE_SERVERKEY:
+        case ZMQ.ZMQ_CURVE_SERVERKEY: {
+            ValueReference<Boolean> result = new ValueReference<>(false);
             curveServerKey = setCurveKey(option, optval, result);
             if (curveServerKey == null) {
                 asServer = false;
             }
             return result.get();
+        }
 
         case ZMQ.ZMQ_CONFLATE:
             conflate = parseBoolean(option, optval);
@@ -414,38 +433,37 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_HANDSHAKE_IVL:
-            handshakeIvl = (Integer) optval;
+            handshakeIvl = (int) parseDuration(optval).toMillis();
             if (handshakeIvl < 0) {
                 throw new IllegalArgumentException("handshakeIvl only accept positive values " + optval);
             }
             return true;
 
         case ZMQ.ZMQ_HEARTBEAT_IVL:
-            heartbeatInterval = (Integer) optval;
+            heartbeatInterval = (int) parseDuration(optval).toMillis();
             if (heartbeatInterval < 0) {
                 throw new IllegalArgumentException("heartbeatInterval only accept positive values " + optval);
             }
             return true;
 
         case ZMQ.ZMQ_HEARTBEAT_TIMEOUT:
-            heartbeatTimeout = (Integer) optval;
+            heartbeatTimeout = (int) parseDuration(optval).toMillis();
             if (heartbeatTimeout < 0) {
                 throw new IllegalArgumentException("heartbeatTimeout only accept positive values " + optval);
             }
             return true;
 
         case ZMQ.ZMQ_HEARTBEAT_TTL:
-            Integer value = (Integer) optval;
             // Convert this to deciseconds from milliseconds
-            value /= 100;
+            long value = parseDuration(optval).toMillis() / 100;
 
-            if (value >= 0 && value <= 6553) {
-                heartbeatTtl = value;
+            if (value >= 0 && value <= 65535) {
+                heartbeatTtl = (int) value;
+                return true;
             }
             else {
-                throw new IllegalArgumentException("heartbeatTtl is out of range [0..655399]" + optval);
+                throw new IllegalArgumentException("heartbeatTtl is out of range [0..65535]: " + value);
             }
-            return true;
 
         case ZMQ.ZMQ_HEARTBEAT_CONTEXT:
             heartbeatContext = (byte[]) optval;
@@ -486,10 +504,12 @@ public class Options
                 allocator = (MsgAllocator) optval;
                 return true;
             }
-            return false;
+            else {
+                return false;
+            }
 
         case ZMQ.ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD:
-            Integer allocationHeapThreshold = (Integer) optval;
+            int allocationHeapThreshold = ((Number) optval).intValue();
             allocator = new MsgAllocatorThreshold(allocationHeapThreshold);
             return true;
 
@@ -511,7 +531,9 @@ public class Options
                 selectorChooser = (SelectorProviderChooser) optval;
                 return true;
             }
-            return false;
+            else {
+                return false;
+            }
 
         case ZMQ.ZMQ_HELLO_MSG:
             if (optval == null) {
@@ -559,11 +581,11 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_AS_TYPE:
-            this.asType = (Integer) optval;
+            asType = ((Number) optval).intValue();
             return true;
 
         case ZMQ.ZMQ_SELFADDR_PROPERTY_NAME:
-            this.selfAddressPropertyName = parseString(option, optval);
+            selfAddressPropertyName = parseString(option, optval);
             return true;
 
         default:
@@ -575,10 +597,12 @@ public class Options
     {
         try {
             Class<? extends MsgAllocator> msgAllocator = clazz.asSubclass(MsgAllocator.class);
-            return msgAllocator.newInstance();
+            return msgAllocator.getConstructor().newInstance();
         }
-        catch (InstantiationException | IllegalAccessException e) {
+        catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new IllegalArgumentException(e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException(e.getCause());
         }
     }
 
@@ -586,13 +610,16 @@ public class Options
     {
         try {
             Class<? extends SelectorProviderChooser> selectorClazz = clazz.asSubclass(SelectorProviderChooser.class);
-            return selectorClazz.newInstance();
+            return selectorClazz.getConstructor().newInstance();
         }
         catch (ClassCastException e) {
             throw new IllegalArgumentException(e);
         }
-        catch (InstantiationException | IllegalAccessException e) {
+        catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new ZError.InstantiationException(e);
+        }
+        catch (InvocationTargetException e) {
+            throw new ZError.InstantiationException(e.getCause());
         }
     }
 
@@ -655,171 +682,196 @@ public class Options
         }
     }
 
-    @SuppressWarnings("deprecation")
-    public Object getSocketOpt(int option)
+    @SuppressWarnings({"deprecation", "unchecked"})
+    public <T> T getSocketOpt(int option)
     {
         switch (option) {
         case ZMQ.ZMQ_SNDHWM:
-            return sendHwm;
+            return (T) Integer.valueOf(sendHwm);
 
         case ZMQ.ZMQ_RCVHWM:
-            return recvHwm;
+            return (T) Integer.valueOf(recvHwm);
 
         case ZMQ.ZMQ_AFFINITY:
-            return affinity;
+            return (T) Long.valueOf(affinity);
 
         case ZMQ.ZMQ_IDENTITY:
-            return identity;
+            return (T) identity;
 
         case ZMQ.ZMQ_RATE:
-            return rate;
+            return (T) Integer.valueOf(rate);
 
         case ZMQ.ZMQ_RECOVERY_IVL:
-            return recoveryIvl;
+            return (T) Integer.valueOf(recoveryIvl);
 
         case ZMQ.ZMQ_SNDBUF:
-            return sndbuf;
+            return (T) Integer.valueOf(sndbuf);
 
         case ZMQ.ZMQ_RCVBUF:
-            return rcvbuf;
+            return (T) Integer.valueOf(rcvbuf);
 
         case ZMQ.ZMQ_TOS:
-            return tos;
+            return (T) Integer.valueOf(tos);
 
         case ZMQ.ZMQ_TYPE:
-            return type;
+            return (T) Integer.valueOf(type);
 
         case ZMQ.ZMQ_LINGER:
-            return linger;
+            return (T) Integer.valueOf(linger);
 
         case ZMQ.ZMQ_RECONNECT_IVL:
-            return reconnectIvl;
+            return (T) Integer.valueOf(reconnectIvl);
 
         case ZMQ.ZMQ_RECONNECT_IVL_MAX:
-            return reconnectIvlMax;
+            return (T) Integer.valueOf(reconnectIvlMax);
 
         case ZMQ.ZMQ_BACKLOG:
-            return backlog;
+            return (T) Integer.valueOf(backlog);
 
         case ZMQ.ZMQ_MAXMSGSIZE:
-            return maxMsgSize;
+            return (T) Long.valueOf(maxMsgSize);
 
         case ZMQ.ZMQ_MULTICAST_HOPS:
-            return multicastHops;
+            return (T) Integer.valueOf(multicastHops);
 
         case ZMQ.ZMQ_RCVTIMEO:
-            return recvTimeout;
+            return (T) Integer.valueOf(recvTimeout);
 
         case ZMQ.ZMQ_SNDTIMEO:
-            return sendTimeout;
+            return (T) Integer.valueOf(sendTimeout);
 
         case ZMQ.ZMQ_IPV4ONLY:
-            return !ipv6;
+            return (T) Boolean.valueOf(!ipv6);
 
         case ZMQ.ZMQ_IPV6:
-            return ipv6;
+            return (T) Boolean.valueOf(ipv6);
 
         case ZMQ.ZMQ_TCP_KEEPALIVE:
-            return tcpKeepAlive;
+            return (T) Integer.valueOf(tcpKeepAlive);
 
         case ZMQ.ZMQ_IMMEDIATE:
-            return immediate;
+            return (T) Boolean.valueOf(immediate);
 
         case ZMQ.ZMQ_DELAY_ATTACH_ON_CONNECT:
-            return !immediate;
+            return (T) Boolean.valueOf(!immediate);
 
         case ZMQ.ZMQ_SOCKS_PROXY:
-            return socksProxyAddress;
+            return (T) socksProxyAddress;
 
         case ZMQ.ZMQ_TCP_KEEPALIVE_CNT:
-            return tcpKeepAliveCnt;
+            return (T) Integer.valueOf(tcpKeepAliveCnt);
+
         case ZMQ.ZMQ_TCP_KEEPALIVE_IDLE:
-            return tcpKeepAliveIdle;
+            return (T) Integer.valueOf(tcpKeepAliveIdle);
+
         case ZMQ.ZMQ_TCP_KEEPALIVE_INTVL:
-            return tcpKeepAliveIntvl;
+            return (T) Integer.valueOf(tcpKeepAliveIntvl);
 
         case ZMQ.ZMQ_MECHANISM:
-            return mechanism;
+            return (T) mechanism;
 
         case ZMQ.ZMQ_PLAIN_SERVER:
-            return asServer && mechanism == Mechanisms.PLAIN;
+            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.PLAIN);
 
         case ZMQ.ZMQ_PLAIN_USERNAME:
-            return plainUsername;
+            return (T) plainUsername;
 
         case ZMQ.ZMQ_PLAIN_PASSWORD:
-            return plainPassword;
+            return (T) plainPassword;
 
         case ZMQ.ZMQ_ZAP_DOMAIN:
-            return zapDomain;
+            return (T) zapDomain;
 
         case ZMQ.ZMQ_LAST_ENDPOINT:
-            return lastEndpoint;
+            return (T) lastEndpoint;
 
         case ZMQ.ZMQ_CURVE_SERVER:
-            return asServer && mechanism == Mechanisms.CURVE;
+            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.CURVE);
 
         case ZMQ.ZMQ_CURVE_PUBLICKEY:
-            return curvePublicKey;
+            return (T) curvePublicKey;
 
         case ZMQ.ZMQ_CURVE_SERVERKEY:
-            return curveServerKey;
+            return (T) curveServerKey;
 
         case ZMQ.ZMQ_CURVE_SECRETKEY:
-            return curveSecretKey;
+            return (T) curveSecretKey;
 
         case ZMQ.ZMQ_CONFLATE:
-            return conflate;
+            return (T) Boolean.valueOf(conflate);
 
         case ZMQ.ZMQ_GSSAPI_SERVER:
-            return asServer && mechanism == Mechanisms.GSSAPI;
+            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.GSSAPI);
 
         case ZMQ.ZMQ_GSSAPI_PRINCIPAL:
-            return gssPrincipal;
+            return (T) gssPrincipal;
 
         case ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL:
-            return gssServicePrincipal;
+            return (T) gssServicePrincipal;
 
         case ZMQ.ZMQ_GSSAPI_PLAINTEXT:
-            return gssPlaintext;
+            return (T) Boolean.valueOf(gssPlaintext);
 
         case ZMQ.ZMQ_HANDSHAKE_IVL:
-            return handshakeIvl;
+            return (T) Integer.valueOf(handshakeIvl);
 
         case ZMQ.ZMQ_HEARTBEAT_IVL:
-            return heartbeatInterval;
+            return (T) Integer.valueOf(heartbeatInterval);
 
         case ZMQ.ZMQ_HEARTBEAT_TIMEOUT:
-            return heartbeatTimeout;
+            return (T) Integer.valueOf(heartbeatTimeout);
 
         case ZMQ.ZMQ_HEARTBEAT_TTL:
             // Convert the internal deciseconds value to milliseconds
-            return heartbeatTtl * 100;
+            return (T) Integer.valueOf(heartbeatTtl * 100);
 
         case ZMQ.ZMQ_HEARTBEAT_CONTEXT:
-            return heartbeatContext;
+            return (T) heartbeatContext;
 
         case ZMQ.ZMQ_MSG_ALLOCATOR:
-            return allocator;
+            return(T)  allocator;
 
         case ZMQ.ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD:
             if (allocator instanceof MsgAllocatorThreshold) {
                 MsgAllocatorThreshold all = (MsgAllocatorThreshold) allocator;
-                return all.threshold;
+                return (T) Integer.valueOf(all.threshold);
             }
-            return -1;
+            else {
+                return (T) Integer.valueOf(-1);
+            }
 
         case ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER:
-            return selectorChooser;
+            return (T) selectorChooser;
 
         case ZMQ.ZMQ_AS_TYPE:
-            return asType;
+            return (T) Integer.valueOf(asType);
 
         case ZMQ.ZMQ_SELFADDR_PROPERTY_NAME:
-            return selfAddressPropertyName;
+            return (T) selfAddressPropertyName;
 
         default:
             throw new IllegalArgumentException("option=" + option);
+        }
+    }
+
+    public static Duration parseDuration(Object duration) {
+        if (duration instanceof Duration) {
+            return (Duration) duration;
+        }
+        else if (duration instanceof Float || duration instanceof Double) {
+            double floatDuration = (duration instanceof Double) ? (Double) duration : (Float) duration;
+            return Duration.ofNanos(
+                    BigDecimal.valueOf(floatDuration)
+                            .multiply(BigDecimal.valueOf(1_000_000_000L))
+                            .longValue()
+            );
+        }
+        else if (duration instanceof Number){
+            long durationLong = ((Number) duration).longValue();
+            return Duration.ofMillis(durationLong);
+        }
+        else {
+            throw new IllegalArgumentException("Unhandled duration " + duration);
         }
     }
 

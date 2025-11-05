@@ -286,7 +286,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final int getSocketOpt(int option)
+    public int getSocketOpt(int option)
     {
         lock();
 
@@ -319,17 +319,20 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             if (val instanceof Integer) {
                 return (Integer) val;
             }
-            if (val instanceof Boolean) {
+            else if (val instanceof Boolean) {
                 return (Boolean) val ? 1 : 0;
             }
-            throw new IllegalArgumentException(val + " is neither an integer or a boolean for option " + option);
+            else {
+                throw new IllegalArgumentException(val + " is neither an integer or a boolean for option " + option);
+            }
         }
         finally {
             unlock();
         }
     }
 
-    public final Object getSocketOptx(int option)
+    @SuppressWarnings("unchecked")
+    public final <T>T getSocketOptx(int option)
     {
         if (ctxTerminated.get()) {
             errno.set(ZError.ETERM);
@@ -337,7 +340,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
 
         if (option == ZMQ.ZMQ_RCVMORE) {
-            return rcvmore ? 1 : 0;
+            return (T) Boolean.valueOf(rcvmore);
         }
 
         if (option == ZMQ.ZMQ_FD) {
@@ -347,13 +350,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
                 return null;
             }
 
-            return ((Mailbox) mailbox).getFd();
+            return (T) ((Mailbox) mailbox).getFd();
         }
 
         if (option == ZMQ.ZMQ_EVENTS) {
             boolean rc = processCommands(0, false, null);
             if (!rc && (errno.get() == ZError.ETERM || errno.get() == ZError.EINTR)) {
-                return -1;
+                return (T) Integer.valueOf(-1);
             }
             assert (rc);
             int val = 0;
@@ -363,7 +366,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             if (hasIn()) {
                 val |= ZMQ.ZMQ_POLLIN;
             }
-            return val;
+            return (T) Integer.valueOf(val);
         }
         //  If the socket type doesn't support the option, pass it to
         //  the generic option parser.

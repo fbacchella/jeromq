@@ -1,11 +1,6 @@
 package zmq;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
+import java.time.Duration;
 import java.util.Arrays;
 
 import org.junit.Assert;
@@ -20,6 +15,12 @@ import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocatorDirect;
 import zmq.msg.MsgAllocatorThreshold;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class OptionsTest
 {
@@ -49,9 +50,16 @@ public class OptionsTest
     }
 
     @Test
-    public void testAllocator()
+    public void testAllocatorInstance()
     {
         options.setSocketOpt(ZMQ.ZMQ_MSG_ALLOCATOR, new MsgAllocatorDirect());
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MSG_ALLOCATOR), is(options.allocator));
+    }
+
+    @Test
+    public void testAllocatorInstanceClassName()
+    {
+        options.setSocketOpt(ZMQ.ZMQ_MSG_ALLOCATOR, MsgAllocatorDirect.class.getName());
         assertThat(options.getSocketOpt(ZMQ.ZMQ_MSG_ALLOCATOR), is(options.allocator));
     }
 
@@ -81,6 +89,10 @@ public class OptionsTest
     {
         options.setSocketOpt(ZMQ.ZMQ_RECOVERY_IVL, 11);
         assertThat(options.getSocketOpt(ZMQ.ZMQ_RECOVERY_IVL), is(11));
+        options.setSocketOpt(ZMQ.ZMQ_RECOVERY_IVL, Duration.ofMillis(12));
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_RECOVERY_IVL), is(12));
+        options.setSocketOpt(ZMQ.ZMQ_RECOVERY_IVL, 0.013);
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_RECOVERY_IVL), is(13));
     }
 
     @Test
@@ -173,21 +185,21 @@ public class OptionsTest
     @Test
     public void testHeartbeatInterval()
     {
-        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_IVL, 1000);
+        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_IVL, Duration.ofMillis(1000));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_IVL), is(1000));
     }
 
     @Test
     public void testHeartbeatTimeout()
     {
-        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TIMEOUT, 1001);
+        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TIMEOUT, Duration.ofMillis(1001));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_TIMEOUT), is(1001));
     }
 
     @Test
     public void testHeartbeatTtlRounded()
     {
-        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL, 2020);
+        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL, Duration.ofMillis(2020));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL), is(2000));
     }
 
@@ -212,10 +224,12 @@ public class OptionsTest
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL), is(655300));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testHeartbeatTtlOverflow()
     {
-        options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL, 655400);
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class,
+                () -> options.setSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL, (65535 + 1) * 100));
+        Assert.assertEquals("heartbeatTtl is out of range [0..65535]: 65536", ex.getMessage());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -278,11 +292,12 @@ public class OptionsTest
         opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, String.class.getName());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSelectorFailed()
     {
         Options opt = new Options();
-        Assert.assertFalse(opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, ""));
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, ""));
+        Assert.assertEquals("java.lang.ClassNotFoundException: ", ex.getMessage());
     }
 
     @Test
@@ -293,12 +308,13 @@ public class OptionsTest
         Assert.assertTrue(opt.setSocketOpt(ZMQ.ZMQ_IDENTITY, new byte[255]));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testIdentityFails()
     {
         Options opt = new Options();
         // Try with a big identity
-        Assert.assertTrue(opt.setSocketOpt(ZMQ.ZMQ_IDENTITY, new byte[256]));
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> opt.setSocketOpt(ZMQ.ZMQ_IDENTITY, new byte[256]));
+        Assert.assertEquals("Identity length must not be null or less than 255: 256", ex.getMessage());
     }
 
     @Test
