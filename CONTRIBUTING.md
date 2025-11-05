@@ -2,7 +2,8 @@
 
 ## Contribution Process
 
-This project uses the [C4 process](https://rfc.zeromq.org/spec:42/C4/) for all code changes. "Everyone, without distinction or discrimination, SHALL have an equal right to become a Contributor under the terms of this contract."
+This project was using the [C4 process](https://rfc.zeromq.org/spec:42/C4/) for all code changes. "Everyone, without distinction or discrimination, SHALL have an equal right to become a Contributor under the terms of this contract."
+But it was more a problem than a solution and this fork dropped this. It now uses the BDFL (Benevolent dictator for life) model.
 
 ## General Information
 
@@ -37,8 +38,3 @@ Or run this [helper script](scripts/run-example):
 ```
 scripts/run-example hwserver
 ```
-
-## JeroMQ wiki
-
-For miscellaneous information that hasn't yet been pulled into this document, please see the [wiki](https://github.com/zeromq/jeromq/wiki).
-

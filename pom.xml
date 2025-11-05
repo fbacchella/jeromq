@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.zeromq</groupId>
+  <groupId>fr.loghub</groupId>
   <artifactId>jeromq-pom</artifactId>
   <packaging>pom</packaging>
   <version>0.7.0-SNAPSHOT</version>
   <name>JeroMQ</name>
   <description>Pure Java implementation of libzmq</description>
-  <url>https://github.com/zeromq/jeromq</url>
+  <url>https://github.com/fbacchella/jeromq</url>
   <licenses>
     <license>
       <name>Mozilla Public License version 2.0</name>
@@ -14,10 +14,9 @@
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:zeromq/jeromq.git</url>
-    <connection>scm:git:git@github.com:zeromq/jeromq.git</connection>
-    <developerConnection>scm:git:git@github.com:zeromq/jeromq.git</developerConnection>
-    <tag>HEAD</tag>
+    <url>git@github.com:fbacchella/jeromq.git</url>
+    <connection>scm:git:git@github.com:fbacchella/jeromq.git</connection>
+    <developerConnection>scm:git:git@fbacchella/jeromq.git</developerConnection>
   </scm>
   <developers>
     <developer>

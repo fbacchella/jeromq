@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.zeromq</groupId>
+    <groupId>fr.loghub</groupId>
     <artifactId>jeromq-pom</artifactId>
     <version>0.7.0-SNAPSHOT</version>
   </parent>
@@ -9,7 +9,7 @@
   <packaging>jar</packaging>
   <name>JeroMQ :: IPC Unix sockets</name>
   <description>Java 16 IPS Unix sockets for jeromq</description>
-  <url>https://github.com/zeromq/jeromq</url>
+  <url>https://github.com/fbacchella/jeromq</url>
   <properties>
     <maven.compiler.release>16</maven.compiler.release>
     <checkstyle.file>${project.basedir}/../src/checkstyle/checks.xml</checkstyle.file>
@@ -18,13 +18,13 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>org.zeromq</groupId>
+      <groupId>fr.loghub</groupId>
       <artifactId>jeromq-core</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.zeromq</groupId>
+      <groupId>fr.loghub</groupId>
       <artifactId>jeromq-core</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
