@@ -2,61 +2,32 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>fr.loghub</groupId>
     <artifactId>jeromq-pom</artifactId>
     <packaging>pom</packaging>
     <version>2.0.0-SNAPSHOT</version>
-    <name>JeroMQ</name>
+
+    <name>JeroMQ :: POM</name>
     <description>Pure Java implementation of libzmq</description>
     <url>https://github.com/fbacchella/jeromq</url>
-    <licenses>
-        <license>
-            <name>Mozilla Public License version 2.0</name>
-            <url>https://www.mozilla.org/en-US/MPL/2.0</url>
-        </license>
-    </licenses>
-    <scm>
-        <url>git@github.com:fbacchella/jeromq.git</url>
-        <connection>scm:git:git@github.com:fbacchella/jeromq.git</connection>
-        <developerConnection>scm:git:git@fbacchella/jeromq.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-    <developers>
-        <developer>
-            <name>Trevor Bernard</name>
-            <id>trevorbernard</id>
-        </developer>
-        <developer>
-            <name>Dongmin Yu</name>
-            <id>miniway</id>
-        </developer>
-        <developer>
-            <name>Fabrice Bacchella</name>
-            <id>fbacchella</id>
-        </developer>
-        <developer>
-            <name>Dave Yarwood</name>
-            <id>daveyarwood</id>
-        </developer>
-        <developer>
-            <name>Frédéric Déléchamp</name>
-            <id>fredoboulo</id>
-        </developer>
-    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
         <!-- Indirection needed to keep optional jacoco settings and external argument lines-->
         <arg.line />
         <argLine>${arg.line}</argLine>
-        <checkstyle.file>${project.basedir}/src/checkstyle/checks.xml</checkstyle.file>
+        <checkstyle.file>${maven.multiModuleProjectDirectory}</checkstyle.file>
         <maven.install.skip>false</maven.install.skip>
     </properties>
+
     <modules>
         <module>jeromq-core</module>
         <module>jeromq-ipcsockets</module>
         <module>jeromq</module>
     </modules>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -65,16 +36,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>central</id>
-            <url>https://central.sonatype.com/repository/maven-snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2</url>
-        </repository>
-    </distributionManagement>
+
     <build>
         <pluginManagement>
             <plugins>
@@ -252,6 +214,7 @@
             </plugin>
         </plugins>
     </reporting>
+
     <profiles>
         <profile>
             <!-- Used with the phase 'site' to check plugins and dependency versions -->
@@ -352,4 +315,49 @@
             </build>
         </profile>
     </profiles>
+
+    <licenses>
+        <license>
+            <name>Mozilla Public License version 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0</url>
+        </license>
+    </licenses>
+    <scm>
+        <url>git@github.com:fbacchella/jeromq.git</url>
+        <connection>scm:git:git@github.com:fbacchella/jeromq.git</connection>
+        <developerConnection>scm:git:git@fbacchella/jeromq.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <developers>
+        <developer>
+            <name>Trevor Bernard</name>
+            <id>trevorbernard</id>
+        </developer>
+        <developer>
+            <name>Dongmin Yu</name>
+            <id>miniway</id>
+        </developer>
+        <developer>
+            <name>Fabrice Bacchella</name>
+            <id>fbacchella</id>
+        </developer>
+        <developer>
+            <name>Dave Yarwood</name>
+            <id>daveyarwood</id>
+        </developer>
+        <developer>
+            <name>Frédéric Déléchamp</name>
+            <id>fredoboulo</id>
+        </developer>
+    </developers>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+    </distributionManagement>
 </project>

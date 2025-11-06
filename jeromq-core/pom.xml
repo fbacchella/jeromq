@@ -2,20 +2,22 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>fr.loghub</groupId>
         <artifactId>jeromq-pom</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
+
     <artifactId>jeromq-core</artifactId>
-    <packaging>jar</packaging>
+
     <name>JeroMQ :: Core</name>
     <description>The core code of jeromq</description>
-    <url>https://github.com/zeromq/jeromq</url>
+
     <properties>
-        <checkstyle.file>${project.basedir}/../src/checkstyle/checks.xml</checkstyle.file>
         <maven.install.skip>true</maven.install.skip>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>eu.neilalexander</groupId>
@@ -23,6 +25,7 @@
             <version>1.0.0</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
