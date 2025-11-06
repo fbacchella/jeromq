@@ -110,10 +110,13 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.8.14</version>
         </plugin>
+        <!-- to be upgraded when issue
+             https://sonarsource.atlassian.net/jira/software/c/projects/SCANMAVEN/issues/?selectedIssue=SCANMAVEN-268
+             is corrected, and version 3.11 is also broken -->
         <plugin>
-            <groupId>org.sonarsource.scanner.maven</groupId>
-            <artifactId>sonar-maven-plugin</artifactId>
-            <version>5.2.0.4988</version>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>3.10.0.2594</version>
         </plugin>
         <plugin>
             <groupId>org.eluder.coveralls</groupId>
