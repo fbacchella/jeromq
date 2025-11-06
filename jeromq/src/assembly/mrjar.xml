@@ -10,7 +10,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.zeromq:jeromq-core</include>
+                <include>fr.loghub:jeromq-core</include>
             </includes>
             <binaries>
                 <unpack>true</unpack>
@@ -20,7 +20,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.zeromq:jeromq-ipcsockets</include>
+                <include>fr.loghub:jeromq-ipcsockets</include>
             </includes>
             <binaries>
                 <outputDirectory>META-INF/versions/16</outputDirectory>
