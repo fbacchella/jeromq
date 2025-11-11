@@ -7,9 +7,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
-import org.zeromq.ZMQException;
-
-import zmq.ZError;
 import zmq.io.net.Address;
 import zmq.io.net.ProtocolFamily;
 import zmq.io.net.StandardProtocolFamily;
@@ -81,12 +78,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
         if (addressPort == 0) {
             addressPort = port;
         }
-        if (address.getAddress() instanceof Inet6Address) {
-            return "tcp://[" + address.getAddress().getHostAddress() + "]:" + addressPort;
-        }
-        else {
-            return "tcp://" + address.getAddress().getHostAddress() + ":" + addressPort;
-        }
+        return "tcp://" + address.getHostString() + ":" + addressPort;
     }
 
     /**
@@ -102,16 +94,16 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
         //  Find the ':' at end that separates address from the port number.
         int delimiter = name.lastIndexOf(':');
         if (delimiter < 0) {
-            throw new IllegalArgumentException(name);
+            throw new IllegalArgumentException(String.format("Not a ZMQ adress \"%s\"", name));
         }
 
         //  Separate the address/port.
         String addrStr = name.substring(0, delimiter);
         String portStr = name.substring(delimiter + 1);
 
-        //  Remove square brackets around the address, if any.
+        // [], an IPv6 was requested
         if (addrStr.length() >= 2 && addrStr.charAt(0) == '[' && addrStr.charAt(addrStr.length() - 1) == ']') {
-            addrStr = addrStr.substring(1, addrStr.length() - 1);
+            ipv6 = true;
         }
 
         int port;
@@ -121,10 +113,10 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
             port = 0;
         }
         else {
-            //  Parse the port number (0 is not a valid port).
-            port = Integer.parseInt(portStr);
-            if (port == 0) {
-                throw new IllegalArgumentException(name);
+            try {
+                port = Integer.parseInt(portStr);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format("Not a integer for the port of \"%s\": %s", name, portStr));
             }
         }
 
@@ -132,7 +124,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
 
         // '*' as unspecified address is not accepted in Java
         // '::' for IPv6 is accepted
-        if (addrStr.equals("*")) {
+        if (addrStr.equals("*") || addrStr.equals("[*]")) {
             addrStr = ipv6 ? "::" : "0.0.0.0";
         }
 
@@ -160,11 +152,11 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
             }
         }
         catch (UnknownHostException e) {
-            throw new ZMQException("failed connecting to " + addrStr + ": " + e.getMessage(), ZError.EADDRNOTAVAIL, e);
+            throw new IllegalArgumentException(String.format("Failed connecting to \"%s\": %s", name, e.getMessage()), e);
         }
 
         if (addrNet == null) {
-            throw new ZMQException(addrStr + " not found matching IPv4/IPv6 settings", ZError.EADDRNOTAVAIL);
+            throw new IllegalArgumentException(String.format("Not found matching IPv4/IPv6 \"%s\" address for \"%s\"", addrStr, name));
         }
 
         return new InetSocketAddress(addrNet, port);

@@ -1,11 +1,13 @@
 package zmq.io.net;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Random;
 
+import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQException;
+
+import zmq.io.net.Address.IZAddress;
 
 public class TestAddress
 {
@@ -13,8 +15,7 @@ public class TestAddress
     public void testToNotResolvedToString()
     {
         Address addr = new Address("tcp", "google.com:90");
-        String saddr = addr.toString();
-        assertThat(saddr, is("tcp://google.com:90"));
+        Assert.assertEquals("tcp://google.com:90", addr.toString());
     }
 
     @Test
@@ -22,13 +23,79 @@ public class TestAddress
     {
         Address addr = new Address("tcp", "google.com:90");
         addr.resolve(false);
-        String resolved = addr.toString();
-        assertTrue(resolved.matches("tcp://\\d+\\.\\d+\\.\\d+\\.\\d+:90"));
+        Assert.assertEquals("tcp://google.com:90", addr.toString());
     }
 
-    @Test(expected = ZMQException.class)
-    public void testInvalid()
+    @Test
+    public void testSourceAddress()
     {
-        new Address("tcp", "ggglocalhostxxx.google.com:80").resolve(false);
+        IZAddress<InetSocketAddress> addr = new Address("tcp", "google.com:90;localhost:10").resolve(false);
+        Assert.assertEquals(new InetSocketAddress("google.com", 90), addr.address());
+        Assert.assertEquals(new InetSocketAddress("localhost", 10), addr.sourceAddress());
+    }
+
+    @Test
+    public void testWildCard1()
+    {
+        IZAddress<InetSocketAddress> addr = new Address("tcp", "google.com:0").resolve(false);
+        Assert.assertEquals(0, addr.address().getPort());
+    }
+
+    @Test
+    public void testWildCard2()
+    {
+        IZAddress<InetSocketAddress> addr = new Address("tcp", "google.com:*").resolve(false);
+        Assert.assertEquals(0, addr.address().getPort());
+    }
+
+    @Test
+    public void testIpv6Wildcard1()
+    {
+        IZAddress<InetSocketAddress> addr = new Address("tcp", "[*]:*").resolve(false);
+        Assert.assertEquals(0, addr.address().getPort());
+        Assert.assertEquals("/0:0:0:0:0:0:0:0", addr.address().getAddress().toString());
+        Assert.assertEquals(StandardProtocolFamily.INET6, addr.family());
+    }
+
+    @Test
+    public void testIpv6Wildcard2()
+    {
+        IZAddress<InetSocketAddress> addr = new Address("tcp", "*:*").resolve(true);
+        Assert.assertEquals(0, addr.address().getPort());
+        Assert.assertEquals("/0:0:0:0:0:0:0:0", addr.address().getAddress().toString());
+        Assert.assertEquals(StandardProtocolFamily.INET6, addr.family());
+    }
+
+    @Test
+    public void testInvalid1()
+    {
+        String hostName = String.format("%s.google.com", new Random().nextLong());
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> new Address("tcp", hostName + ":80").resolve(false));
+        String expected = String.format("Failed connecting to \"%s:80\": ", hostName);
+        // Don't check the full message, different JVM change it
+        Assert.assertTrue(ex.getMessage().startsWith(expected));
+        Assert.assertEquals(UnknownHostException.class, ex.getCause().getClass());
+
+    }
+
+    @Test
+    public void testInvalid2()
+    {
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> new Address("tcp", "www.google.com:-1").resolve(false));
+        Assert.assertEquals("port out of range:-1", ex.getMessage());
+    }
+
+    @Test
+    public void testInvalid3()
+    {
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> new Address("tcp", "www.google.com").resolve(false));
+        Assert.assertEquals("Not a ZMQ adress \"www.google.com\"", ex.getMessage());
+    }
+
+    @Test
+    public void testInvalid4()
+    {
+        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> new Address("tcp", "www.google.com:a").resolve(false));
+        Assert.assertEquals("Not a integer for the port of \"www.google.com:a\": a", ex.getMessage());
     }
 }
