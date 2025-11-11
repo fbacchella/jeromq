@@ -1,6 +1,8 @@
 package zmq.io.net.ipc;
 
 import java.io.IOException;
+import java.net.ProtocolFamily;
+import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,8 +11,6 @@ import org.zeromq.ZMQException;
 
 import zmq.ZError;
 import zmq.io.net.Address;
-import zmq.io.net.ProtocolFamily;
-import zmq.io.net.StandardProtocolFamily;
 
 public class IpcAddress implements Address.IZAddress<UnixDomainSocketAddress>
 {

@@ -1,6 +1,7 @@
 package zmq.io.net;
 
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.net.UnknownHostException;
 import java.util.Random;
 

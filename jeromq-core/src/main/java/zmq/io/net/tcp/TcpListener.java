@@ -2,6 +2,7 @@ package zmq.io.net.tcp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Locale;
@@ -11,7 +12,6 @@ import zmq.SocketBase;
 import zmq.io.IOThread;
 import zmq.io.net.AbstractSocketListener;
 import zmq.io.net.Address;
-import zmq.io.net.StandardProtocolFamily;
 
 public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAddress>
 {

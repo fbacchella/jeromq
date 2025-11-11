@@ -1,5 +1,6 @@
 package zmq.io.net;
 
+import java.net.ProtocolFamily;
 import java.net.SocketAddress;
 
 public class Address<S extends SocketAddress>

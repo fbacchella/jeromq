@@ -2,6 +2,7 @@ package zmq.io.net.tcp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
 import java.nio.channels.SocketChannel;
 
 import zmq.Options;
@@ -9,7 +10,6 @@ import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.AbstractSocketConnecter;
 import zmq.io.net.Address;
-import zmq.io.net.StandardProtocolFamily;
 
 public class TcpConnecter extends AbstractSocketConnecter<InetSocketAddress>
 {

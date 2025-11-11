@@ -4,12 +4,12 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ProtocolFamily;
 import java.net.SocketAddress;
+import java.net.StandardProtocolFamily;
 import java.net.UnknownHostException;
 
 import zmq.io.net.Address;
-import zmq.io.net.ProtocolFamily;
-import zmq.io.net.StandardProtocolFamily;
 
 public class TcpAddress implements Address.IZAddress<InetSocketAddress>
 {
