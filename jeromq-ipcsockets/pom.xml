@@ -42,6 +42,14 @@
           <rerunFailingTestsCount>5</rerunFailingTestsCount>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <extensions>true</extensions>
+          <configuration>
+            <skipPublishing>true</skipPublishing>
+          </configuration>
+      </plugin>
     </plugins>
   </build>
   <reporting>
