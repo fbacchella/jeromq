@@ -3,7 +3,7 @@
   <parent>
     <groupId>fr.loghub</groupId>
     <artifactId>jeromq-pom</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.7.0</version>
   </parent>
   <groupId>fr.loghub</groupId>
   <artifactId>jeromq</artifactId>
