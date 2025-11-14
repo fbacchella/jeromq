@@ -3,11 +3,10 @@
 
 Pure Java implementation of libzmq (http://zeromq.org).
 
-[![CircleCI](https://circleci.com/gh/zeromq/jeromq.svg?style=svg)](https://circleci.com/gh/zeromq/jeromq)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=zeromq_jeromq&metric=alert_status)](https://sonarcloud.io/dashboard?id=zeromq_jeromq)
-[![Coverage Status](https://coveralls.io/repos/github/zeromq/jeromq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/jeromq?branch=master)
-[![Maven Central](https://img.shields.io/maven-central/v/org.zeromq/jeromq.svg)](https://maven-badges.herokuapp.com/maven-central/org.zeromq/jeromq)
-[![Javadocs](http://www.javadoc.io/badge/org.zeromq/jeromq.svg)](http://www.javadoc.io/doc/org.zeromq/jeromq)
+[![CircleCI](https://circleci.com/gh/fbacchella/jeromq.svg?style=svg)](https://circleci.com/gh/fbacchella/jeromq)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fr.loghub%3Ajeromq&metric=alert_status)](https://sonarcloud.io/dashboard?id=fr.loghub%3Ajeromq)
+[![Maven Central](https://img.shields.io/maven-central/v/fr.loghub/jeromq.svg)](https://maven-badges.herokuapp.com/maven-central/fr.loghub/jeromq)
+[![Javadocs](http://www.javadoc.io/badge/fbacchella/jeromq.svg)](http://www.javadoc.io/doc/org.zeromq/jeromq)
 
 ## Features
 
@@ -50,23 +49,23 @@ Add it to your Maven project's `pom.xml`:
 
 ```xml
     <dependency>
-      <groupId>org.zeromq</groupId>
+      <groupId>fr.loghub</groupId>
       <artifactId>jeromq</artifactId>
-      <version>0.6.0</version>
+      <version>0.7.0</version>
     </dependency>
 
     <!-- for the latest SNAPSHOT -->
     <dependency>
-      <groupId>org.zeromq</groupId>
+      <groupId>fr.loghub</groupId>
       <artifactId>jeromq</artifactId>
-      <version>0.6.0</version>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
 
     <!-- If you can't find the latest snapshot -->
     <repositories>
       <repository>
-        <id>sonatype-nexus-snapshots</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+          <id>central</id>
+          <url>https://central.sonatype.com/repository/maven-snapshots</url>
         <releases>
           <enabled>false</enabled>
         </releases>

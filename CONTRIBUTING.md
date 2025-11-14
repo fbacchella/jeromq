@@ -2,11 +2,13 @@
 
 ## Contribution Process
 
-This project uses the [C4 process](https://rfc.zeromq.org/spec:42/C4/) for all code changes. "Everyone, without distinction or discrimination, SHALL have an equal right to become a Contributor under the terms of this contract."
+This project was using the [C4 process](https://rfc.zeromq.org/spec:42/C4/) for all code changes.
+But it was more a problem than a solution and this fork dropped this. It now uses the BDFL (Benevolent dictator for life) model.
 
 ## General Information
 
-These [slides](http://www.slideshare.net/dongminyu/zeromq-jeromq) (a visualization of the [Internal Architecture of libzmq](http://zeromq.org/whitepapers:architecture) page) may be helpful if you are interesting in contributing to JeroMQ.
+These [slides](http://www.slideshare.net/dongminyu/zeromq-jeromq) (a visualization of the [Internal Architecture of libzmq](http://zeromq.org/whitepapers:architecture) page) may be helpful if you are interested
+in contributing to JeroMQ.
 
 ## Running the Tests
 
