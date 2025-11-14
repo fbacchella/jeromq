@@ -4,6 +4,7 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,8 +12,6 @@ import java.util.function.BiFunction;
 
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZThread.IAttachedRunnable;
-
-import zmq.util.Objects;
 
 /**
  * First implementation for the base of a remotely controlled background service for 0MQ.

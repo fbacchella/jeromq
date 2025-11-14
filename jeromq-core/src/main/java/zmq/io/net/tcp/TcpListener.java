@@ -87,9 +87,7 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
             TcpUtils.setReuseAddress(fd, true);
         }
 
-        //  Bind the socket to the network interface and port.
-        // NB: fd.socket().bind(...) for Android environments
-        fd.socket().bind(address.address(), options.backlog);
+        fd.bind(address.address(), options.backlog);
     }
 
     @Override

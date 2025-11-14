@@ -104,9 +104,8 @@ public class ZContext implements Closeable
             this.shadows = parent.shadows;
             this.shadows.add(this);
         }
-        // Android compatibility: not using ConcurrentHashMap.newKeySet()
-        this.sockets = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.selectors = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.sockets = ConcurrentHashMap.newKeySet();
+        this.selectors = ConcurrentHashMap.newKeySet();
         this.ioThreads = ioThreads;
         this.linger = 0;
         this.pipehwm = 1000;

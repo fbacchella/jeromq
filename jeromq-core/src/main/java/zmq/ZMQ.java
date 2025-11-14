@@ -249,7 +249,6 @@ public class ZMQ
 
     public static final byte[] SUBSCRIPTION_ALL = new byte[0];
 
-    // Android compatibility: not using StandardCharsets (API 19+)
     public static final Charset CHARSET = StandardCharsets.UTF_8;
 
     public static final byte[] PROXY_PAUSE     = "PAUSE".getBytes(ZMQ.CHARSET);

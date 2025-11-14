@@ -10,14 +10,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMQ.Socket.Mechanism;
 import org.zeromq.util.ZMetadata;
-
-import zmq.util.Objects;
 
 /**
  * A ZAuth actor takes over authentication for all incoming connections in
