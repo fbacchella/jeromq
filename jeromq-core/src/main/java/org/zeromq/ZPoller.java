@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -325,16 +324,18 @@ public class ZPoller implements Closeable
 
         private boolean doEvent(Predicate<EventsHandler> handle, int events)
         {
-            return holders.stream()
-                          .filter(holder -> holder.item().hasEvent(events))
-                          .map(holder -> holder.handler() == null ? currentGlobalHandler.get() : holder.handler())
-                          .filter(Objects::nonNull)
-                          .map(handle::test).reduce(this::and).orElse(false);
-        }
-
-        private Boolean and(boolean b0, boolean b1)
-        {
-            return b0 & b1;
+            boolean has = true;
+            boolean seen = false;
+            for (ItemHolder holder : holders) {
+                if (holder.item().hasEvent(events)) {
+                    seen = true;
+                    EventsHandler handler = holder.handler() == null ? currentGlobalHandler.get() : holder.handler();
+                    if (handler != null) {
+                        has &= handle.test(handler);
+                    }
+                }
+            }
+            return seen ? has : true;
         }
 
         private Integer or(Integer ops1, Integer ops2)
