@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -3229,8 +3230,9 @@ public class ZMQ
         public int bindToRandomPort(String addr, int min, int max)
         {
             int port;
+            ThreadLocalRandom rand = ThreadLocalRandom.current();
             for (int i = 0; i < 100; i++) { // hardcoded to 100 tries. should this be parametrised
-                port = zmq.util.Utils.randomInt(max - min + 1) + min;
+                port = rand.nextInt(min, max + 1);
                 if (base.bind(String.format("%s:%s", addr, port))) {
                     base.errno.set(0);
                     return port;

@@ -1,16 +1,29 @@
 package zmq.io.mechanism.curve;
 
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 import com.neilalexander.jnacl.crypto.curve25519xsalsa20poly1305;
 import com.neilalexander.jnacl.crypto.xsalsa20poly1305;
 
-import zmq.util.Utils;
 import zmq.util.Z85;
 
 // wrapper around the wrapper of libsodium (ahem), for shorter names.
 public class Curve
 {
+    private static final SecureRandom strongRandom;
+
+    static {
+        try {
+            strongRandom = SecureRandom.getInstanceStrong();
+        }
+        catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("No secure random available: " + ex.getMessage(), ex);
+        }
+    }
+
+
     enum Size
     {
         NONCE {
@@ -178,7 +191,10 @@ public class Curve
 
     byte[] random(int length)
     {
-        return Utils.randomBytes(length);
+        byte[] bytes = new byte[length];
+        strongRandom.nextBytes(bytes);
+        return bytes;
+
     }
 
     public int box(ByteBuffer ciphertext, ByteBuffer plaintext, int length, ByteBuffer nonce, byte[] publicKey,

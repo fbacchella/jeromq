@@ -1,5 +1,11 @@
 package zmq.socket.radiodish;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.Options;
@@ -11,14 +17,6 @@ import zmq.io.SessionBase;
 import zmq.io.net.Address;
 import zmq.pipe.Pipe;
 import zmq.socket.pubsub.Dist;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class Radio extends SocketBase
 {
@@ -51,10 +49,7 @@ public class Radio extends SocketBase
         Msg msg = pipe.read();
         while (msg != null) {
             if (msg.isJoin()) {
-                if (! subscriptions.containsKey(msg.getGroup())) {
-                    subscriptions.put(msg.getGroup(), new ArrayList<>());
-                }
-                List<Pipe> pipes = subscriptions.get(msg.getGroup());
+                List<Pipe> pipes = subscriptions.computeIfAbsent(msg.getGroup(), k -> new ArrayList<>());
                 pipes.add(pipe);
             }
             else if (msg.isLeave()) {
@@ -80,14 +75,10 @@ public class Radio extends SocketBase
     @Override
     public void xpipeTerminated(Pipe pipe)
     {
-        Iterator<Entry<String, List<Pipe>>> i = subscriptions.entrySet().iterator();
-        while (i.hasNext()) {
-            Entry<String, List<Pipe>> entry = i.next();
+        subscriptions.entrySet().removeIf(entry -> {
             entry.getValue().remove(pipe);
-            if (entry.getValue().isEmpty()) {
-                i.remove();
-            }
-        }
+            return entry.getValue().isEmpty();
+        });
 
         dist.terminated(pipe);
     }

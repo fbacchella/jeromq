@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.zeromq.ZMQ.Poller;
@@ -295,12 +296,7 @@ public class ZPoller implements Closeable
 
         private int ops()
         {
-            int ops = 0;
-            for (ItemHolder holder : holders) {
-                int interest = holder.item().zinterestOps();
-                ops |= interest;
-            }
-            return ops;
+            return holders.stream().map(holder -> holder.item().zinterestOps()).reduce(this::or).orElse(0);
         }
 
         @Override
@@ -327,25 +323,26 @@ public class ZPoller implements Closeable
             return doEvent(h -> h.events(channel, events), events);
         }
 
-        private boolean doEvent(Function<EventsHandler, Boolean> handle, int events)
+        private boolean doEvent(Predicate<EventsHandler> handle, int events)
         {
-            boolean has = false;
-            boolean first = true;
-            for (ItemHolder holder : holders) {
-                if (holder.item().hasEvent(events)) {
-                    if (first) {
-                        first = false;
-                        has = true;
-                    }
-                    EventsHandler handler = holder.handler() == null ? currentGlobalHandler.get() : holder.handler();
-                    if (handler != null) {
-                        has &= handle.apply(handler);
-                    }
-                }
-            }
-            return has;
+            return holders.stream()
+                          .filter(holder -> holder.item().hasEvent(events))
+                          .map(holder -> holder.handler() == null ? currentGlobalHandler.get() : holder.handler())
+                          .filter(Objects::nonNull)
+                          .map(handle::test).reduce(this::and).orElse(false);
+        }
+
+        private Boolean and(boolean b0, boolean b1)
+        {
+            return b0 & b1;
+        }
+
+        private Integer or(Integer ops1, Integer ops2)
+        {
+            return ops1 | ops2;
         }
     }
+
 
     /******************************************************************************/
     /* 0MQ socket events */

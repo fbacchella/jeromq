@@ -117,6 +117,7 @@ public class ZStar implements ZAgent
     /**
      * Utility class with callback for when the Star has finished its performances.
      */
+    @FunctionalInterface
     public interface TimeTaker
     {
         /**
