@@ -19,7 +19,7 @@ public class YPipeConflate<T extends Msg> implements YPipeBase<T>
     //  when used with zmq_msg. Initialising the VSM body for
     //  non-VSM messages won't be good for performance.
     @Override
-    public void write(final T value, boolean incomplete)
+    public void write(T value, boolean incomplete)
     {
         dbuffer.write(value);
     }

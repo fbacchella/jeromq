@@ -160,7 +160,7 @@ public enum NetProtocol
                        .orElse(false);
     }
 
-    public final boolean compatible(int type)
+    public boolean compatible(int type)
     {
         return compatibles.isEmpty() || compatibles.contains(type);
     }

@@ -235,7 +235,7 @@ public class ZConfig
             return null;
         }
         else { // write to file
-            final File file = new File(filename);
+            File file = new File(filename);
             if (file.exists()) {
                 file.delete();
             }
@@ -250,7 +250,7 @@ public class ZConfig
         }
     }
 
-    public void save(final Writer writer) throws IOException
+    public void save(Writer writer) throws IOException
     {
         visit(this, (node, level) -> {
             // First print comments

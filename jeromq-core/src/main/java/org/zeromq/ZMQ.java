@@ -453,7 +453,7 @@ public class ZMQ
      * @param patch Version patch component.
      * @return Comparible single int version number.
      */
-    public static int makeVersion(final int major, final int minor, final int patch)
+    public static int makeVersion(int major, int minor, int patch)
     {
         return zmq.ZMQ.makeVersion(major, minor, patch);
     }
@@ -3889,7 +3889,7 @@ public class ZMQ
          * @return the picture elements as object array
          **/
         @Draft
-        public Object[] recvBinaryPicture(final String picture)
+        public Object[] recvBinaryPicture(String picture)
         {
             return new ZPicture().recvBinaryPicture(this, picture);
         }
@@ -4352,37 +4352,37 @@ public class ZMQ
             socket = null;
         }
 
-        final zmq.poll.PollItem base()
+        zmq.poll.PollItem base()
         {
             return base;
         }
 
-        public final SelectableChannel getRawSocket()
+        public SelectableChannel getRawSocket()
         {
             return base.getRawSocket();
         }
 
-        public final Socket getSocket()
+        public Socket getSocket()
         {
             return socket;
         }
 
-        public final boolean isReadable()
+        public boolean isReadable()
         {
             return base.isReadable();
         }
 
-        public final boolean isWritable()
+        public boolean isWritable()
         {
             return base.isWritable();
         }
 
-        public final boolean isError()
+        public boolean isError()
         {
             return base.isError();
         }
 
-        public final int readyOps()
+        public int readyOps()
         {
             return base.readyOps();
         }
@@ -4686,7 +4686,7 @@ public class ZMQ
              */
             public final String secretKey;
 
-            public KeyPair(final String publicKey, final String secretKey)
+            public KeyPair(String publicKey, String secretKey)
             {
                 Utils.checkArgument(publicKey != null, "Public key cannot be null");
                 Utils.checkArgument(publicKey.length() == Curve.KEY_SIZE_Z85, "Public key has to be Z85 format");

@@ -228,8 +228,8 @@ public class Dish extends SocketBase
         private State state;
         private String group;
 
-        public DishSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
-                           final Address addr)
+        public DishSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
+                           Address addr)
         {
             super(ioThread, connect, socket, options, addr);
 

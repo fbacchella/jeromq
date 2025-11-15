@@ -7,7 +7,7 @@ import zmq.io.net.tcp.TcpListener;
 
 public class TipcListener extends TcpListener
 {
-    public TipcListener(IOThread ioThread, SocketBase socket, final Options options)
+    public TipcListener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, socket, options);
         // TODO V4 implement tipc

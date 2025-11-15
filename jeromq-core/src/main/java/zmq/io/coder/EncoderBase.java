@@ -42,7 +42,7 @@ public abstract class EncoderBase implements IEncoder
 
     //  Load a new message into encoder.
     @Override
-    public final void loadMsg(Msg msg)
+    public void loadMsg(Msg msg)
     {
         assert (inProgress == null);
         inProgress = msg;
@@ -53,7 +53,7 @@ public abstract class EncoderBase implements IEncoder
     //  are filled to a supplied buffer. If no buffer is supplied (data
     //  is NULL) encoder will provide buffer of its own.
     @Override
-    public final int encode(ValueReference<ByteBuffer> data, int size)
+    public int encode(ValueReference<ByteBuffer> data, int size)
     {
         int bufferSize = size;
         ByteBuffer buf = data.get();
@@ -129,7 +129,7 @@ public abstract class EncoderBase implements IEncoder
         error = true;
     }
 
-    public final boolean isError()
+    public boolean isError()
     {
         return error;
     }

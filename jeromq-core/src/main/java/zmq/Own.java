@@ -96,7 +96,7 @@ public abstract class Own extends ZObject
     }
 
     @Override
-    protected final void processSeqnum()
+    protected void processSeqnum()
     {
         //  Catch up with counter of processed commands.
         processedSeqnum++;
@@ -106,7 +106,7 @@ public abstract class Own extends ZObject
     }
 
     //  Launch the supplied object and become its owner.
-    protected final void launchChild(Own object)
+    protected void launchChild(Own object)
     {
         //  Specify the owner of the object.
         object.setOwner(this);
@@ -119,13 +119,13 @@ public abstract class Own extends ZObject
     }
 
     //  Terminate owned object
-    protected final void termChild(Own object)
+    protected void termChild(Own object)
     {
         processTermReq(object);
     }
 
     @Override
-    protected final void processTermReq(Own object)
+    protected void processTermReq(Own object)
     {
         //  When shutting down we can ignore termination requests from owned
         //  objects. The termination request was already sent to the object.
@@ -149,7 +149,7 @@ public abstract class Own extends ZObject
     }
 
     @Override
-    protected final void processOwn(Own object)
+    protected void processOwn(Own object)
     {
         //  If the object is already being shut down, new owned objects are
         //  immediately asked to terminate. Note that linger is set to zero.
@@ -166,7 +166,7 @@ public abstract class Own extends ZObject
     //  Ask owner object to terminate this object. It may take a while
     //  while actual termination is started. This function should not be
     //  called more than once.
-    protected final void terminate()
+    protected void terminate()
     {
         //  If termination is already underway, there's no point
         //  in starting it anew.
@@ -186,7 +186,7 @@ public abstract class Own extends ZObject
     }
 
     //  Returns true if the object is in process of termination.
-    protected final boolean isTerminating()
+    protected boolean isTerminating()
     {
         return terminating;
     }
@@ -218,12 +218,12 @@ public abstract class Own extends ZObject
     //  register_tem_acks functions. When event occurs, call
     //  remove_term_ack. When number of pending acks reaches zero
     //  object will be deallocated.
-    final void registerTermAcks(int count)
+    void registerTermAcks(int count)
     {
         termAcks += count;
     }
 
-    final void unregisterTermAck()
+    void unregisterTermAck()
     {
         assert (termAcks > 0);
         termAcks--;
@@ -233,7 +233,7 @@ public abstract class Own extends ZObject
     }
 
     @Override
-    protected final void processTermAck()
+    protected void processTermAck()
     {
         unregisterTermAck();
     }

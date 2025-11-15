@@ -61,7 +61,7 @@ public abstract class Mechanism
         identity = Blob.createBlob(data);
     }
 
-    public final Msg peerIdentity()
+    public Msg peerIdentity()
     {
         byte[] data = new byte[0];
         int size = 0;
@@ -83,22 +83,22 @@ public abstract class Mechanism
         zapProperties.put(Metadata.USER_ID, new String(data, ZMQ.CHARSET));
     }
 
-    public final Blob getUserId()
+    public Blob getUserId()
     {
         return userId;
     }
 
-    protected final void addProperty(ByteBuffer buf, String name, String value)
+    protected void addProperty(ByteBuffer buf, String name, String value)
     {
         addProperty(buf, name, value.getBytes(ZMQ.CHARSET));
     }
 
-    protected final void addProperty(Msg msg, String name, String value)
+    protected void addProperty(Msg msg, String name, String value)
     {
         addProperty(msg, name, value.getBytes(ZMQ.CHARSET));
     }
 
-    protected final void addProperty(ByteBuffer buf, String name, byte[] value)
+    protected void addProperty(ByteBuffer buf, String name, byte[] value)
     {
         byte[] nameB = name.getBytes(ZMQ.CHARSET);
         int nameLength = nameB.length;
@@ -115,7 +115,7 @@ public abstract class Mechanism
         }
     }
 
-    protected final void addProperty(Msg msg, String name, byte[] value)
+    protected void addProperty(Msg msg, String name, byte[] value)
     {
         byte[] nameB = name.getBytes(ZMQ.CHARSET);
         int nameLength = nameB.length;
@@ -132,12 +132,12 @@ public abstract class Mechanism
         }
     }
 
-    protected final int parseMetadata(Msg msg, int offset, boolean zapFlag)
+    protected int parseMetadata(Msg msg, int offset, boolean zapFlag)
     {
         return parseMetadata(msg.buf(), offset, zapFlag);
     }
 
-    protected final int parseMetadata(ByteBuffer msg, int offset, boolean zapFlag)
+    protected int parseMetadata(ByteBuffer msg, int offset, boolean zapFlag)
     {
         Metadata meta = zapFlag ? zapProperties : zmtpProperties;
         return meta.read(msg, offset, (name, value, valueAsString) -> {
@@ -169,7 +169,7 @@ public abstract class Mechanism
         return 0;
     }
 
-    protected final String socketType()
+    protected String socketType()
     {
         if (options.asType != -1) {
             return Sockets.name(options.asType);
@@ -263,7 +263,7 @@ public abstract class Mechanism
         return rc;
     }
 
-    protected final void sendZapRequest(Mechanisms mechanism, boolean more)
+    protected void sendZapRequest(Mechanisms mechanism, boolean more)
     {
         assert (session != null);
         assert (peerAddress != null);
@@ -322,7 +322,7 @@ public abstract class Mechanism
         assert (rc);
     }
 
-    protected final int receiveAndProcessZapReply()
+    protected int receiveAndProcessZapReply()
     {
         assert (session != null);
 

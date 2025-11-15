@@ -296,7 +296,7 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
-    public ZStar(final Fortune fortune, String motdelafin, final Object... bags)
+    public ZStar(Fortune fortune, String motdelafin, Object... bags)
     {
         this((ZContext) null, fortune, motdelafin, bags);
     }
@@ -316,8 +316,8 @@ public class ZStar implements ZAgent
      * @deprecated use {@link ZStar#ZStar(ZContext, Fortune, String, Object...)} instead.
      */
     @Deprecated
-    public ZStar(final ZContext context, final SelectorCreator selector, final Fortune fortune, String motdelafin,
-                 final Object... bags)
+    public ZStar(ZContext context, SelectorCreator selector, Fortune fortune, String motdelafin,
+                 Object... bags)
     {
         this(context, fortune, ZAgent.Creator::create, motdelafin, bags);
     }
@@ -334,7 +334,7 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
-    public ZStar(final ZContext context, final Fortune fortune, String motdelafin, final Object... bags)
+    public ZStar(ZContext context, Fortune fortune, String motdelafin, Object... bags)
     {
         this(context, fortune, ZAgent.Creator::create, motdelafin, bags);
     }
@@ -355,8 +355,8 @@ public class ZStar implements ZAgent
      * @deprecated use {@link ZStar#ZStar(ZContext, Fortune, BiFunction, String, Object...)} instead.
      */
     @Deprecated
-    public ZStar(final ZContext context, final SelectorCreator selector, final Fortune fortune,
-                 BiFunction<Socket, String, ZAgent> agent, String motdelafin, final Object... bags)
+    public ZStar(ZContext context, SelectorCreator selector, Fortune fortune,
+                 BiFunction<Socket, String, ZAgent> agent, String motdelafin, Object... bags)
     {
         this(context, fortune, agent, motdelafin, bags);
     }
@@ -374,8 +374,8 @@ public class ZStar implements ZAgent
      * @param motdelafin the final word used to mark the end of the star. Null to disable this mechanism.
      * @param bags       the optional arguments that will be passed to the distant star
      */
-    public ZStar(final ZContext context, final Fortune fortune, BiFunction<Socket, String, ZAgent> agent,
-                 String motdelafin, final Object... bags)
+    public ZStar(ZContext context, Fortune fortune, BiFunction<Socket, String, ZAgent> agent,
+                 String motdelafin, Object... bags)
     {
         super();
         Objects.requireNonNull(agent, "Agent creator has to be supplied");
@@ -411,7 +411,7 @@ public class ZStar implements ZAgent
             set = new SimpleSet();
         }
 
-        final List<Object> train = new ArrayList<>(6 + bags.length);
+        List<Object> train = new ArrayList<>(6 + bags.length);
 
         train.add(set);
         train.add(fortune);
@@ -448,7 +448,7 @@ public class ZStar implements ZAgent
 
     // the plateau where the acting will take place (stage and backstage), or
     // the forked runnable containing the loop processing all messages in the background
-    private static final class Plateau implements IAttachedRunnable, Exit
+    private static class Plateau implements IAttachedRunnable, Exit
     {
         private static final AtomicInteger shows = new AtomicInteger();
         // id if unnamed
@@ -458,23 +458,23 @@ public class ZStar implements ZAgent
         private final CountDownLatch exit = new CountDownLatch(1);
 
         @Override
-        public void run(final Object[] train, final ZContext chef, final Socket mic)
+        public void run(Object[] train, ZContext chef, Socket mic)
         {
-            final int mandat = 5;
+            int mandat = 5;
 
             // end of a trip can be a bit messy...
             Fortune star = (Fortune) train[1];
 
-            final Entourage entourage = (Entourage) train[3];
+            Entourage entourage = (Entourage) train[3];
 
-            final ZContext producer = (ZContext) train[2];
+            ZContext producer = (ZContext) train[2];
 
-            final Set set = (Set) train[0];
+            Set set = (Set) train[0];
             // the word informing the world that the plateau is closed and the star vanished
-            final String gossip = (String) train[4];
+            String gossip = (String) train[4];
 
             // prune our mandatory transit variables from the arguments
-            final Object[] bags = new Object[train.length - mandat];
+            Object[] bags = new Object[train.length - mandat];
             System.arraycopy(train, mandat, bags, 0, bags.length);
 
             // leaving unloaded platform
@@ -528,8 +528,8 @@ public class ZStar implements ZAgent
         /******************************************************************************/
 
         // starts the performance
-        private void showMustGoOn(final ZContext chef, final Set set, final Socket phone, final Fortune fortune,
-                                  final Object... bags)
+        private void showMustGoOn(ZContext chef, Set set, Socket phone, Fortune fortune,
+                                  Object... bags)
         {
             int shows = 0;
             /** on the spot lights, the star in only an actor **/
@@ -691,7 +691,7 @@ public class ZStar implements ZAgent
             Thread.currentThread().setName(name);
         }
 
-        public static String createDefaultName(final String format, final int id)
+        public static String createDefaultName(String format, int id)
         {
             return String.format(format, id);
         }

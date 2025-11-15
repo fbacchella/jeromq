@@ -6,7 +6,7 @@ public interface YPipeBase<T>
     //  set to true the item is assumed to be continued by items
     //  subsequently written to the pipe. Incomplete items are never
     //  flushed down the stream.
-    void write(final T value, boolean incomplete);
+    void write(T value, boolean incomplete);
 
     //  Pop an incomplete item from the pipe. Returns true is such
     //  item exists, false otherwise.

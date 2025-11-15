@@ -19,7 +19,7 @@ public class Msgs
      */
     public static boolean startsWith(Msg msg, String data, boolean includeLength)
     {
-        final int length = data.length();
+        int length = data.length();
         assert (length < 256);
 
         int start = includeLength ? 1 : 0;

@@ -10,7 +10,7 @@ import zmq.io.net.tcp.TcpConnecter;
 
 public class IpcConnecter extends TcpConnecter
 {
-    public IpcConnecter(IOThread ioThread, SessionBase session, final Options options, final Address<InetSocketAddress> addr, boolean wait)
+    public IpcConnecter(IOThread ioThread, SessionBase session, Options options, Address<InetSocketAddress> addr, boolean wait)
     {
         super(ioThread, session, options, addr, wait);
     }

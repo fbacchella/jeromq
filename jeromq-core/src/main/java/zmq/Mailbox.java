@@ -36,7 +36,7 @@ public class Mailbox implements IMailbox
     }
 
     @Override
-    public void send(final Command cmd)
+    public void send(Command cmd)
     {
         cpipe.addLast(cmd);
         signaler.send();

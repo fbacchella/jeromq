@@ -51,7 +51,7 @@ public class V2Decoder extends Decoder
         //  The most significant byte comes first.
         tmpbuf.position(0);
         tmpbuf.limit(8);
-        final long size = Wire.getUInt64(tmpbuf, 0);
+        long size = Wire.getUInt64(tmpbuf, 0);
         if (size <= 0) {
             errno(ZError.EPROTO);
             return Step.Result.ERROR;

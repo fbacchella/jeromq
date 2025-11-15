@@ -13,14 +13,14 @@ import zmq.util.Draft;
  */
 @Draft
 @Deprecated
-public final class ZTimer
+public class ZTimer
 {
     /**
      * Opaque representation of a timer.
      * @deprecated use {@link org.zeromq.timer.ZTimer.Timer} instead
      */
     @Deprecated
-    public static final class Timer
+    public static class Timer
     {
         private final org.zeromq.timer.ZTimer.Timer delegate;
 
@@ -38,7 +38,7 @@ public final class ZTimer
     {
     }
 
-    private final org.zeromq.timer.ZTimer timer = new org.zeromq.timer.ZTimer();
+    private org.zeromq.timer.ZTimer timer = new org.zeromq.timer.ZTimer();
 
     /**
      * Add timer to the set, timer repeats forever, or until cancel is called.

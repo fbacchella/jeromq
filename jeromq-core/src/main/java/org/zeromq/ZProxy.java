@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * You can have all the above non-customizable features in about these lines of code:
  * <pre>
  * {@code
-        final ZProxy.Proxy provider = new ZProxy.SimpleProxy()
+        ZProxy.Proxy provider = new ZProxy.SimpleProxy()
         {
             public Socket create(ZContext ctx, ZProxy.Plug place, Object ... args)
             {
@@ -89,7 +89,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * You can then use it like this:
  * <pre>
  * {@code
-        final boolean async = false, sync = true;
+        boolean async = false, sync = true;
         String status = null;
         status = proxy.status();
         status = proxy.pause(sync);
@@ -445,7 +445,7 @@ public class ZProxy
         ZMsg msg = new ZMsg();
         msg.add(RESTART);
 
-        final boolean cold = hot == null;
+        boolean cold = hot == null;
         if (cold) {
             msg.add(Boolean.toString(false));
         }
@@ -535,7 +535,7 @@ public class ZProxy
             return EXITED;
         }
         // receive the status response
-        final ZMsg msg = agent.recv();
+        ZMsg msg = agent.recv();
 
         if (msg == null) {
             return EXITED;
@@ -768,10 +768,10 @@ public class ZProxy
     }
 
     // acts in background to proxy messages
-    private static final class ProxyActor extends ZActor.SimpleActor
+    private static class ProxyActor extends ZActor.SimpleActor
     {
         // the states container of the proxy
-        private static final class State
+        private static class State
         {
             @Override
             public String toString()
@@ -1160,7 +1160,7 @@ public class ZProxy
      * A specialized transport for better transmission purposes
      * that will send each packets individually instead of the whole message.
      */
-    private static final class ZmqPump implements Pump
+    private static class ZmqPump implements Pump
     {
         // transfers each message as a whole by sending each packet received to the capture socket
         @Override

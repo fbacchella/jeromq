@@ -117,7 +117,7 @@ public interface ZAgent
     /**
      * Creates a very simple agent with an easy lock mechanism.
      */
-    final class SimpleAgent implements ZAgent
+    class SimpleAgent implements ZAgent
     {
         // the pipe used for communicating with the star
         private final Socket pipe;
@@ -162,7 +162,7 @@ public interface ZAgent
         @Override
         public ZMsg recv(int timeout)
         {
-            final int old = pipe.getReceiveTimeOut();
+            int old = pipe.getReceiveTimeOut();
             pipe.setReceiveTimeOut(timeout);
 
             ZMsg msg = recv(true);
@@ -184,7 +184,7 @@ public interface ZAgent
                 }
 
                 if (msg.size() == 1) {
-                    final ZFrame frame = msg.peek();
+                    ZFrame frame = msg.peek();
                     byte[] key = frame.getData();
                     if (lock != null && Arrays.equals(lock, key)) {
                         locked = true;

@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  * This is a DRAFT class, and may change without notice.
  */
 @Draft
-public final class ZTicker
+public class ZTicker
 {
     private final ZTimer  timer;
     private final ZTicket ticket;

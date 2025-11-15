@@ -74,7 +74,7 @@ public class Command
         this.arg = arg;
     }
 
-    public final void process()
+    public void process()
     {
         destination.processCommand(this);
     }

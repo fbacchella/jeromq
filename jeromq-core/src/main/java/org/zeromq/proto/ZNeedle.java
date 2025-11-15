@@ -20,7 +20,7 @@ import zmq.util.Wire;
  * This is a DRAFT class, and may change without notice.
  */
 @Draft
-public final class ZNeedle
+public class ZNeedle
 {
     private final ByteBuffer needle; //  Read/write pointer for serialization
 

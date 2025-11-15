@@ -14,12 +14,12 @@ import java.util.function.Supplier;
  * This is a DRAFT class, and may change without notice.
  */
 @Draft
-public final class ZTimer
+public class ZTimer
 {
     /**
      * Opaque representation of a timer.
      */
-    public static final class Timer
+    public static class Timer
     {
         private final Timers.Timer delegate;
 

@@ -35,7 +35,7 @@ class ManagedContext
 
     SocketBase createSocket(int type)
     {
-        final SocketBase base = ctx.createSocket(type);
+        SocketBase base = ctx.createSocket(type);
         lock.lock();
         try {
             sockets.add(base);

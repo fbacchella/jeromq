@@ -29,7 +29,7 @@ public class Address<S extends SocketAddress>
      * @throws IllegalArgumentException if the protocol name can be matched to an actual supported protocol
      */
     @Deprecated
-    public Address(final String protocol, final String address)
+    public Address(String protocol, String address)
     {
         this.protocol = NetProtocol.getProtocol(protocol);
         this.address = address;
@@ -40,7 +40,7 @@ public class Address<S extends SocketAddress>
      * @param protocol
      * @param address
      */
-    public Address(final NetProtocol protocol, final String address)
+    public Address(NetProtocol protocol, String address)
     {
         this.protocol = protocol;
         this.address = address;
@@ -84,7 +84,7 @@ public class Address<S extends SocketAddress>
 
     public String host()
     {
-        final int portDelimiter = address.lastIndexOf(':');
+        int portDelimiter = address.lastIndexOf(':');
         if (portDelimiter > 0) {
             return address.substring(0, portDelimiter);
         }

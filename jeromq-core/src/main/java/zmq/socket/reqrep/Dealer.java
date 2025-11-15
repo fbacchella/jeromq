@@ -110,12 +110,12 @@ public class Dealer extends SocketBase
         lb.terminated(pipe);
     }
 
-    protected final boolean sendpipe(Msg msg, ValueReference<Pipe> pipe)
+    protected boolean sendpipe(Msg msg, ValueReference<Pipe> pipe)
     {
         return lb.sendpipe(msg, errno, pipe);
     }
 
-    protected final Msg recvpipe(ValueReference<Pipe> pipe)
+    protected Msg recvpipe(ValueReference<Pipe> pipe)
     {
         return fq.recvPipe(errno, pipe);
     }

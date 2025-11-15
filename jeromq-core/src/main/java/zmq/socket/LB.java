@@ -46,7 +46,7 @@ public class LB
 
     public void terminated(Pipe pipe)
     {
-        final int index = pipes.indexOf(pipe);
+        int index = pipes.indexOf(pipe);
 
         //  If we are in the middle of multipart message and current pipe
         //  have disconnected, we have to drop the remainder of the message.

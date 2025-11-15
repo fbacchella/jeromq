@@ -13,12 +13,12 @@ public class ValueReference<V>
     {
     }
 
-    public final V get()
+    public V get()
     {
         return value;
     }
 
-    public final void set(V value)
+    public void set(V value)
     {
         this.value = value;
     }

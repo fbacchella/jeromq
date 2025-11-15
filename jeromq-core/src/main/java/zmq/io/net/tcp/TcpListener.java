@@ -21,7 +21,7 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         isWindows = os.contains("win");
     }
 
-    public TcpListener(IOThread ioThread, SocketBase socket, final Options options)
+    public TcpListener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, socket, options);
     }

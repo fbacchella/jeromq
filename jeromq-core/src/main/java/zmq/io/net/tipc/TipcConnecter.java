@@ -8,7 +8,7 @@ import zmq.io.net.tcp.TcpConnecter;
 
 public class TipcConnecter extends TcpConnecter
 {
-    public TipcConnecter(IOThread ioThread, SessionBase session, final Options options, final Address addr,
+    public TipcConnecter(IOThread ioThread, SessionBase session, Options options, Address addr,
             boolean wait)
     {
         super(ioThread, session, options, addr, wait);

@@ -38,7 +38,7 @@ import zmq.util.Wire;
 // e.g. TCP socket or an UNIX domain socket.
 public class StreamEngine implements IEngine, IPollEvents
 {
-    private final class ProducePongMessage implements Supplier<Msg>
+    private class ProducePongMessage implements Supplier<Msg>
     {
         private final byte[] pingContext;
 
@@ -167,7 +167,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Errno errno;
 
-    public StreamEngine(SocketChannel fd, final Options options, final String endpoint)
+    public StreamEngine(SocketChannel fd, Options options, String endpoint)
     {
         this.errno = options.errno;
         this.fd = fd;
@@ -254,8 +254,8 @@ public class StreamEngine implements IEngine, IPollEvents
         ioError = false;
 
         //  Make sure batch sizes match large buffer sizes
-        final int inBatchSize = Math.max(options.rcvbuf, Config.IN_BATCH_SIZE.getValue());
-        final int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
+        int inBatchSize = Math.max(options.rcvbuf, Config.IN_BATCH_SIZE.getValue());
+        int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
 
         if (options.rawSocket) {
             decoder = instantiate(options.decoder, inBatchSize, options.maxMsgSize);
@@ -482,7 +482,7 @@ public class StreamEngine implements IEngine, IPollEvents
             outsize = encoder.encode(outpos, 0);
 
             //  Make sure batch sizes match large buffer sizes
-            final int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
+            int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
 
             while (outsize < outBatchSize) {
                 Msg msg = nextMsg.get();
@@ -616,19 +616,19 @@ public class StreamEngine implements IEngine, IPollEvents
         assert (handshaking);
         assert (greetingRecv.position() < greetingSize);
 
-        final Mechanisms mechanism = options.mechanism;
+        Mechanisms mechanism = options.mechanism;
         assert (mechanism != null);
 
         //  Position of the version field in the greeting.
-        final int revisionPos = SIGNATURE_SIZE;
+        int revisionPos = SIGNATURE_SIZE;
 
         //  Make sure batch sizes match large buffer sizes
-        final int inBatchSize = Math.max(options.rcvbuf, Config.IN_BATCH_SIZE.getValue());
-        final int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
+        int inBatchSize = Math.max(options.rcvbuf, Config.IN_BATCH_SIZE.getValue());
+        int outBatchSize = Math.max(options.sndbuf, Config.OUT_BATCH_SIZE.getValue());
 
         //  Receive the greeting.
         while (greetingRecv.position() < greetingSize) {
-            final int n = read(greetingRecv);
+            int n = read(greetingRecv);
             if (n == 0) {
                 error(ErrorReason.CONNECTION);
                 return false;
@@ -738,7 +738,7 @@ public class StreamEngine implements IEngine, IPollEvents
             //  Since there is no way to tell the encoder to
             //  skip the message header, we simply throw that
             //  header data away.
-            final int headerSize = options.identitySize + 1 >= 255 ? 10 : 2;
+            int headerSize = options.identitySize + 1 >= 255 ? 10 : 2;
             ByteBuffer tmp = ByteBuffer.allocate(headerSize);
 
             //  Prepare the identity message and load it into encoder.
@@ -838,7 +838,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private void decodeDataAfterHandshake(int greetingSize)
     {
-        final int pos = greetingRecv.position();
+        int pos = greetingRecv.position();
         if (pos > greetingSize) {
             // data is present after handshake
             greetingRecv.position(greetingSize).limit(pos);
@@ -1236,7 +1236,7 @@ public class StreamEngine implements IEngine, IPollEvents
         if (remaining > 16) {
             remaining = 16;
         }
-        final byte[] pingContext = new byte[remaining];
+        byte[] pingContext = new byte[remaining];
         msg.getBytes(7, pingContext, 0, remaining);
 
         nextMsg = new ProducePongMessage(pingContext);

@@ -188,14 +188,14 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Returns the mailbox associated with this socket.
-    final IMailbox getMailbox()
+    IMailbox getMailbox()
     {
         return mailbox;
     }
 
     //  Interrupt blocking call if the socket is stuck in one.
     //  This function can be called from a different thread!
-    final void stop()
+    void stop()
     {
         //  Called by ctx when it is terminated (zmq_term).
         //  'stop' command is sent from the threads that called zmq_term to
@@ -257,7 +257,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final boolean setSocketOpt(int option, Object optval)
+    public boolean setSocketOpt(int option, Object optval)
     {
         lock();
 
@@ -332,7 +332,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @SuppressWarnings("unchecked")
-    public final <T>T getSocketOptx(int option)
+    public <T>T getSocketOptx(int option)
     {
         if (ctxTerminated.get()) {
             errno.set(ZError.ETERM);
@@ -373,7 +373,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return options.getSocketOpt(option);
     }
 
-    public final boolean bind(final String addr)
+    public boolean bind(String addr)
     {
         lock();
 
@@ -444,7 +444,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final boolean connect(String addr)
+    public boolean connect(String addr)
     {
         lock();
 
@@ -456,7 +456,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final int connectPeer(String addr)
+    public int connectPeer(String addr)
     {
         lock();
 
@@ -685,7 +685,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         endpoints.insert(addr, new EndpointPipe(endpoint, pipe));
     }
 
-    public final boolean termEndpoint(String addr)
+    public boolean termEndpoint(String addr)
     {
         lock();
 
@@ -779,12 +779,12 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final boolean send(Msg msg, int flags)
+    public boolean send(Msg msg, int flags)
     {
         return send(msg, flags, null);
     }
 
-    public final boolean send(Msg msg, int flags, AtomicBoolean canceled)
+    public boolean send(Msg msg, int flags, AtomicBoolean canceled)
     {
         lock();
 
@@ -871,12 +871,12 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final Msg recv(int flags)
+    public Msg recv(int flags)
     {
         return recv(flags, null);
     }
 
-    public final Msg recv(int flags, AtomicBoolean canceled)
+    public Msg recv(int flags, AtomicBoolean canceled)
     {
         lock();
 
@@ -978,7 +978,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final boolean join(String group)
+    public boolean join(String group)
     {
         lock();
 
@@ -990,7 +990,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final boolean leave(String group)
+    public boolean leave(String group)
     {
         lock();
 
@@ -1002,13 +1002,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final void cancel(AtomicBoolean canceled)
+    public void cancel(AtomicBoolean canceled)
     {
         canceled.set(true);
         sendCancel();
     }
 
-    public final int poll(int interest, int timeout, AtomicBoolean canceled)
+    public int poll(int interest, int timeout, AtomicBoolean canceled)
     {
         lock();
 
@@ -1071,7 +1071,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final void close()
+    public void close()
     {
         lock();
 
@@ -1091,19 +1091,19 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  These functions are used by the polling mechanism to determine
     //  which events are to be reported from this socket.
-    final boolean hasIn()
+    boolean hasIn()
     {
         return xhasIn();
     }
 
-    final boolean hasOut()
+    boolean hasOut()
     {
         return xhasOut();
     }
 
     //  Using this function reaper thread ask the socket to register with
     //  its poller.
-    final void startReaping(Poller poller)
+    void startReaping(Poller poller)
     {
         //  Plug the socket to the reaper thread.
         this.poller = poller;
@@ -1195,7 +1195,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @Override
-    protected final void processStop()
+    protected void processStop()
     {
         //  Here, someone have called zmq_term while the socket was still alive.
         //  We'll remember the fact so that any blocking call is interrupted and any
@@ -1208,13 +1208,13 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @Override
-    protected final void processBind(Pipe pipe)
+    protected void processBind(Pipe pipe)
     {
         attachPipe(pipe, false);
     }
 
     @Override
-    protected final void processTerm(int linger)
+    protected void processTerm(int linger)
     {
         //  Unregister all inproc endpoints associated with this socket.
         //  Doing this we make sure that no new pipes from other sockets (inproc)
@@ -1234,7 +1234,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
     //  Delay actual destruction of the socket.
     @Override
-    protected final void processDestroy()
+    protected void processDestroy()
     {
         destroyed.set(true);
     }
@@ -1314,7 +1314,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @Override
-    public final void inEvent()
+    public void inEvent()
     {
         //  This function is invoked only once the socket is running in the context
         //  of the reaper thread. Process any commands from other threads/sockets
@@ -1356,19 +1356,19 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @Override
-    public final void readActivated(Pipe pipe)
+    public void readActivated(Pipe pipe)
     {
         xreadActivated(pipe);
     }
 
     @Override
-    public final void writeActivated(Pipe pipe)
+    public void writeActivated(Pipe pipe)
     {
         xwriteActivated(pipe);
     }
 
     @Override
-    public final void hiccuped(Pipe pipe)
+    public void hiccuped(Pipe pipe)
     {
         if (!options.immediate) {
             pipe.terminate(false);
@@ -1380,7 +1380,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @Override
-    public final void pipeTerminated(Pipe pipe)
+    public void pipeTerminated(Pipe pipe)
     {
         //  Notify the specific socket type about the pipe termination.
         xpipeTerminated(pipe);
@@ -1415,7 +1415,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
      * @throws IllegalStateException if a previous monitor was already
      *         registered and consumer is not null.
      */
-    public final boolean monitor(final String addr, int events)
+    public boolean monitor(String addr, int events)
     {
         synchronized (monitor) {
             // To be tested before trying anything
@@ -1465,7 +1465,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
      * @throws IllegalStateException if a previous monitor was already
      *         registered and consumer is not null.
      */
-    public final boolean setEventHook(ZMQ.EventConsummer consumer, int events)
+    public boolean setEventHook(ZMQ.EventConsummer consumer, int events)
     {
         synchronized (monitor) {
             if (ctxTerminated.get()) {
@@ -1488,77 +1488,77 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         }
     }
 
-    public final void eventHandshaken(String addr, int zmtpVersion)
+    public void eventHandshaken(String addr, int zmtpVersion)
     {
         event(addr, zmtpVersion, ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL);
     }
 
-    public final void eventConnected(String addr, SelectableChannel ch)
+    public void eventConnected(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_CONNECTED);
     }
 
-    public final void eventConnectDelayed(String addr, int errno)
+    public void eventConnectDelayed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_CONNECT_DELAYED);
     }
 
-    public final void eventConnectRetried(String addr, int interval)
+    public void eventConnectRetried(String addr, int interval)
     {
         event(addr, interval, ZMQ.ZMQ_EVENT_CONNECT_RETRIED);
     }
 
-    public final void eventListening(String addr, SelectableChannel ch)
+    public void eventListening(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_LISTENING);
     }
 
-    public final void eventBindFailed(String addr, int errno)
+    public void eventBindFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_BIND_FAILED);
     }
 
-    public final void eventAccepted(String addr, SelectableChannel ch)
+    public void eventAccepted(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_ACCEPTED);
     }
 
-    public final void eventAcceptFailed(String addr, int errno)
+    public void eventAcceptFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_ACCEPT_FAILED);
     }
 
-    public final void eventClosed(String addr, SelectableChannel ch)
+    public void eventClosed(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_CLOSED);
     }
 
-    public final void eventCloseFailed(String addr, int errno)
+    public void eventCloseFailed(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_CLOSE_FAILED);
     }
 
-    public final void eventDisconnected(String addr, SelectableChannel ch)
+    public void eventDisconnected(String addr, SelectableChannel ch)
     {
         event(addr, ch, ZMQ.ZMQ_EVENT_DISCONNECTED);
     }
 
-    public final void eventHandshakeFailedNoDetail(String addr, int errno)
+    public void eventHandshakeFailedNoDetail(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL);
     }
 
-    public final void eventHandshakeFailedProtocol(String addr, int errno)
+    public void eventHandshakeFailedProtocol(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL);
     }
 
-    public final void eventHandshakeFailedAuth(String addr, int errno)
+    public void eventHandshakeFailedAuth(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_AUTH);
     }
 
-    public final void eventHandshakeSucceeded(String addr, int errno)
+    public void eventHandshakeSucceeded(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_SUCCEEDED);
     }
@@ -1574,7 +1574,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     //  Send a monitor event
-    protected final void monitorEvent(ZMQ.Event event)
+    protected void monitorEvent(ZMQ.Event event)
     {
         if (monitor.get() == null) {
             return;
@@ -1603,7 +1603,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return getClass().getSimpleName() + "[" + options.socketId + "]";
     }
 
-    public final SelectableChannel getFD()
+    public SelectableChannel getFD()
     {
         if (threadSafe) {
             errno.set(ZError.EINVAL);
@@ -1618,7 +1618,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         return Sockets.name(options.type);
     }
 
-    public final int errno()
+    public int errno()
     {
         return errno.get();
     }

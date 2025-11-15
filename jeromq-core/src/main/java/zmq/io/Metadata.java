@@ -367,7 +367,7 @@ public class Metadata
         int index = offset;
 
         while (bytesLeft > 1) {
-            final int nameLength = Byte.toUnsignedInt(data.get(index));
+            int nameLength = Byte.toUnsignedInt(data.get(index));
             if (nameLength == 0) {
                 break;
             }
@@ -377,7 +377,7 @@ public class Metadata
             if (bytesLeft < nameLength) {
                 break;
             }
-            final String name = new String(bytes(data, index, nameLength), ZMQ.CHARSET);
+            String name = new String(bytes(data, index, nameLength), ZMQ.CHARSET);
             index += nameLength;
             bytesLeft -= nameLength;
 
@@ -385,7 +385,7 @@ public class Metadata
                 break;
             }
 
-            final int valueLength = Wire.getUInt32(data, index);
+            int valueLength = Wire.getUInt32(data, index);
             index += 4;
             bytesLeft -= 4;
 
@@ -393,8 +393,8 @@ public class Metadata
                 break;
             }
 
-            final byte[] value = bytes(data, index, valueLength);
-            final String valueAsString = new String(value, ZMQ.CHARSET);
+            byte[] value = bytes(data, index, valueLength);
+            String valueAsString = new String(value, ZMQ.CHARSET);
             index += valueLength;
             bytesLeft -= valueLength;
             if (listener != null) {
@@ -411,10 +411,10 @@ public class Metadata
         return 0;
     }
 
-    private byte[] bytes(final ByteBuffer buf, final int position, final int length)
+    private byte[] bytes(ByteBuffer buf, int position, int length)
     {
-        final byte[] bytes = new byte[length];
-        final int current = buf.position();
+        byte[] bytes = new byte[length];
+        int current = buf.position();
         buf.position(position);
         buf.get(bytes, 0, length);
         buf.position(current);

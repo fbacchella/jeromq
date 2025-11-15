@@ -21,7 +21,7 @@ public class ZMonitor implements Closeable
     /**
      * High-level representation of an event.
      */
-    public static final class ZEvent
+    public static class ZEvent
     {
         // Enum.values return a different array on each call, so keep it to avoid useless allocations
         private static final Event[] EVENTVALUES = Event.values();
@@ -52,8 +52,8 @@ public class ZMonitor implements Closeable
             assert (msg != null);
             assert (msg.size() == 1 || msg.size() == 2) : msg.size();
 
-            final ZFrame frame = msg.pop();
-            final ZNeedle needle = new ZNeedle(frame);
+            ZFrame frame = msg.pop();
+            ZNeedle needle = new ZNeedle(frame);
 
             type = EVENTVALUES[needle.getNumber1()];
             code = needle.getNumber4();
@@ -203,7 +203,7 @@ public class ZMonitor implements Closeable
      * Event types have to be added before the start, or they will take no effect.
      * @return this instance.
      */
-    public final ZMonitor start()
+    public ZMonitor start()
     {
         if (started) {
             System.out.println("ZMonitor: Unable to start while already started.");
@@ -220,7 +220,7 @@ public class ZMonitor implements Closeable
      * When returning from that call, ZMonitor will be no more active.
      */
     @Override
-    public final void close()
+    public void close()
     {
         destroy();
     }
@@ -229,7 +229,7 @@ public class ZMonitor implements Closeable
      * Stops the monitoring and closes the actor.
      * When returning from that call, ZMonitor will be no more active.
      */
-    public final void destroy()
+    public void destroy()
     {
         agent.send(CLOSE);
         exit.awaitSilent();
@@ -241,7 +241,7 @@ public class ZMonitor implements Closeable
      * @param verbose true for monitor to be verbose, otherwise false.
      * @return this instance.
      */
-    public final ZMonitor verbose(boolean verbose)
+    public ZMonitor verbose(boolean verbose)
     {
         if (started) {
             System.out.println("ZMonitor: Unable to change verbosity while already started.");
@@ -258,7 +258,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to monitor.
      * @return this instance.
      */
-    public final ZMonitor add(Event... events)
+    public ZMonitor add(Event... events)
     {
         if (started) {
             System.out.println("ZMonitor: Unable to add events while already started.");
@@ -279,7 +279,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to stop monitoring.
      * @return this instance.
      */
-    public final ZMonitor remove(Event... events)
+    public ZMonitor remove(Event... events)
     {
         if (started) {
             System.out.println("ZMonitor: Unable to remove events while already started.");
@@ -299,7 +299,7 @@ public class ZMonitor implements Closeable
      * Gets the next event, blocking for it until available.
      * @return the next monitored event or null if closed.
      */
-    public final ZEvent nextEvent()
+    public ZEvent nextEvent()
     {
         return nextEvent(true);
     }
@@ -309,7 +309,7 @@ public class ZMonitor implements Closeable
      * @param wait true to block until next event is available, false to immediately return with null if there is no event.
      * @return the next event or null if there is currently none.
      */
-    public final ZEvent nextEvent(boolean wait)
+    public ZEvent nextEvent(boolean wait)
     {
         if (!started) {
             System.out.println("ZMonitor: Start before getting events.");
@@ -327,7 +327,7 @@ public class ZMonitor implements Closeable
      * @param timeout the time in milliseconds to wait for a message before returning null, -1 to block.
      * @return the next event or null if there is currently none after the specified timeout.
      */
-    public final ZEvent nextEvent(int timeout)
+    public ZEvent nextEvent(int timeout)
     {
         if (!started) {
             System.out.println("ZMonitor: Start before getting events.");
@@ -358,8 +358,8 @@ public class ZMonitor implements Closeable
     {
         Objects.requireNonNull(ctx, "ZMonitor works only with a supplied context");
         Objects.requireNonNull(socket, "Socket has to be supplied");
-        final MonitorActor actor = new MonitorActor(socket);
-        final ZActor zactor = new ZActor(ctx, actor, UUID.randomUUID().toString());
+        MonitorActor actor = new MonitorActor(socket);
+        ZActor zactor = new ZActor(ctx, actor, UUID.randomUUID().toString());
 
         agent = zactor.agent();
         exit = zactor.exit();
@@ -411,24 +411,24 @@ public class ZMonitor implements Closeable
         @Override
         public boolean stage(Socket socket, Socket pipe, ZPoller poller, int evts)
         {
-            final zmq.ZMQ.Event event = zmq.ZMQ.Event.read(socket.base());
+            zmq.ZMQ.Event event = zmq.ZMQ.Event.read(socket.base());
             assert (event != null);
-            final int code = event.event;
-            final String address = event.addr;
+            int code = event.event;
+            String address = event.addr;
             assert (address != null);
-            final Event type = Event.findByCode(code);
+            Event type = Event.findByCode(code);
             assert (type != null);
-            final ZMsg msg = new ZMsg();
+            ZMsg msg = new ZMsg();
 
-            final ZFrame frame = new ZFrame(new byte[1 + 4 + address.length() + 4]);
-            final ZNeedle needle = new ZNeedle(frame);
+            ZFrame frame = new ZFrame(new byte[1 + 4 + address.length() + 4]);
+            ZNeedle needle = new ZNeedle(frame);
             needle.putNumber1(type.ordinal());
             needle.putNumber4(code);
             needle.putString(address);
 
             msg.add(frame);
 
-            final Object value = event.arg;
+            Object value = event.arg;
             if (value != null) {
                 msg.add(value.toString());
             }
@@ -438,7 +438,7 @@ public class ZMonitor implements Closeable
         @Override
         public boolean backstage(ZMQ.Socket pipe, ZPoller poller, int evts)
         {
-            final String command = pipe.recvStr();
+            String command = pipe.recvStr();
             if (command == null) {
                 System.out.printf("ZMonitor: Closing monitor %s : No command%n", monitored);
                 return false;
@@ -464,13 +464,13 @@ public class ZMonitor implements Closeable
 
         private boolean addEvents(Socket pipe)
         {
-            final ZMsg msg = ZMsg.recvMsg(pipe);
+            ZMsg msg = ZMsg.recvMsg(pipe);
             if (msg == null) {
                 return false; // interrupted
             }
             for (ZFrame frame : msg) {
-                final String evt = frame.getString(ZMQ.CHARSET);
-                final Event event = Event.valueOf(evt);
+                String evt = frame.getString(ZMQ.CHARSET);
+                Event event = Event.valueOf(evt);
                 if (verbose) {
                     System.out.printf("ZMonitor: Adding" + " event %s%n", event);
                 }
@@ -481,13 +481,13 @@ public class ZMonitor implements Closeable
 
         private boolean removeEvents(Socket pipe)
         {
-            final ZMsg msg = ZMsg.recvMsg(pipe);
+            ZMsg msg = ZMsg.recvMsg(pipe);
             if (msg == null) {
                 return false; // interrupted
             }
             for (ZFrame frame : msg) {
-                final String evt = frame.getString(ZMQ.CHARSET);
-                final Event event = Event.valueOf(evt);
+                String evt = frame.getString(ZMQ.CHARSET);
+                Event event = Event.valueOf(evt);
                 if (verbose) {
                     System.out.printf("ZMonitor: Removing" + " event %s%n", event);
                 }

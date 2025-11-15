@@ -180,7 +180,7 @@ public class ZPicture
      * @return the picture elements as object array
      **/
     @Draft
-    public Object[] recvBinaryPicture(Socket socket, final String picture)
+    public Object[] recvBinaryPicture(Socket socket, String picture)
     {
         if (!BINARY_FORMAT.matcher(picture).matches()) {
             throw new ZMQException(picture + " is not in expected binary format " + BINARY_FORMAT.pattern(),

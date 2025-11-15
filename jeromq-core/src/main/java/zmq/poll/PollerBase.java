@@ -9,7 +9,7 @@ import zmq.util.MultiMap;
 
 abstract class PollerBase implements Runnable
 {
-    private static final class TimerInfo
+    private static class TimerInfo
     {
         private final IPollEvents sink;
         private final int         id;
@@ -26,7 +26,7 @@ abstract class PollerBase implements Runnable
         @Override
         public int hashCode()
         {
-            final int prime = 31;
+            int prime = 31;
             int result = 1;
             result = prime * result + id;
             result = prime * result + sink.hashCode();
@@ -90,14 +90,14 @@ abstract class PollerBase implements Runnable
         return Clock.nowMS();
     }
 
-    final boolean isEmpty()
+    boolean isEmpty()
     {
         return timers.isEmpty();
     }
 
     //  Returns load of the poller. Note that this function can be
     //  invoked from a different thread!
-    public final int getLoad()
+    public int getLoad()
     {
         return load.get();
     }
@@ -115,7 +115,7 @@ abstract class PollerBase implements Runnable
     {
         assert (Thread.currentThread() == worker);
 
-        final long expiration = clock() + timeout;
+        long expiration = clock() + timeout;
         TimerInfo info = new TimerInfo(sink, id);
         timers.insert(expiration, info);
 
@@ -155,7 +155,7 @@ abstract class PollerBase implements Runnable
 
         //   Execute the timers that are already due.
         for (Entry<TimerInfo, Long> entry : timers.entries()) {
-            final TimerInfo timerInfo = entry.getKey();
+            TimerInfo timerInfo = entry.getKey();
             if (timerInfo.cancelled) {
                 timers.remove(entry.getValue(), timerInfo);
                 continue;
@@ -165,7 +165,7 @@ abstract class PollerBase implements Runnable
             //  checking the subsequent timers and return the time to wait for
             //  the next timer (at least 1ms).
 
-            final Long key = entry.getValue();
+            Long key = entry.getValue();
 
             if (key > current) {
                 return key - current;
@@ -180,7 +180,7 @@ abstract class PollerBase implements Runnable
 
         //  Remove empty list object
         for (Entry<TimerInfo, Long> entry : timers.entries()) {
-            final Long key = entry.getValue();
+            Long key = entry.getValue();
 
             if (!timers.hasValues(key)) {
                 timers.remove(key);

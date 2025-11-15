@@ -11,7 +11,7 @@ public abstract class Listener extends Own implements IPollEvents
     //  Socket the listener belongs to.
     protected final SocketBase socket;
 
-    protected Listener(IOThread ioThread, SocketBase socket, final Options options)
+    protected Listener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, options);
         this.socket = socket;

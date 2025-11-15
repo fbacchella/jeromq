@@ -13,7 +13,7 @@ import zmq.util.Wire;
 public class Msg
 {
     // dynamic message building used when the size is not known in advance
-    public static final class Builder extends Msg
+    public static class Builder extends Msg
     {
         private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -143,7 +143,7 @@ public class Msg
         this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
     }
 
-    public Msg(final ByteBuffer src)
+    public Msg(ByteBuffer src)
     {
         if (src == null) {
             throw new IllegalArgumentException("ByteBuffer cannot be null");
@@ -154,7 +154,7 @@ public class Msg
         this.size = buf.remaining();
     }
 
-    public Msg(final Msg m)
+    public Msg(Msg m)
     {
         if (m == null) {
             throw new IllegalArgumentException("Msg cannot be null");
@@ -415,12 +415,12 @@ public class Msg
         return String.format("#zmq.Msg{type=%s, size=%s, flags=%s}", type, size, flags);
     }
 
-    protected final int getWriteIndex()
+    protected int getWriteIndex()
     {
         return writeIndex;
     }
 
-    protected final void setWriteIndex(int writeIndex)
+    protected void setWriteIndex(int writeIndex)
     {
         this.writeIndex = writeIndex;
     }

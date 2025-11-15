@@ -332,7 +332,7 @@ public class Ctx
         }
     }
 
-    final void shutdown()
+    void shutdown()
     {
         slotSync.lock();
         try {
@@ -656,7 +656,7 @@ public class Ctx
     }
 
     //  Send command to the destination thread.
-    void sendCommand(int tid, final Command command)
+    void sendCommand(int tid, Command command)
     {
         //        System.out.println(Thread.currentThread().getName() + ": Sending command " + command);
         slots[tid].send(command);

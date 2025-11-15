@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import zmq.poll.IPollEvents;
 import zmq.poll.Poller;
 
-final class Reaper extends ZObject implements IPollEvents, Closeable
+class Reaper extends ZObject implements IPollEvents, Closeable
 {
     //  Reaper thread accesses incoming commands via this mailbox.
     private final Mailbox mailbox;

@@ -19,7 +19,7 @@ import zmq.util.Utils;
 //  to signal_fd there can be at most one signal in the signaler at any
 //  given moment. Attempt to send a signal before receiving the previous
 //  one will result in undefined behaviour.
-final class Signaler implements Closeable
+class Signaler implements Closeable
 {
     private interface IoOperation<O>
     {

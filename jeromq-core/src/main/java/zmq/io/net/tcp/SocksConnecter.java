@@ -25,8 +25,8 @@ public class SocksConnecter extends TcpConnecter
     // String representation of endpoint to connect to
     String endpoint;
 
-    public SocksConnecter(IOThread ioThread, SessionBase session, final Options options, final Address addr,
-            final Address proxyAddr, boolean delayedStart)
+    public SocksConnecter(IOThread ioThread, SessionBase session, Options options, Address addr,
+            Address proxyAddr, boolean delayedStart)
     {
         super(ioThread, session, options, addr, delayedStart);
         assert (NetProtocol.tcp.equals(addr.protocol()));

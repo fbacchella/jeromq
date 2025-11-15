@@ -132,8 +132,8 @@ public class Radio extends SocketBase
         private State state;
         private Msg pending;
 
-        public RadioSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
-                            final Address addr)
+        public RadioSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
+                            Address addr)
         {
             super(ioThread, connect, socket, options, addr);
 

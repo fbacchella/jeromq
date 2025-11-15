@@ -42,7 +42,7 @@ public class YPipe<T> implements YPipeBase<T>
     //  subsequently written to the pipe. Incomplete items are never
     //  flushed down the stream.
     @Override
-    public void write(final T value, boolean incomplete)
+    public void write(T value, boolean incomplete)
     {
         //  Place the value to the queue, add new terminator element.
         queue.push(value);

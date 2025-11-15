@@ -106,8 +106,8 @@ public class ZAuth implements Closeable
         private void loadPasswords(boolean initial)
         {
             if (!initial) {
-                final long lastModified = passwordsFile.lastModified();
-                final long age = System.currentTimeMillis() - lastModified;
+                long lastModified = passwordsFile.lastModified();
+                long age = System.currentTimeMillis() - lastModified;
                 if (lastModified > passwordsModified && age > 1000) {
                     // File has been modified and is stable, clear map
                     passwords.clear();
@@ -149,7 +149,7 @@ public class ZAuth implements Closeable
         {
             //  If location is CURVE_ALLOW_ANY, allow all clients. Otherwise
             //  treat location as a directory that holds the certificates.
-            final String location = configuration.popString();
+            String location = configuration.popString();
             allowAny = location.equals(CURVE_ALLOW_ANY);
             if (allowAny) {
                 if (verbose) {
@@ -448,13 +448,13 @@ public class ZAuth implements Closeable
         return auths;
     }
 
-    public ZAuth(final ZContext ctx, String actorName, Map<String, Auth> auths)
+    public ZAuth(ZContext ctx, String actorName, Map<String, Auth> auths)
     {
         Objects.requireNonNull(ctx, "ZAuth works only with a provided ZContext");
         Objects.requireNonNull(actorName, "Actor name shall be defined");
         Objects.requireNonNull(auths, "Authenticators shall be supplied as non-null map");
-        final AuthActor actor = new AuthActor(actorName, auths);
-        final ZActor zactor = new ZActor(ctx, actor, UUID.randomUUID().toString());
+        AuthActor actor = new AuthActor(actorName, auths);
+        ZActor zactor = new ZActor(ctx, actor, UUID.randomUUID().toString());
         agent = zactor.agent();
         exit = zactor.exit();
 
@@ -740,7 +740,7 @@ public class ZAuth implements Closeable
                 return false;
             }
             else {
-                final Auth authenticator = auths.get(command);
+                Auth authenticator = auths.get(command);
                 if (authenticator != null) {
                     if (authenticator.configure(msg, verbose)) {
                         rc = pipe.send(OK);
@@ -805,7 +805,7 @@ public class ZAuth implements Closeable
 
             //mechanism specific check
             if (!denied) {
-                final Auth auth = auths.get(request.mechanism);
+                Auth auth = auths.get(request.mechanism);
                 if (auth == null) {
                     System.out.printf("ZAuth E: Skipping unhandled mechanism %s%n", request.mechanism);
                     return false;
@@ -815,7 +815,7 @@ public class ZAuth implements Closeable
                 }
             }
 
-            final Socket reply = repliesEnabled ? replies : null;
+            Socket reply = repliesEnabled ? replies : null;
             if (allowed) {
                 request.reply(200, OK, reply);
             }

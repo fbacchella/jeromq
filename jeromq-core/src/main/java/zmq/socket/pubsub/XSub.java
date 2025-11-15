@@ -12,7 +12,7 @@ import zmq.util.Blob;
 
 public class XSub extends SocketBase
 {
-    private final class SendSubscription implements ITrieHandler
+    private class SendSubscription implements ITrieHandler
     {
         @Override
         public void added(byte[] data, int size, Pipe pipe)
@@ -102,7 +102,7 @@ public class XSub extends SocketBase
     @Override
     protected boolean xsend(Msg msg)
     {
-        final int size = msg.size();
+        int size = msg.size();
 
         if (size > 0 && msg.get(0) == 1) {
             //  Process subscribe message

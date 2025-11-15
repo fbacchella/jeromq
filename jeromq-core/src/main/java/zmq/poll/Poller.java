@@ -17,11 +17,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import zmq.Ctx;
 import zmq.ZError;
 
-public final class Poller extends PollerBase implements Runnable
+public class Poller extends PollerBase implements Runnable
 {
     // opaque class to mimic libzmq behaviour.
     // extra interest is we do not need to look through the fdTable to perform common operations.
-    public static final class Handle
+    public static class Handle
     {
         private final SelectableChannel fd;
         private final IPollEvents       handler;
@@ -40,7 +40,7 @@ public final class Poller extends PollerBase implements Runnable
         @Override
         public int hashCode()
         {
-            final int prime = 31;
+            int prime = 31;
             int result = 1;
             result = prime * result + fd.hashCode();
             result = prime * result + handler.hashCode();

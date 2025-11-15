@@ -52,7 +52,7 @@ public class Req extends Dealer
     }
 
     @Override
-    public boolean xsend(final Msg msg)
+    public boolean xsend(Msg msg)
     {
         //  If we've sent a request and we still haven't got the reply,
         //  we can't send another request.
@@ -73,7 +73,7 @@ public class Req extends Dealer
             if (requestIdFramesEnabled) {
                 requestId++;
 
-                final Msg id = new Msg(4);
+                Msg id = new Msg(4);
                 Wire.putUInt32(id.buf(), requestId);
                 id.setFlags(Msg.MORE);
                 boolean rc = super.sendpipe(id, replyPipe);
@@ -247,8 +247,8 @@ public class Req extends Dealer
 
         private State state;
 
-        public ReqSession(IOThread ioThread, boolean connect, SocketBase socket, final Options options,
-                final Address addr)
+        public ReqSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
+                Address addr)
         {
             super(ioThread, connect, socket, options, addr);
 

@@ -18,7 +18,7 @@ import zmq.util.Errno;
 
 public abstract class Decoder extends DecoderBase
 {
-    private final class MessageReady implements Step
+    private class MessageReady implements Step
     {
         @Override
         public Step.Result apply()
@@ -27,7 +27,7 @@ public abstract class Decoder extends DecoderBase
         }
     }
 
-    private final class FlagsReady implements Step
+    private class FlagsReady implements Step
     {
         @Override
         public Step.Result apply()
@@ -36,7 +36,7 @@ public abstract class Decoder extends DecoderBase
         }
     }
 
-    private final class EightByteSizeReady implements Step
+    private class EightByteSizeReady implements Step
     {
         @Override
         public Step.Result apply()
@@ -45,7 +45,7 @@ public abstract class Decoder extends DecoderBase
         }
     }
 
-    private final class OneByteSizeReady implements Step
+    private class OneByteSizeReady implements Step
     {
         @Override
         public Step.Result apply()
@@ -73,7 +73,7 @@ public abstract class Decoder extends DecoderBase
         this.allocator = allocator;
     }
 
-    protected final Step.Result sizeReady(final long size)
+    protected Step.Result sizeReady(long size)
     {
         //  Message size must not exceed the maximum allowed size.
         if (maxmsgsize >= 0) {
@@ -97,7 +97,7 @@ public abstract class Decoder extends DecoderBase
         return Step.Result.MORE_DATA;
     }
 
-    protected Msg allocate(final int size)
+    protected Msg allocate(int size)
     {
         return allocator.allocate(size);
     }

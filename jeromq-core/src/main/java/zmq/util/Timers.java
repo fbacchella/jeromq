@@ -15,9 +15,9 @@ import zmq.ZMQ;
  * This is a DRAFT class, and may change without notice.
  */
 @Draft
-public final class Timers
+public class Timers
 {
-    public static final class Timer
+    public static class Timer
     {
         private final Timers   parent;
         private long           interval;
@@ -123,8 +123,8 @@ public final class Timers
             return null;
         }
         Utils.checkArgument(interval > 0, "Delay of a timer has to be strictly greater than 0");
-        final Timer timer = new Timer(this, interval, handler, args);
-        final boolean rc = insert(timer);
+        Timer timer = new Timer(this, interval, handler, args);
+        boolean rc = insert(timer);
         assert (rc);
         return timer;
     }
@@ -176,10 +176,10 @@ public final class Timers
      */
     public long timeout()
     {
-        final long now = now();
+        long now = now();
         for (Entry<Timer, Long> entry : entries()) {
-            final Timer timer = entry.getKey();
-            final Long expiration = entry.getValue();
+            Timer timer = entry.getKey();
+            Long expiration = entry.getValue();
 
             if (timer.alive) {
                 //  Live timer, lets return the timeout
@@ -205,10 +205,10 @@ public final class Timers
     public int execute()
     {
         int executed = 0;
-        final long now = now();
+        long now = now();
         for (Entry<Timer, Long> entry : entries()) {
-            final Timer timer = entry.getKey();
-            final Long expiration = entry.getValue();
+            Timer timer = entry.getKey();
+            Long expiration = entry.getValue();
 
             //  Dead timer, lets remove it and continue
             if (!timer.alive) {

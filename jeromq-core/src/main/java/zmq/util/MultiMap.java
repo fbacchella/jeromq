@@ -11,10 +11,10 @@ import java.util.Map.Entry;
 // custom implementation of a collection mapping multiple values, tailored for use in the lib.
 // this class is definitely not thread-safe, and allows only one mapping per key-value
 // aka if the same value is correlated to a new key, the old mapping is removed.
-public final class MultiMap<K extends Comparable<? super K>, V>
+public class MultiMap<K extends Comparable<? super K>, V>
 {
     // sorts entries according to the natural order of the values
-    private final class EntryComparator implements Comparator<Entry<V, K>>
+    private class EntryComparator implements Comparator<Entry<V, K>>
     {
         @Override
         public int compare(Entry<V, K> first, Entry<V, K> second)

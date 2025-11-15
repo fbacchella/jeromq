@@ -172,14 +172,14 @@ public class ZPoller implements Closeable
     {
         private final EventsHandler handler;
 
-        public ZPollItem(final Socket socket, final EventsHandler handler, final int ops)
+        public ZPollItem(Socket socket, EventsHandler handler, int ops)
         {
             super(socket, ops);
             this.handler = handler;
             assert (item() != null);
         }
 
-        public ZPollItem(final SelectableChannel channel, final EventsHandler handler, final int ops)
+        public ZPollItem(SelectableChannel channel, EventsHandler handler, int ops)
         {
             super(channel, ops);
             this.handler = handler;
@@ -201,7 +201,7 @@ public class ZPoller implements Closeable
         @Override
         public int hashCode()
         {
-            final int prime = 31;
+            int prime = 31;
             int result = 1;
             result = prime * result + ((item() == null) ? 0 : item().hashCode());
             result = prime * result + ((getRawSocket() == null) ? 0 : getRawSocket().hashCode());
@@ -211,7 +211,7 @@ public class ZPoller implements Closeable
         }
 
         @Override
-        public boolean equals(final Object obj)
+        public boolean equals(Object obj)
         {
             if (this == obj) {
                 return true;
@@ -267,7 +267,7 @@ public class ZPoller implements Closeable
 
         private PollItem      item;
 
-        public CompositePollItem(final Object socketOrChannel)
+        public CompositePollItem(Object socketOrChannel)
         {
             this.socket = socketOrChannel instanceof Socket ? (Socket) socketOrChannel : null;
             this.channel = socketOrChannel instanceof SelectableChannel ? (SelectableChannel) socketOrChannel : null;
@@ -371,7 +371,7 @@ public class ZPoller implements Closeable
      *
      * @param poller    the main poller.
      */
-    public ZPoller(final ZPoller poller)
+    public ZPoller(ZPoller poller)
     {
         this(poller.creator, poller.selector);
     }
@@ -381,7 +381,7 @@ public class ZPoller implements Closeable
      *
      * @param selector  the selector to use for polling.
      */
-    public ZPoller(final Selector selector)
+    public ZPoller(Selector selector)
     {
         this(new SimpleCreator(), selector);
     }
@@ -393,7 +393,7 @@ public class ZPoller implements Closeable
      * @param context
      *            the context that will provide the selector to use for polling.
      */
-    public ZPoller(final ZContext context)
+    public ZPoller(ZContext context)
     {
         this(new SimpleCreator(), context);
     }
@@ -406,7 +406,7 @@ public class ZPoller implements Closeable
      * @param creator   the items creator
      * @param poller    the main poller.
      */
-    public ZPoller(final ItemCreator creator, final ZPoller poller)
+    public ZPoller(ItemCreator creator, ZPoller poller)
     {
         this(creator, poller.selector);
     }
@@ -420,7 +420,7 @@ public class ZPoller implements Closeable
      * @param context
      *            the context that will provide the selector to use for polling.
      */
-    public ZPoller(final ItemCreator creator, final ZContext context)
+    public ZPoller(ItemCreator creator, ZContext context)
     {
         this(creator, context.selector());
     }
@@ -431,7 +431,7 @@ public class ZPoller implements Closeable
      * @param creator   the items creator
      * @param selector  the selector to use for polling.
      */
-    private ZPoller(final ItemCreator creator, final Selector selector)
+    private ZPoller(ItemCreator creator, Selector selector)
     {
         Objects.requireNonNull(creator, "Item creator is mandatory for ZPoller");
         Objects.requireNonNull(selector, "Selector is mandatory for ZPoller");
@@ -442,14 +442,14 @@ public class ZPoller implements Closeable
     }
 
     // creates a new poll item
-    protected ItemHolder create(final Socket socket, final EventsHandler handler, final int events)
+    protected ItemHolder create(Socket socket, EventsHandler handler, int events)
     {
         Objects.requireNonNull(socket, "Socket has to be non-null");
         return creator.create(socket, handler, events);
     }
 
     // creates a new poll item
-    protected ItemHolder create(final SelectableChannel channel, final EventsHandler handler, final int events)
+    protected ItemHolder create(SelectableChannel channel, EventsHandler handler, int events)
     {
         Objects.requireNonNull(channel, "Channel has to be non-null");
         return creator.create(channel, handler, events);
@@ -460,7 +460,7 @@ public class ZPoller implements Closeable
      *
      * @param globalHandler the events handler to set
      */
-    public void setGlobalHandler(final EventsHandler globalHandler)
+    public void setGlobalHandler(EventsHandler globalHandler)
     {
         this.globalHandler.set(globalHandler);
     }
@@ -483,8 +483,8 @@ public class ZPoller implements Closeable
      * @param events   the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final Socket socket, final BiFunction<Socket, Integer, Boolean> handler,
-                                  final int events)
+    public boolean register(Socket socket, BiFunction<Socket, Integer, Boolean> handler,
+                                  int events)
     {
         return register(socket, new ComposeEventsHandler(handler, null), events);
     }
@@ -497,7 +497,7 @@ public class ZPoller implements Closeable
      * @param events   the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final Socket socket, final EventsHandler handler, final int events)
+    public boolean register(Socket socket, EventsHandler handler, int events)
     {
         if (socket == null) {
             return false;
@@ -512,7 +512,7 @@ public class ZPoller implements Closeable
      * @param handler  the events handler for this socket
      * @return true if registered, otherwise false
      */
-    public final boolean register(final Socket socket, final EventsHandler handler)
+    public boolean register(Socket socket, EventsHandler handler)
     {
         return register(socket, handler, POLLIN | POLLOUT | POLLERR);
     }
@@ -524,7 +524,7 @@ public class ZPoller implements Closeable
      * @param events   the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final Socket socket, final int events)
+    public boolean register(Socket socket, int events)
     {
         return register(socket, globalHandler.get(), events);
     }
@@ -537,8 +537,8 @@ public class ZPoller implements Closeable
      * @param events    the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final SelectableChannel channel,
-                                  final BiFunction<SelectableChannel, Integer, Boolean> handler, final int events)
+    public boolean register(SelectableChannel channel,
+                                  BiFunction<SelectableChannel, Integer, Boolean> handler, int events)
     {
         return register(channel, new ComposeEventsHandler(null, handler), events);
     }
@@ -551,7 +551,7 @@ public class ZPoller implements Closeable
      * @param events    the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final SelectableChannel channel, final EventsHandler handler, final int events)
+    public boolean register(SelectableChannel channel, EventsHandler handler, int events)
     {
         if (channel == null) {
             return false;
@@ -566,7 +566,7 @@ public class ZPoller implements Closeable
      * @param handler   the events handler for this channel
      * @return true if registered, otherwise false
      */
-    public final boolean register(final SelectableChannel channel, final EventsHandler handler)
+    public boolean register(SelectableChannel channel, EventsHandler handler)
     {
         return register(channel, handler, IN | OUT | ERR);
     }
@@ -578,7 +578,7 @@ public class ZPoller implements Closeable
      * @param events    the events to listen to, as a mask composed by ORing POLLIN, POLLOUT and POLLERR.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final SelectableChannel channel, final int events)
+    public boolean register(SelectableChannel channel, int events)
     {
         return register(channel, globalHandler.get(), events);
     }
@@ -597,7 +597,7 @@ public class ZPoller implements Closeable
      * @param item   the registering item.
      * @return true if registered, otherwise false
      */
-    public final boolean register(final ItemHolder item)
+    public boolean register(ItemHolder item)
     {
         return add(null, item);
     }
@@ -609,7 +609,7 @@ public class ZPoller implements Closeable
      * @return true if unregistered, otherwise false
      * TODO would it be useful to unregister only for specific events ?
      */
-    public final synchronized boolean unregister(final Object socketOrChannel)
+    public synchronized boolean unregister(Object socketOrChannel)
     {
         if (socketOrChannel == null) {
             return false;
@@ -637,7 +637,7 @@ public class ZPoller implements Closeable
      * @see "http://api.zeromq.org/3-0:zmq-poll"
      * @return how many objects where signaled by poll ()
      */
-    public int poll(final long timeout)
+    public int poll(long timeout)
     {
         return poll(timeout, true);
     }
@@ -651,16 +651,16 @@ public class ZPoller implements Closeable
      * @see "http://api.zeromq.org/3-0:zmq-poll"
      * @return how many objects where signaled by poll ()
      */
-    protected int poll(final long timeout, final boolean dispatchEvents)
+    protected int poll(long timeout, boolean dispatchEvents)
     {
         // Local copy of the items, for consistency
         Set<CompositePollItem> allPolled = new HashSet<>(items.values());
         // get all the raw items
-        final Set<PollItem> pollItems = allPolled.stream()
+        Set<PollItem> pollItems = allPolled.stream()
                                                  .map(CompositePollItem::item)
                                                  .collect(Collectors.toSet());
         // polling time
-        final int rc = poll(selector, timeout, pollItems);
+        int rc = poll(selector, timeout, pollItems);
 
         if (!dispatchEvents) {
             // raw result
@@ -676,7 +676,7 @@ public class ZPoller implements Closeable
     }
 
     // does the effective polling
-    protected int poll(final Selector selector, final long tout, final Collection<zmq.poll.PollItem> items)
+    protected int poll(Selector selector, long tout, Collection<zmq.poll.PollItem> items)
     {
         return zmq.ZMQ.poll(selector, items.toArray(new PollItem[0]), items.size(), tout);
     }
@@ -696,7 +696,7 @@ public class ZPoller implements Closeable
      */
     @SuppressWarnings("unused")
     @Deprecated
-    protected boolean dispatch(final Collection<? extends ItemHolder> all, int size)
+    protected boolean dispatch(Collection<? extends ItemHolder> all, int size)
     {
         return subDispatch(all);
     }
@@ -707,7 +707,7 @@ public class ZPoller implements Closeable
      * @param allDispatched   the items used for dispatching
      * @return true if correctly dispatched, false in case of error
      */
-    protected boolean dispatch(final Collection<? extends ItemHolder> allDispatched)
+    protected boolean dispatch(Collection<? extends ItemHolder> allDispatched)
     {
         return subDispatch(allDispatched);
     }
@@ -722,7 +722,7 @@ public class ZPoller implements Closeable
         return subDispatch(new HashSet<>(items.values()));
     }
 
-    private boolean subDispatch(final Collection<? extends ItemHolder> allDispatched)
+    private boolean subDispatch(Collection<? extends ItemHolder> allDispatched)
     {
         EventsHandler localGlobalHandler = currentGlobalHandler.get();
         for (ItemHolder holder : allDispatched) {
@@ -734,15 +734,15 @@ public class ZPoller implements Closeable
                 // no handler, short-circuit
                 continue;
             }
-            final PollItem item = holder.item();
-            final int events = item.readyOps();
+            PollItem item = holder.item();
+            int events = item.readyOps();
 
             if (events <= 0) {
                 // no events, short-circuit
                 continue;
             }
-            final Socket socket = holder.socket();
-            final SelectableChannel channel = holder.item().getRawSocket();
+            Socket socket = holder.socket();
+            SelectableChannel channel = holder.item().getRawSocket();
 
             if (socket != null) {
                 assert (channel == null);
@@ -771,12 +771,12 @@ public class ZPoller implements Closeable
      * @param channel    the channel to ask for.
      * @return true if readable, otherwise false
      */
-    public boolean isReadable(final SelectableChannel channel)
+    public boolean isReadable(SelectableChannel channel)
     {
         return readable((Object) channel);
     }
 
-    public boolean readable(final SelectableChannel channel)
+    public boolean readable(SelectableChannel channel)
     {
         return readable((Object) channel);
     }
@@ -787,32 +787,32 @@ public class ZPoller implements Closeable
      * @param socket    the socket to ask for.
      * @return true if readable, otherwise false
      */
-    public boolean isReadable(final Socket socket)
+    public boolean isReadable(Socket socket)
     {
         return readable(socket);
     }
 
-    public boolean readable(final Socket socket)
+    public boolean readable(Socket socket)
     {
         return readable((Object) socket);
     }
 
     // checks for read event
-    public boolean readable(final Object socketOrChannel)
+    public boolean readable(Object socketOrChannel)
     {
-        final PollItem it = filter(socketOrChannel, READABLE);
+        PollItem it = filter(socketOrChannel, READABLE);
         if (it == null) {
             return false;
         }
         return it.isReadable();
     }
 
-    public boolean pollin(final Socket socket)
+    public boolean pollin(Socket socket)
     {
         return isReadable(socket);
     }
 
-    public boolean pollin(final SelectableChannel channel)
+    public boolean pollin(SelectableChannel channel)
     {
         return isReadable(channel);
     }
@@ -823,12 +823,12 @@ public class ZPoller implements Closeable
      * @param channel     the channel to ask for.
      * @return true if writable, otherwise false
      */
-    public boolean isWritable(final SelectableChannel channel)
+    public boolean isWritable(SelectableChannel channel)
     {
         return writable((Object) channel);
     }
 
-    public boolean writable(final SelectableChannel channel)
+    public boolean writable(SelectableChannel channel)
     {
         return writable((Object) channel);
     }
@@ -839,32 +839,32 @@ public class ZPoller implements Closeable
      * @param socket     the socket to ask for.
      * @return true if writable, otherwise false
      */
-    public boolean isWritable(final Socket socket)
+    public boolean isWritable(Socket socket)
     {
         return writable((Object) socket);
     }
 
-    public boolean writable(final Socket socket)
+    public boolean writable(Socket socket)
     {
         return writable((Object) socket);
     }
 
     // checks for write event
-    public boolean writable(final Object socketOrChannel)
+    public boolean writable(Object socketOrChannel)
     {
-        final PollItem it = filter(socketOrChannel, WRITABLE);
+        PollItem it = filter(socketOrChannel, WRITABLE);
         if (it == null) {
             return false;
         }
         return it.isWritable();
     }
 
-    public boolean pollout(final Socket socket)
+    public boolean pollout(Socket socket)
     {
         return isWritable(socket);
     }
 
-    public boolean pollout(final SelectableChannel channel)
+    public boolean pollout(SelectableChannel channel)
     {
         return isWritable(channel);
     }
@@ -875,12 +875,12 @@ public class ZPoller implements Closeable
      * @param channel     the channel to ask for.
      * @return true if in error, otherwise false
      */
-    public boolean isError(final SelectableChannel channel)
+    public boolean isError(SelectableChannel channel)
     {
         return error((Object) channel);
     }
 
-    public boolean error(final SelectableChannel channel)
+    public boolean error(SelectableChannel channel)
     {
         return error((Object) channel);
     }
@@ -891,32 +891,32 @@ public class ZPoller implements Closeable
      * @param socket     the socket to ask for.
      * @return true if in error, otherwise false
      */
-    public boolean isError(final Socket socket)
+    public boolean isError(Socket socket)
     {
         return error((Object) socket);
     }
 
-    public boolean error(final Socket socket)
+    public boolean error(Socket socket)
     {
         return error((Object) socket);
     }
 
     // checks for error event
-    public boolean error(final Object socketOrChannel)
+    public boolean error(Object socketOrChannel)
     {
-        final PollItem it = filter(socketOrChannel, ERR);
+        PollItem it = filter(socketOrChannel, ERR);
         if (it == null) {
             return false;
         }
         return it.isError();
     }
 
-    public boolean pollerr(final Socket socket)
+    public boolean pollerr(Socket socket)
     {
         return isError(socket);
     }
 
-    public boolean pollerr(final SelectableChannel channel)
+    public boolean pollerr(SelectableChannel channel)
     {
         return isError(channel);
     }
@@ -956,27 +956,27 @@ public class ZPoller implements Closeable
     public static class SimpleCreator implements ItemCreator
     {
         @Override
-        public ItemHolder create(final Socket socket, final EventsHandler handler, final int events)
+        public ItemHolder create(Socket socket, EventsHandler handler, int events)
         {
             return new ZPollItem(socket, handler, events);
         }
 
         @Override
-        public ItemHolder create(final SelectableChannel channel, final EventsHandler handler, final int events)
+        public ItemHolder create(SelectableChannel channel, EventsHandler handler, int events)
         {
             return new ZPollItem(channel, handler, events);
         }
     }
 
     // add an item to this poller
-    protected boolean add(final Object socketOrChannel, final ItemHolder holder)
+    protected boolean add(Object socketOrChannel, ItemHolder holder)
     {
         Object key = Optional.ofNullable(socketOrChannel).orElseGet(() -> computeSocketOrChannel(holder));
         CompositePollItem aggregate = items.computeIfAbsent(key, CompositePollItem::new);
         return aggregate.holders.add(holder);
     }
 
-    private Object computeSocketOrChannel(final ItemHolder holder)
+    private Object computeSocketOrChannel(ItemHolder holder)
     {
         Socket socket = holder.socket();
         SelectableChannel ch = holder.item().getRawSocket();
@@ -1009,7 +1009,7 @@ public class ZPoller implements Closeable
     }
 
     // gets all the items of this poller regarding the given input
-    protected Iterable<ItemHolder> items(final Object socketOrChannel)
+    protected Iterable<ItemHolder> items(Object socketOrChannel)
     {
         if (socketOrChannel == null || ! items.containsKey(socketOrChannel)) {
             return Collections.emptySet();
@@ -1020,7 +1020,7 @@ public class ZPoller implements Closeable
     }
 
     // filters items to get the first one matching the criteria, or null if none found
-    protected PollItem filter(final Object socketOrChannel, final int events)
+    protected PollItem filter(Object socketOrChannel, int events)
     {
         return Optional.ofNullable(socketOrChannel)
                        .map(items::get)
