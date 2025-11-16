@@ -26,7 +26,7 @@ class NullMechanism extends Mechanism
     private boolean zapRequestSent;
     private boolean zapReplyReceived;
 
-    NullMechanism(SessionBase session, Address peerAddress, Options options)
+    NullMechanism(SessionBase session, Address<?> peerAddress, Options options)
     {
         super(session, peerAddress, options);
 

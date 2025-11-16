@@ -2,6 +2,7 @@ package zmq;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
@@ -56,7 +57,7 @@ public class Utils
         return zmq.util.Utils.delete(path);
     }
 
-    public static Address getPeerIpAddress(SocketChannel fd)
+    public static Address<SocketAddress> getPeerIpAddress(SocketChannel fd)
     {
         return zmq.util.Utils.getPeerIpAddress(fd);
     }

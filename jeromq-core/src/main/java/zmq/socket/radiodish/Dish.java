@@ -229,7 +229,7 @@ public class Dish extends SocketBase
         private String group;
 
         public DishSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
-                           Address addr)
+                           Address<?> addr)
         {
             super(ioThread, connect, socket, options, addr);
 

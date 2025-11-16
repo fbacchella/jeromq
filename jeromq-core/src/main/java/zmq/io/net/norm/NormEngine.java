@@ -13,7 +13,7 @@ public class NormEngine extends EngineNotImplemented
         throw new UnsupportedOperationException();
     }
 
-    public boolean init(Address addr, boolean b, boolean c)
+    public boolean init(Address<?> addr, boolean b, boolean c)
     {
         return false;
     }

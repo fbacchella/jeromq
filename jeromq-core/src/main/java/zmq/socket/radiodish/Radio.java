@@ -133,7 +133,7 @@ public class Radio extends SocketBase
         private Msg pending;
 
         public RadioSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
-                            Address addr)
+                            Address<?> addr)
         {
             super(ioThread, connect, socket, options, addr);
 

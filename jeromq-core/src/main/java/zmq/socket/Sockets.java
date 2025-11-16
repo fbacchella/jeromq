@@ -58,7 +58,7 @@ public enum Sockets
         }
 
         @Override
-        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
         {
             return new Req.ReqSession(ioThread, connect, socket, options, addr);
         }
@@ -141,7 +141,7 @@ public enum Sockets
         }
 
         @Override
-        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
         {
             return new Radio.RadioSession(ioThread, connect, socket, options, addr);
         }
@@ -154,7 +154,7 @@ public enum Sockets
         }
 
         @Override
-        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+        public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
         {
             return new Dish.DishSession(ioThread, connect, socket, options, addr);
         }
@@ -207,7 +207,7 @@ public enum Sockets
     //  Create a socket of a specified type.
     abstract SocketBase create(Ctx parent, int tid, int sid);
 
-    public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+    public SessionBase create(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
     {
         if (options.canSendHelloMsg && options.helloMsg != null) {
             return new HelloMsgSession(ioThread, connect, socket, options, addr);
@@ -218,7 +218,7 @@ public enum Sockets
     }
 
     public static SessionBase createSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
-                                            Address addr)
+                                            Address<?> addr)
     {
         return VALUES[options.type].create(ioThread, connect, socket, options, addr);
     }

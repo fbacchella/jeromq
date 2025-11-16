@@ -58,11 +58,11 @@ public class SessionBase extends Own implements Pipe.IPipeEvents, IPollEvents
     private boolean hasLingerTimer;
 
     //  Protocol and address to use when connecting.
-    private final Address addr;
+    private final Address<?> addr;
 
     private final IOObject ioObject;
 
-    public SessionBase(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+    public SessionBase(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
     {
         super(ioThread, options);
         ioObject = new IOObject(ioThread, this);

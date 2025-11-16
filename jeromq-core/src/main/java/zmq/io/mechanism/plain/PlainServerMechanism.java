@@ -28,7 +28,7 @@ public class PlainServerMechanism extends Mechanism
 
     private State state;
 
-    public PlainServerMechanism(SessionBase session, Address peerAddress, Options options)
+    public PlainServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
     {
         super(session, peerAddress, options);
         this.state = State.WAITING_FOR_HELLO;

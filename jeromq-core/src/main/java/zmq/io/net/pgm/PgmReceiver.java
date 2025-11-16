@@ -13,7 +13,7 @@ public class PgmReceiver extends EngineNotImplemented
         throw new UnsupportedOperationException();
     }
 
-    public boolean init(boolean udpEncapsulation, Address addr)
+    public boolean init(boolean udpEncapsulation, Address<?> addr)
     {
         return false;
     }

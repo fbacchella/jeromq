@@ -20,7 +20,7 @@ public class SelectorProviderTest
     {
         public final AtomicInteger choosen = new AtomicInteger(0);
         @Override
-        public SelectorProvider choose(IZAddress addr, Options options)
+        public SelectorProvider choose(IZAddress<?> addr, Options options)
         {
             choosen.addAndGet(1);
             return SelectorProvider.provider();

@@ -9,7 +9,7 @@ public class HelloMsgSession extends SessionBase
 {
     boolean newPipe;
 
-    public HelloMsgSession(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+    public HelloMsgSession(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
     {
         super(ioThread, connect, socket, options, addr);
         newPipe = true;

@@ -45,7 +45,7 @@ public class TcpNetworkProtocolProvider implements NetworkProtocolProvider<InetS
                                 BiConsumer<SessionBase, IEngine> sendAttach)
     {
         if (options.socksProxyAddress != null) {
-            Address proxyAddress = new Address(NetProtocol.tcp, options.socksProxyAddress);
+            Address<InetSocketAddress> proxyAddress = new Address<>(NetProtocol.tcp, options.socksProxyAddress);
             SocksConnecter connecter = new SocksConnecter(ioThread, session, options, addr, proxyAddress, delayedStart);
             launchChild.accept(connecter);
         }

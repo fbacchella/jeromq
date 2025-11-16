@@ -25,7 +25,7 @@ public enum Mechanisms
             // Nothing to check
         }
         @Override
-        public Mechanism create(SessionBase session, Address peerAddress, Options options)
+        public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
         {
             return new NullMechanism(session, peerAddress, options);
         }
@@ -51,7 +51,7 @@ public enum Mechanisms
             }
         }
         @Override
-        public Mechanism create(SessionBase session, Address peerAddress, Options options)
+        public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
         {
             if (options.asServer) {
                 return new PlainServerMechanism(session, peerAddress, options);
@@ -80,7 +80,7 @@ public enum Mechanisms
             }
         }
         @Override
-        public Mechanism create(SessionBase session, Address peerAddress, Options options)
+        public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
         {
             if (options.asServer) {
                 return new CurveServerMechanism(session, peerAddress, options);
@@ -97,7 +97,7 @@ public enum Mechanisms
             throw new UnsupportedOperationException("GSSAPI mechanism is not yet implemented");
         }
         @Override
-        public Mechanism create(SessionBase session, Address peerAddress, Options options)
+        public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
         {
             if (options.asServer) {
                 return new GssapiServerMechanism(session, peerAddress, options);
@@ -108,7 +108,7 @@ public enum Mechanisms
         }
     };
 
-    public abstract Mechanism create(SessionBase session, Address peerAddress, Options options);
+    public abstract Mechanism create(SessionBase session, Address<?> peerAddress, Options options);
 
     public abstract void check(Options options);
 

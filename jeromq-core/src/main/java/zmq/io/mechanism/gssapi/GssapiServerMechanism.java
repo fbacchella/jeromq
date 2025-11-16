@@ -9,7 +9,7 @@ import zmq.io.net.Address;
 // TODO V4 implement GSSAPI
 public class GssapiServerMechanism extends Mechanism
 {
-    public GssapiServerMechanism(SessionBase session, Address peerAddress, Options options)
+    public GssapiServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
     {
         super(session, peerAddress, options);
         throw new UnsupportedOperationException("GSSAPI mechanism is not yet implemented");

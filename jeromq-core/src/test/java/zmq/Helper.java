@@ -114,10 +114,10 @@ public class Helper
 
         public DummySession()
         {
-            this(new DummyIOThread(), false, new DummySocket(), new Options(), new Address(NetProtocol.tcp, "localhost:9090"));
+            this(new DummyIOThread(), false, new DummySocket(), new Options(), new Address<>(NetProtocol.tcp, "localhost:9090"));
         }
 
-        public DummySession(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address addr)
+        public DummySession(IOThread ioThread, boolean connect, SocketBase socket, Options options, Address<?> addr)
         {
             super(ioThread, connect, socket, options, addr);
         }

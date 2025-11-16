@@ -52,7 +52,7 @@ public class CurveServerMechanism extends Mechanism
 
     private final Errno errno;
 
-    public CurveServerMechanism(SessionBase session, Address peerAddress, Options options)
+    public CurveServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
     {
         super(session, peerAddress, options);
         this.state = State.EXPECT_HELLO;

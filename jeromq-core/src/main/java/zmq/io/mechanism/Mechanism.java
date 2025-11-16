@@ -43,11 +43,11 @@ public abstract class Mechanism
     public final Metadata zmtpProperties = new Metadata();
 
     protected final SessionBase session;
-    private final Address       peerAddress;
+    private final Address<?>    peerAddress;
 
     protected String statusCode;
 
-    protected Mechanism(SessionBase session, Address peerAddress, Options options)
+    protected Mechanism(SessionBase session, Address<?> peerAddress, Options options)
     {
         this.session = session;
         this.options = options;

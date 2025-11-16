@@ -632,7 +632,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             errno.set(ZError.EMTHREAD);
             return false;
         }
-        Address paddr = new Address(protocol, address);
+        Address<?> paddr = new Address<>(protocol, address);
 
         //  Resolve address (if needed by the protocol)
         protocol.resolve(paddr, options.ipv6);
@@ -745,7 +745,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
                 boolean endpoint = endpoints.hasValues(resolvedAddress);
                 if (!endpoint) {
                     // TODO V4 resolve TCP address when unbinding
-                    IZAddress address = protocol.zresolve(uri.getAddress(), options.ipv6);
+                    IZAddress<SocketAddress> address = protocol.zresolve(uri.getAddress(), options.ipv6);
                     resolvedAddress = address.address().toString();
                     endpoint = endpoints.hasValues(resolvedAddress);
                     if (!endpoint) {

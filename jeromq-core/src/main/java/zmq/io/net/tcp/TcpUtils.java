@@ -1,6 +1,7 @@
 package zmq.io.net.tcp;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.net.SocketOption;
 import java.net.StandardSocketOptions;
 import java.nio.channels.Channel;
@@ -109,7 +110,7 @@ public class TcpUtils
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
     @Deprecated
-    public static Address getPeerIpAddress(SocketChannel channel)
+    public static Address<SocketAddress> getPeerIpAddress(SocketChannel channel)
     {
         return Utils.getPeerIpAddress(channel);
     }

@@ -149,11 +149,11 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
-    public static Address getPeerIpAddress(SocketChannel fd)
+    public static Address<SocketAddress> getPeerIpAddress(SocketChannel fd)
     {
         try {
             SocketAddress address = fd.getRemoteAddress();
-            return new Address(address);
+            return new Address<>(address);
         }
         catch (IOException e) {
             throw new ZError.IOException(e);

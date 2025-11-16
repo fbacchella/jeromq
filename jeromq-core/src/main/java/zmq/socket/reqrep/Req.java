@@ -248,7 +248,7 @@ public class Req extends Dealer
         private State state;
 
         public ReqSession(IOThread ioThread, boolean connect, SocketBase socket, Options options,
-                Address addr)
+                Address<?> addr)
         {
             super(ioThread, connect, socket, options, addr);
 
