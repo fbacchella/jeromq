@@ -1277,7 +1277,7 @@ public class ZMQ
         @Draft
         public byte[] getHeartbeatContext()
         {
-            return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_HEARTBEAT_CONTEXT);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_HEARTBEAT_CONTEXT);
         }
 
         /**
@@ -1446,7 +1446,7 @@ public class ZMQ
          */
         public long getMaxMsgSize()
         {
-            return (Long) base.getSocketOptx(zmq.ZMQ.ZMQ_MAXMSGSIZE);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_MAXMSGSIZE);
         }
 
         /**
@@ -1707,7 +1707,7 @@ public class ZMQ
          */
         public long getAffinity()
         {
-            return (Long) base.getSocketOptx(zmq.ZMQ.ZMQ_AFFINITY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_AFFINITY);
         }
 
         /**
@@ -1738,7 +1738,7 @@ public class ZMQ
          */
         public byte[] getIdentity()
         {
-            return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_IDENTITY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_IDENTITY);
         }
 
         /**
@@ -2206,7 +2206,7 @@ public class ZMQ
          */
         public SelectableChannel getFD()
         {
-            return (SelectableChannel) base.getSocketOptx(zmq.ZMQ.ZMQ_FD);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_FD);
         }
 
         /**
@@ -2390,7 +2390,7 @@ public class ZMQ
          */
         public SelectorProviderChooser getSelectorProviderChooser()
         {
-            return (SelectorProviderChooser) base.getSocketOptx(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER);
         }
 
         /**
@@ -2554,7 +2554,7 @@ public class ZMQ
          */
         public boolean isIPv6()
         {
-            return (Boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_IPV6);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_IPV6);
         }
 
         /**
@@ -2662,7 +2662,7 @@ public class ZMQ
          */
         public boolean isImmediate()
         {
-            return (boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_IMMEDIATE);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_IMMEDIATE);
         }
 
         /**
@@ -2736,7 +2736,7 @@ public class ZMQ
          */
         public String getSocksProxy()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_SOCKS_PROXY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_SOCKS_PROXY);
         }
 
         /**
@@ -2746,7 +2746,7 @@ public class ZMQ
          */
         public String getLastEndpoint()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_LAST_ENDPOINT);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_LAST_ENDPOINT);
         }
 
         /**
@@ -2790,7 +2790,7 @@ public class ZMQ
          */
         public String getZapDomain()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_ZAP_DOMAIN);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_ZAP_DOMAIN);
         }
 
         /**
@@ -2846,7 +2846,7 @@ public class ZMQ
          */
         public String getSelfAddressPropertyName()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_SELFADDR_PROPERTY_NAME);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_SELFADDR_PROPERTY_NAME);
         }
 
         /**
@@ -2930,7 +2930,7 @@ public class ZMQ
          */
         public boolean getPlainServer()
         {
-            return (Boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_SERVER);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_SERVER);
         }
 
         /**
@@ -2995,7 +2995,7 @@ public class ZMQ
          */
         public String getPlainUsername()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_USERNAME);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_USERNAME);
         }
 
         /**
@@ -3007,7 +3007,7 @@ public class ZMQ
          */
         public String getPlainPassword()
         {
-            return (String) base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_PASSWORD);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_PASSWORD);
         }
 
         /**
@@ -3069,7 +3069,7 @@ public class ZMQ
          */
         public boolean getCurveServer()
         {
-            return (boolean) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVER);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVER);
         }
 
         /**
@@ -3146,7 +3146,7 @@ public class ZMQ
          */
         public byte[] getCurvePublicKey()
         {
-            return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY);
         }
 
         /**
@@ -3157,7 +3157,7 @@ public class ZMQ
          */
         public byte[] getCurveServerKey()
         {
-            return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVERKEY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVERKEY);
         }
 
         /**
@@ -3168,7 +3168,7 @@ public class ZMQ
          */
         public byte[] getCurveSecretKey()
         {
-            return (byte[]) base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SECRETKEY);
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SECRETKEY);
         }
 
         /**
@@ -3178,7 +3178,7 @@ public class ZMQ
          */
         public Mechanism getMechanism()
         {
-            return Mechanism.find((Mechanisms) base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM));
+            return Mechanism.find(base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM));
         }
 
         /**
