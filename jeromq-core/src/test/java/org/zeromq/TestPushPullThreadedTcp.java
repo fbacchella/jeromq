@@ -1,10 +1,5 @@
 package org.zeromq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +7,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 import org.zeromq.ZMQ.Socket;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Tests a PUSH-PULL dialog with several methods, each component being on a
