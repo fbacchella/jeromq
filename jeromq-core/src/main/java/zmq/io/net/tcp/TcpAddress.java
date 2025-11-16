@@ -136,7 +136,7 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
                 addrNet = Arrays.stream(addresses).filter(Inet6Address.class::isInstance).findFirst().orElseGet(() -> addresses[0]);
             }
             else {
-                addrNet = Arrays.stream(addresses).filter(Inet4Address.class::isInstance).findFirst().orElseGet(() -> null);
+                addrNet = Arrays.stream(addresses).filter(Inet4Address.class::isInstance).findFirst().orElse(null);
             }
         }
         catch (UnknownHostException e) {
