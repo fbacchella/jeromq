@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-import zmq.io.Metadata;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocator;
@@ -893,17 +892,6 @@ public class ZMQ
         default:
             throw new IllegalArgumentException();
         }
-    }
-
-    //  Get message metadata string
-    public static String getMessageMetadata(Msg msg, String property)
-    {
-        String data = null;
-        Metadata metadata = msg.getMetadata();
-        if (metadata != null) {
-            data = metadata.get(property);
-        }
-        return data;
     }
 
     //  Set routing id on a message sent over SERVER socket type

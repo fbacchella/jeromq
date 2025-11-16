@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.Map;
 
 import zmq.io.Metadata;
 import zmq.util.Utils;
@@ -102,7 +103,7 @@ public class Msg
     /// The maximum length of a group (Radio/Dish)
     public static final int MAX_GROUP_LENGTH = 255;
 
-    private Metadata metadata;
+    private Map<String, ?> metadata;
     private int      flags;
     private Type     type;
 
@@ -302,12 +303,12 @@ public class Msg
         return fileDesc;
     }
 
-    public Metadata getMetadata()
+    public Map<String, ?> getMetadata()
     {
         return metadata;
     }
 
-    public Msg setMetadata(Metadata metadata)
+    public Msg setMetadata(Map<String, ?> metadata)
     {
         this.metadata = metadata;
         return this;

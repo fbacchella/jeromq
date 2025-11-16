@@ -5,6 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -93,7 +95,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private int outsize;
     private IEncoder encoder;
 
-    private Metadata metadata;
+    private Map<String, Object> metadata;
 
     //  When true, we are still trying to determine whether
     //  the peer is using versioned protocol, and if so, which
@@ -276,16 +278,16 @@ public class StreamEngine implements IEngine, IPollEvents
             if (peerAddress != null && !peerAddress.address().isEmpty()) {
                 assert (metadata == null);
                 // Compile metadata
-                metadata = new Metadata();
-                metadata.put(Metadata.PEER_ADDRESS, peerAddress.address());
+                metadata = new HashMap<>();
+                metadata.put(Metadata.PEER_ADDRESS, peerAddress);
             }
 
             if (options.selfAddressPropertyName != null && ! options.selfAddressPropertyName.isEmpty()
                 && selfAddress != null && !selfAddress.address().isEmpty()) {
                 if (metadata == null) {
-                    metadata = new Metadata();
+                    metadata = new HashMap<>();
                 }
-                metadata.put(options.selfAddressPropertyName, selfAddress.address());
+                metadata.put(options.selfAddressPropertyName, selfAddress);
             }
 
             //  For raw sockets, send an initial 0-length message to the
@@ -981,22 +983,22 @@ public class StreamEngine implements IEngine, IPollEvents
         //  Compile metadata.
         assert (metadata == null);
 
-        metadata = new Metadata();
+        metadata = new HashMap<>();
 
         //  If we have a peer_address, add it to metadata
-        if (peerAddress != null && !peerAddress.address().isEmpty()) {
-            metadata.set(Metadata.PEER_ADDRESS, peerAddress.address());
+        if (peerAddress != null) {
+            metadata.put(Metadata.PEER_ADDRESS, peerAddress);
         }
         //  If we have a local_address, add it to metadata
         if (options.selfAddressPropertyName != null && ! options.selfAddressPropertyName.isEmpty()
-            && selfAddress != null && !selfAddress.address().isEmpty()) {
-            metadata.put(options.selfAddressPropertyName, selfAddress.address());
+            && selfAddress != null) {
+            metadata.put(options.selfAddressPropertyName, selfAddress);
         }
         //  Add ZAP properties.
-        metadata.set(mechanism.zapProperties);
+        metadata.putAll(mechanism.zapProperties.asMap());
 
         //  Add ZMTP properties.
-        metadata.set(mechanism.zmtpProperties);
+        metadata.putAll(mechanism.zmtpProperties.asMap());
 
         if (metadata.isEmpty()) {
             metadata = null;

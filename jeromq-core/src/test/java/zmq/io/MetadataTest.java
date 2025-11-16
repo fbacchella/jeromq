@@ -124,22 +124,22 @@ public class MetadataTest
         Msg msg = ZMQ.recv(server, 0);
         assertThat(msg, notNullValue());
 
-        String prop = ZMQ.getMessageMetadata(msg, "Socket-Type");
+        String prop = (String) msg.getMetadata().get("Socket-Type");
         assertThat(prop, is("DEALER"));
 
-        prop = ZMQ.getMessageMetadata(msg, "User-Id");
+        prop = (String) msg.getMetadata().get("User-Id");
         assertThat(prop, is("anonymous"));
 
-        prop = ZMQ.getMessageMetadata(msg, "Peer-Address");
+        prop = ((Address<?>) msg.getMetadata().get("Peer-Address")).address();
         assertThat(prop.startsWith("127.0.0.1:"), is(true));
 
-        prop = ZMQ.getMessageMetadata(msg, "no such");
+        prop = (String) msg.getMetadata().get("no such");
         assertThat(prop, nullValue());
 
-        prop = ZMQ.getMessageMetadata(msg, "Hello");
+        prop = (String) msg.getMetadata().get("Hello");
         assertThat(prop, is("World"));
 
-        prop = ZMQ.getMessageMetadata(msg, "X-Local-Address");
+        prop = ((Address<?>) msg.getMetadata().get("X-Local-Address")).address();
         assertThat(prop, is("127.0.0.1:" + port));
 
         ZMQ.closeZeroLinger(server);

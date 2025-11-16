@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -419,5 +420,9 @@ public class Metadata
         buf.get(bytes, 0, length);
         buf.position(current);
         return bytes;
+    }
+
+    public Map<String, String> asMap() {
+        return Collections.unmodifiableMap(dictionary);
     }
 }

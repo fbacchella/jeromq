@@ -66,7 +66,7 @@ public class StreamTest
         assertThat(id.hasMore(), is(true));
 
         // Verify the existence of Peer-Address metadata
-        assertThat(id.getMetadata().get("Peer-Address").startsWith("127.0.0.1:"), is(true));
+        assertThat(((Address<?>)id.getMetadata().get("Peer-Address")).host(), is("127.0.0.1"));
 
         //  Second frame is zero
         Msg zero = ZMQ.recv(stream, 0);
@@ -80,7 +80,7 @@ public class StreamTest
         assertThat(id.hasMore(), is(true));
 
         // Verify the existence of Peer-Address metadata
-        assertThat(id.getMetadata().get("Peer-Address").startsWith("127.0.0.1:"), is(true));
+        assertThat(((Address<?>)id.getMetadata().get("Peer-Address")).host(), is("127.0.0.1"));
 
         //  Second frame is greeting signature
         Msg greeting = ZMQ.recv(stream, 0);

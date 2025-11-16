@@ -231,7 +231,7 @@ public class Stream extends SocketBase
         msg = new Msg(identity.data());
 
         // forward metadata (if any)
-        Metadata metadata = prefetchedMsg.getMetadata();
+        Map<String, ?> metadata = prefetchedMsg.getMetadata();
         if (metadata != null) {
             msg.setMetadata(metadata);
         }
@@ -268,7 +268,7 @@ public class Stream extends SocketBase
         prefetchedId = new Msg(identity.data());
 
         // forward metadata (if any)
-        Metadata metadata = prefetchedMsg.getMetadata();
+        Map<String, ?> metadata = prefetchedMsg.getMetadata();
         if (metadata != null) {
             prefetchedId.setMetadata(metadata);
         }
