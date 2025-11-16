@@ -172,24 +172,24 @@ public class clone
             if (command == null)
                 return false; //  Interrupted
 
-            if (command.equals("SUBTREE")) {
+            switch (command) {
+            case "SUBTREE":
                 subtree = msg.popString();
-            }
-            else if (command.equals("CONNECT")) {
+                break;
+            case "CONNECT":
                 String address = msg.popString();
                 String service = msg.popString();
                 if (nbrServers < SERVER_MAX) {
                     server[nbrServers++] = new Server(ctx, address, Integer.parseInt(service), subtree);
                     //  We broadcast updates to all known servers
                     publisher.connect(String.format("%s:%d", address, Integer.parseInt(service) + 2));
-                }
-                else System.out.printf("E: too many servers (max. %d)\n", SERVER_MAX);
-            }
-            else
+                } else
+                    System.out.printf("E: too many servers (max. %d)\n", SERVER_MAX);
+                break;
             //  .split set and get commands
             //  When we set a property, we push the new key-value pair onto
             //  all our connected servers:
-            if (command.equals("SET")) {
+            case "SET": {
                 String key = msg.popString();
                 String value = msg.popString();
                 String ttl = msg.popString();
@@ -203,11 +203,14 @@ public class clone
                 kvmsg.setProp("ttl", ttl);
                 kvmsg.send(publisher);
                 kvmsg.destroy();
+                break;
             }
-            else if (command.equals("GET")) {
+            case "GET": {
                 String key = msg.popString();
                 String value = kvmap.get(key);
                 pipe.send(Objects.requireNonNullElse(value, ""));
+                break;
+            }
             }
             msg.destroy();
 

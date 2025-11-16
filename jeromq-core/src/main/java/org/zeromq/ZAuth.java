@@ -696,40 +696,42 @@ public class ZAuth implements Closeable
                 return false; //interrupted
             }
             boolean rc;
-            if (ALLOW.equals(command)) {
+            switch (command) {
+            case ALLOW: {
                 String address = msg.popString();
                 if (verbose) {
                     System.out.printf("ZAuth: Whitelisting IP address=%s\n", address);
                 }
                 whitelist.put(address, OK);
                 rc = pipe.send(OK);
+                break;
             }
-            else if (DENY.equals(command)) {
+            case DENY: {
                 String address = msg.popString();
                 if (verbose) {
                     System.out.printf("ZAuth: Blacklisting IP address=%s\n", address);
                 }
                 blacklist.put(address, OK);
                 rc = pipe.send(OK);
+                break;
             }
-            else if (VERBOSE.equals(command)) {
+            case VERBOSE:
                 String verboseStr = msg.popString();
                 this.verbose = Boolean.parseBoolean(verboseStr);
                 rc = pipe.send(OK);
-            }
-            else if (REPLIES.equals(command)) {
+                break;
+            case REPLIES:
                 repliesEnabled = Boolean.parseBoolean(msg.popString());
                 if (verbose) {
                     if (repliesEnabled) {
                         System.out.println("ZAuth: Enabled replies");
-                    }
-                    else {
+                    } else {
                         System.out.println("ZAuth: Disabled replies");
                     }
                 }
                 rc = pipe.send(OK);
-            }
-            else if (TERMINATE.equals(command)) {
+                break;
+            case TERMINATE:
                 if (repliesEnabled) {
                     replies.send(repliesAddress); // lock replies agent
                 }
@@ -738,21 +740,19 @@ public class ZAuth implements Closeable
                 }
                 pipe.send(OK);
                 return false;
-            }
-            else {
+            default:
                 Auth authenticator = auths.get(command);
                 if (authenticator != null) {
                     if (authenticator.configure(msg, verbose)) {
                         rc = pipe.send(OK);
-                    }
-                    else {
+                    } else {
                         rc = pipe.send("ERROR");
                     }
-                }
-                else {
+                } else {
                     System.out.printf("ZAuth: Invalid command %s%n", command);
                     rc = true;
                 }
+                break;
             }
 
             msg.destroy();

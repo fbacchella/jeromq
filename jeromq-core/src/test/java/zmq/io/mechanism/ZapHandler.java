@@ -131,25 +131,27 @@ class ZapHandler implements Runnable
                     boolean authentified;
                     String errorMessage;
                     String userId;
-                    if ("CURVE".equals(mechanism)) {
+                    switch (mechanism) {
+                    case "CURVE":
                         authentified = clientKeyText.equals(clientPublic);
                         errorMessage = "Invalid client public key";
                         userId = clientPublic;
-                    }
-                    else if ("PLAIN".equals(mechanism)) {
+                        break;
+                    case "PLAIN":
                         authentified = username.equals(clientUsername) && password.equals(clientPassword);
                         errorMessage = "Invalid username or password";
                         userId = clientUsername;
-                    }
-                    else if ("NULL".equals(mechanism)) {
+                        break;
+                    case "NULL":
                         authentified = "TEST".equals(clientDomain);
                         errorMessage = "BAD DOMAIN";
                         userId = "";
-                    }
-                    else {
+                        break;
+                    default:
                         authentified = false;
                         errorMessage = "Unknown mechanism";
                         userId = "";
+                        break;
                     }
                     ret = ZMQ.send(handler, authentified ? "200" : "400", ZMQ.ZMQ_SNDMORE);
                     assertThat(ret, is(3));
