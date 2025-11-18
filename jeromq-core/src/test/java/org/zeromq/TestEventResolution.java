@@ -315,7 +315,7 @@ public class TestEventResolution
             s.setEventHook(eventFuture::complete, zmq.ZMQ.ZMQ_EVENT_MONITOR_STOPPED);
         }
         ZEvent ev = eventFuture.get();
-        assertThat(ev.getEvent(), is(ZMonitor.Event.MONITOR_STOPPED));
+        assertThat(ev.getEvent(), is(Events.MONITOR_STOPPED));
         assertThat(ev.isError(), is(false));
         assertThat(ev.isWarn(), is(false));
         assertThat(ev.isInformation(), is(false));

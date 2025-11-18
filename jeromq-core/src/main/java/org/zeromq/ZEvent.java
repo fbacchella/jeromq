@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.zeromq.ZMQ.Socket;
-import org.zeromq.ZMonitor.Event;
 
 import zmq.ZError;
 
@@ -119,7 +118,7 @@ public class ZEvent
         }
     }
 
-    private final Event event;
+    private final Events event;
     // To keep backward compatibility, the old value field only store integer
     // The resolved value (Error, channel or other) is stored in resolvedValue field.
     private final Object value;
@@ -127,12 +126,12 @@ public class ZEvent
 
     private ZEvent(zmq.ZMQ.Event event, Function<Object, SelectableChannel> getResolveChannel)
     {
-        this.event = ZMonitor.Event.findByCode(event.event);
+        this.event = Events.findByCode(event.event);
         this.address = event.addr;
         this.value = resolve(this.event, event.arg, getResolveChannel);
     }
 
-    static Object resolve(Event event, Object value, Function<Object, SelectableChannel> getResolveChannel)
+    static Object resolve(Events event, Object value, Function<Object, SelectableChannel> getResolveChannel)
     {
         switch (event) {
         case HANDSHAKE_FAILED_PROTOCOL:
@@ -163,7 +162,7 @@ public class ZEvent
         }
     }
 
-    public Event getEvent()
+    public Events getEvent()
     {
         return event;
     }
@@ -221,7 +220,7 @@ public class ZEvent
      */
     public boolean isWarn()
     {
-        return event == Event.HANDSHAKE_FAILED_AUTH;
+        return event == Events.HANDSHAKE_FAILED_AUTH;
     }
 
     /**
@@ -233,7 +232,7 @@ public class ZEvent
      */
     public boolean isInformation()
     {
-        return event == Event.DISCONNECTED;
+        return event == Events.DISCONNECTED;
     }
 
     /**

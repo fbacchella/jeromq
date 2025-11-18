@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.ZAuth.ZapRequest;
 import org.zeromq.ZMQ.Socket;
-import org.zeromq.ZMonitor.Event;
 import org.zeromq.ZMonitor.ZEvent;
 
 import zmq.io.mechanism.curve.Curve;
@@ -51,34 +50,34 @@ public class ZMonitorTest
 
         final ZMonitor clientMonitor = new ZMonitor(ctx, client);
         clientMonitor.verbose(true);
-        clientMonitor.add(Event.LISTENING, Event.CONNECTED, Event.DISCONNECTED, Event.ACCEPT_FAILED);
-        clientMonitor.remove(Event.ACCEPT_FAILED);
+        clientMonitor.add(Events.LISTENING, Events.CONNECTED, Events.DISCONNECTED, Events.ACCEPT_FAILED);
+        clientMonitor.remove(Events.ACCEPT_FAILED);
 
         clientMonitor.start();
 
         final ZMonitor serverMonitor = new ZMonitor(ctx, server);
         serverMonitor.verbose(false);
-        serverMonitor.add(Event.LISTENING, Event.ACCEPTED, Event.HANDSHAKE_PROTOCOL);
+        serverMonitor.add(Events.LISTENING, Events.ACCEPTED, Events.HANDSHAKE_PROTOCOL);
         serverMonitor.start();
 
         //  Check server is now listening
         int port = server.bindToRandomPort("tcp://127.0.0.1");
         ZEvent received = serverMonitor.nextEvent();
-        Assert.assertEquals(Event.LISTENING, received.type);
+        Assert.assertEquals(Events.LISTENING, received.type);
 
         //  Check server connected to client
         boolean rc = client.connect("tcp://127.0.0.1:" + port);
         Assert.assertTrue(rc);
         received = clientMonitor.nextEvent();
-        assertThat(received.type, is(Event.CONNECTED));
+        assertThat(received.type, is(Events.CONNECTED));
 
         //  Check server accepted connection
         received = serverMonitor.nextEvent(true);
-        Assert.assertEquals(Event.ACCEPTED, received.type);
+        Assert.assertEquals(Events.ACCEPTED, received.type);
 
         //  Check server accepted connection
         received = serverMonitor.nextEvent(-1); // timeout -1 aka blocking
-        Assert.assertEquals(Event.HANDSHAKE_PROTOCOL, received.type);
+        Assert.assertEquals(Events.HANDSHAKE_PROTOCOL, received.type);
 
         received = serverMonitor.nextEvent(false); // with no blocking
         Assert.assertNull(received);
@@ -119,12 +118,12 @@ public class ZMonitorTest
 
         final ZMonitor clientMonitor = new ZMonitor(ctx, client);
         clientMonitor.verbose(true);
-        clientMonitor.add(Event.ALL);
+        clientMonitor.add(Events.ALL);
         clientMonitor.start();
 
         final ZMonitor serverMonitor = new ZMonitor(ctx, server);
         serverMonitor.verbose(true);
-        serverMonitor.add(Event.ALL);
+        serverMonitor.add(Events.ALL);
         serverMonitor.start();
 
         //  Check server is now listening
@@ -152,20 +151,20 @@ public class ZMonitorTest
         ctx.close();
         // [ZEvent [_PROTOCOL, code=32768, address=tcp://127.0.0.1:53682, value=3], ZEvent [type=DISCONNECTED, code=512, address=tcp://127.0.0.1:53682, value=null]]
 
-        final Event[] expectedEventsClient = new Event[] {
-            Event.CONNECT_DELAYED,
-            Event.CONNECTED,
-            Event.HANDSHAKE_PROTOCOL,
-            Event.MONITOR_STOPPED,
+        final Events[] expectedEventsClient = new Events[] {
+            Events.CONNECT_DELAYED,
+            Events.CONNECTED,
+            Events.HANDSHAKE_PROTOCOL,
+            Events.MONITOR_STOPPED,
         };
         check(receivedEventsClient, expectedEventsClient);
-        final Event[] expectedEventsServer = new Event[] {
-            Event.LISTENING,
-            Event.ACCEPTED,
-            Event.HANDSHAKE_PROTOCOL,
-            Event.DISCONNECTED,
-            Event.CLOSED,
-            Event.MONITOR_STOPPED,
+        final Events[] expectedEventsServer = new Events[] {
+            Events.LISTENING,
+            Events.ACCEPTED,
+            Events.HANDSHAKE_PROTOCOL,
+            Events.DISCONNECTED,
+            Events.CLOSED,
+            Events.MONITOR_STOPPED,
         };
         check(receivedEventsServer, expectedEventsServer);
     }
@@ -195,12 +194,12 @@ public class ZMonitorTest
 
         final ZMonitor clientMonitor = new ZMonitor(ctx, client);
         clientMonitor.verbose(true);
-        clientMonitor.add(Event.ALL);
+        clientMonitor.add(Events.ALL);
         clientMonitor.start();
 
         final ZMonitor serverMonitor = new ZMonitor(ctx, server);
         serverMonitor.verbose(true);
-        serverMonitor.add(Event.ALL);
+        serverMonitor.add(Events.ALL);
         serverMonitor.start();
 
         //  Check server is now listening
@@ -228,22 +227,22 @@ public class ZMonitorTest
 
         ctx.close();
 
-        final Event[] expectedEventsClient = new Event[] {
-            Event.CONNECT_DELAYED,
-            Event.CONNECTED,
-            Event.HANDSHAKE_PROTOCOL,
-            Event.DISCONNECTED,
-            Event.MONITOR_STOPPED,
+        final Events[] expectedEventsClient = new Events[] {
+            Events.CONNECT_DELAYED,
+            Events.CONNECTED,
+            Events.HANDSHAKE_PROTOCOL,
+            Events.DISCONNECTED,
+            Events.MONITOR_STOPPED,
         };
         check(receivedEventsClient, expectedEventsClient);
-        final Event[] expectedEventsServer = new Event[] {
-            Event.LISTENING,
-            Event.ACCEPTED,
-            Event.HANDSHAKE_PROTOCOL,
-            Event.HANDSHAKE_FAILED_PROTOCOL,
-            Event.DISCONNECTED,
-            Event.CLOSED,
-            Event.MONITOR_STOPPED,
+        final Events[] expectedEventsServer = new Events[] {
+            Events.LISTENING,
+            Events.ACCEPTED,
+            Events.HANDSHAKE_PROTOCOL,
+            Events.HANDSHAKE_FAILED_PROTOCOL,
+            Events.DISCONNECTED,
+            Events.CLOSED,
+            Events.MONITOR_STOPPED,
         };
         check(receivedEventsServer, expectedEventsServer);
     }
@@ -274,11 +273,11 @@ public class ZMonitorTest
              Socket client = ctx.createSocket(SocketType.PULL);
              ZMonitor clientMonitor = new ZMonitor(ctx, client)) {
             clientMonitor.verbose(true);
-            clientMonitor.add(Event.ALL);
+            clientMonitor.add(Events.ALL);
             clientMonitor.start();
 
             serverMonitor.verbose(true);
-            serverMonitor.add(Event.ALL);
+            serverMonitor.add(Events.ALL);
             serverMonitor.start();
 
             server.setPlainServer(true);
@@ -317,26 +316,27 @@ public class ZMonitorTest
                 receivedEventsServer.add(received);
             }
 
-            final Event[] expectedEventsClient = new Event[] {
-                Event.CONNECT_DELAYED,
-                Event.CONNECTED,
-                Event.HANDSHAKE_PROTOCOL,
-                Event.HANDSHAKE_FAILED_AUTH,
-                Event.DISCONNECTED,
+            final Events[] expectedEventsClient = new Events[] {
+                Events.CONNECT_DELAYED,
+                Events.CONNECTED,
+                Events.HANDSHAKE_PROTOCOL,
+                Events.HANDSHAKE_FAILED_AUTH,
+                Events.DISCONNECTED,
            };
             check(receivedEventsClient, expectedEventsClient);
-            final Event[] expectedEventsServer = new Event[] {
-                Event.LISTENING,
-                Event.ACCEPTED,
-                Event.HANDSHAKE_PROTOCOL,
-                Event.DISCONNECTED,
+            final Events[] expectedEventsServer = new Events[] {
+                Events.LISTENING,
+                Events.ACCEPTED,
+                Events.HANDSHAKE_PROTOCOL,
+                Events.DISCONNECTED,
             };
             check(receivedEventsServer, expectedEventsServer);
         }
     }
 
-    private void check(final List<ZEvent> receivedEvents, final Event[] expectedEvents)
+    private void check(final List<ZEvent> receivedEvents, final Events[] expectedEvents)
     {
+        System.err.println(receivedEvents);
         Assert.assertEquals(expectedEvents.length, receivedEvents.size());
         for (int i = 0; i < expectedEvents.length; i++) {
             Assert.assertEquals(expectedEvents[i], receivedEvents.get(i).type);

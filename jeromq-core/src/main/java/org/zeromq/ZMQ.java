@@ -4554,7 +4554,7 @@ public class ZMQ
          * <p>
          * It returns objects of type:
          * <ul>
-         * <li> {@link org.zeromq.ZMonitor.ProtocolCode} for a handshake protocol error.</li>
+         * <li> {@link ProtocolCode} for a handshake protocol error.</li>
          * <li> {@link org.zeromq.ZMQ.Error} for any other error.</li>
          * <li> {@link java.lang.Integer} when available.</li>
          * <li> null when no relevant value available.</li>

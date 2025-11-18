@@ -2,9 +2,7 @@ package org.zeromq;
 
 import java.io.Closeable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -24,12 +22,12 @@ public class ZMonitor implements Closeable
     public static class ZEvent
     {
         // Enum.values return a different array on each call, so keep it to avoid useless allocations
-        private static final Event[] EVENTVALUES = Event.values();
+        private static final Events[] EVENTVALUES = Events.values();
 
         /**
          * The type of the event. (never null)
          */
-        public final Event type;
+        public final Events type;
 
         /**
          * The numerical code of the event. (useful in case of unrecognized event, in which case type is ALL)
@@ -72,7 +70,7 @@ public class ZMonitor implements Closeable
         {
             code = event.getEvent();
             address = event.getAddress();
-            type = Event.findByCode(code);
+            type = Events.findByCode(code);
             Object tryValue = event.resolveValue();
             if (tryValue != null) {
                 value = tryValue.toString();
@@ -86,54 +84,6 @@ public class ZMonitor implements Closeable
         public String toString()
         {
             return "ZEvent [type=" + type + ", code=" + code + ", address=" + address + ", value=" + value + "]";
-        }
-    }
-
-    /**
-     * Enumerates types of monitoring events.
-     */
-    public enum Event
-    {
-        CONNECTED(ZMQ.EVENT_CONNECTED),
-        CONNECT_DELAYED(ZMQ.EVENT_CONNECT_DELAYED),
-        CONNECT_RETRIED(ZMQ.EVENT_CONNECT_RETRIED),
-        LISTENING(ZMQ.EVENT_LISTENING),
-        BIND_FAILED(ZMQ.EVENT_BIND_FAILED),
-        ACCEPTED(ZMQ.EVENT_ACCEPTED),
-        ACCEPT_FAILED(ZMQ.EVENT_ACCEPT_FAILED),
-        CLOSED(ZMQ.EVENT_CLOSED),
-        CLOSE_FAILED(ZMQ.EVENT_CLOSE_FAILED),
-        DISCONNECTED(ZMQ.EVENT_DISCONNECTED),
-        MONITOR_STOPPED(ZMQ.EVENT_MONITOR_STOPPED),
-        HANDSHAKE_FAILED_NO_DETAIL(ZMQ.HANDSHAKE_FAILED_NO_DETAIL),
-        HANDSHAKE_SUCCEEDED(ZMQ.HANDSHAKE_SUCCEEDED),
-        HANDSHAKE_FAILED_PROTOCOL(ZMQ.HANDSHAKE_FAILED_PROTOCOL),
-        HANDSHAKE_FAILED_AUTH(ZMQ.HANDSHAKE_FAILED_AUTH),
-        HANDSHAKE_PROTOCOL(ZMQ.EVENT_HANDSHAKE_PROTOCOL),
-        ALL(ZMQ.EVENT_ALL);
-
-        private static final Map<Integer, Event> MAP = new HashMap<>(Event.values().length);
-        static {
-            for (Event e : Event.values()) {
-                MAP.put(e.code, e);
-            }
-        }
-
-        private final int code;
-
-        Event(int code)
-        {
-            this.code = code;
-        }
-
-        /**
-         * Find the {@link Event} associated with the numerical event code.
-         * @param event the numerical event code
-         * @return the found {@link Event}
-         */
-        public static Event findByCode(int event)
-        {
-            return MAP.getOrDefault(event, ALL);
         }
     }
 
@@ -199,7 +149,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to monitor.
      * @return this instance.
      */
-    public ZMonitor add(Event... events)
+    public ZMonitor add(Events... events)
     {
         if (started) {
             System.out.println("ZMonitor: Unable to add events while already started.");
@@ -207,7 +157,7 @@ public class ZMonitor implements Closeable
         }
         ZMsg msg = new ZMsg();
         msg.add(ADD_EVENTS);
-        for (Event evt : events) {
+        for (Events evt : events) {
             msg.add(evt.name());
         }
         agent.send(msg);
@@ -220,7 +170,7 @@ public class ZMonitor implements Closeable
      * @param events the types of events to stop monitoring.
      * @return this instance.
      */
-    public ZMonitor remove(Event... events)
+    public ZMonitor remove(Events... events)
     {
         if (started) {
             System.out.println("ZMonitor: Unable to remove events while already started.");
@@ -228,7 +178,7 @@ public class ZMonitor implements Closeable
         }
         ZMsg msg = new ZMsg();
         msg.add(REMOVE_EVENTS);
-        for (Event evt : events) {
+        for (Events evt : events) {
             msg.add(evt.name());
         }
         agent.send(msg);
@@ -357,7 +307,7 @@ public class ZMonitor implements Closeable
             int code = event.event;
             String address = event.addr;
             assert (address != null);
-            Event type = Event.findByCode(code);
+            Events type = Events.findByCode(code);
             assert (type != null);
             ZMsg msg = new ZMsg();
 
@@ -411,11 +361,11 @@ public class ZMonitor implements Closeable
             }
             for (ZFrame frame : msg) {
                 String evt = frame.getString(ZMQ.CHARSET);
-                Event event = Event.valueOf(evt);
+                Events event = Events.valueOf(evt);
                 if (verbose) {
                     System.out.printf("ZMonitor: Adding" + " event %s%n", event);
                 }
-                events |= event.code;
+                events |= event.getCode();
             }
             return pipe.send(OK);
         }
@@ -428,11 +378,11 @@ public class ZMonitor implements Closeable
             }
             for (ZFrame frame : msg) {
                 String evt = frame.getString(ZMQ.CHARSET);
-                Event event = Event.valueOf(evt);
+                Events event = Events.valueOf(evt);
                 if (verbose) {
                     System.out.printf("ZMonitor: Removing" + " event %s%n", event);
                 }
-                events &= ~event.code;
+                events &= ~event.getCode();
             }
             return pipe.send(OK);
         }
