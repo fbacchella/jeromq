@@ -4381,7 +4381,7 @@ public class ZMQ
             case zmq.ZMQ.ZMQ_EVENT_ACCEPTED:
             case zmq.ZMQ.ZMQ_EVENT_CLOSED:
             case zmq.ZMQ.ZMQ_EVENT_DISCONNECTED:
-                resolvedValue = e.getChannel(socket.base);
+                resolvedValue = e.getChannel();
                 break;
             case zmq.ZMQ.ZMQ_EVENT_CONNECT_DELAYED:
             case zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_SUCCEEDED:

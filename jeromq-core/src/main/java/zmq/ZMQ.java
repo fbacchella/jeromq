@@ -495,7 +495,7 @@ public class ZMQ
 
         private ByteBuffer serialize(Ctx ctx)
         {
-            int size = 4 + 1 + addr.length() + 1; // event + len(addr) + addr + flag
+            int size = 4 + 1 + addr.length() + 1;
             if (flag == VALUE_INTEGER || flag == VALUE_CHANNEL) {
                 size += 4;
             }
@@ -518,35 +518,16 @@ public class ZMQ
 
         /**
          * Resolve the channel that was associated with this event.
-         * Implementation note: to be backward compatible, {@link #arg} only store Integer value, so
-         * the channel is resolved using this call.
          * <p>
          * Internally socket are kept using weak values, so it's better to retrieve the channel as early
          * as possible, otherwise it might get lost.
          *
-         * @param socket the socket that send the event
          * @return the channel in the event, or null if was not a channel event.
          */
-        public SelectableChannel getChannel(SocketBase socket)
-        {
-            return getChannel(socket.getCtx());
-        }
-
-        /**
-         * Resolve the channel that was associated with this event.
-         * Implementation note: to be backward compatible, {@link #arg} only store Integer value, so
-         * the channel is resolved using this call.
-         * <p>
-         * Internally socket are kept using weak values, so it's better to retrieve the channel as early
-         * as possible, otherwise it might get lost.
-         *
-         * @param ctx the socket that send the event
-         * @return the channel in the event, or null if was not a channel event.
-         */
-        public SelectableChannel getChannel(Ctx ctx)
+        public SelectableChannel getChannel()
         {
             if (flag == VALUE_CHANNEL) {
-                return ctx.getForwardedChannel((Integer) arg);
+                return (SelectableChannel) arg;
             }
             else {
                 return null;
@@ -569,8 +550,12 @@ public class ZMQ
             int flag = buffer.get();
             Object arg = null;
 
-            if (flag == VALUE_INTEGER || flag == VALUE_CHANNEL) {
+            if (flag == VALUE_INTEGER) {
                 arg = buffer.getInt();
+            }
+            else if (flag == VALUE_CHANNEL) {
+                int handle = buffer.getInt();
+                arg = s.getCtx().getForwardedChannel(handle);
             }
 
             return new Event(event, new String(addr, CHARSET), arg, flag);

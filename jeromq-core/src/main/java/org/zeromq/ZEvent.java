@@ -305,8 +305,13 @@ public class ZEvent
             return null;
         }
         else {
-            return new ZEvent(e, o -> e.getChannel(socket.getCtx()));
+            return new ZEvent(e, o -> e.getChannel());
         }
+    }
+
+    public static ZEvent wrap(zmq.ZMQ.Event e)
+    {
+        return new ZEvent(e, o -> (SelectableChannel) e.arg);
     }
 
     /**
