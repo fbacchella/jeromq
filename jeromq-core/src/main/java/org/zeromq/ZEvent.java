@@ -89,7 +89,7 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>HANDSHAKE_FAILED_PROTOCOL</td>
- *         <td>{@link ZMonitor.ProtocolCode}</td>
+ *         <td>{@link ProtocolCode}</td>
  *         <td>error</td>
  *     </tr>
  *     <tr>
@@ -136,7 +136,7 @@ public class ZEvent
     {
         switch (event) {
         case HANDSHAKE_FAILED_PROTOCOL:
-            return ZMonitor.ProtocolCode.findByCode((Integer) value);
+            return ProtocolCode.findByCode((Integer) value);
         case CLOSE_FAILED:
         case ACCEPT_FAILED:
         case BIND_FAILED:
@@ -172,7 +172,7 @@ public class ZEvent
      * Return the value of the event as a high level java object.
      * It returns objects of type:
      * <ul>
-     * <li> {@link org.zeromq.ZMonitor.ProtocolCode} for a handshake protocol error.</li>
+     * <li> {@link ProtocolCode} for a handshake protocol error.</li>
      * <li> {@link org.zeromq.ZMQ.Error} for any other error.</li>
      * <li> {@link Duration} when associated with a delay.</li>
      * <li> null when no relevant value available.</li>

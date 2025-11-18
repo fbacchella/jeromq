@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.ZMQ.Error;
-import org.zeromq.ZMonitor.ProtocolCode;
 
 import zmq.SocketBase;
 import zmq.ZError;

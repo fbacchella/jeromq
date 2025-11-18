@@ -4457,7 +4457,7 @@ public class ZMQ
             Object resolvedValue;
             switch (e.event) {
             case zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL:
-                resolvedValue = ZMonitor.ProtocolCode.findByCode((Integer) e.arg);
+                resolvedValue = ProtocolCode.findByCode((int) e.arg);
                 break;
             case zmq.ZMQ.ZMQ_EVENT_CLOSE_FAILED:
             case zmq.ZMQ.ZMQ_EVENT_ACCEPT_FAILED:
