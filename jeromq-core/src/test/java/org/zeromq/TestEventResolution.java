@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ.Error;
 
 import zmq.SocketBase;
 import zmq.ZError;
@@ -193,7 +192,7 @@ public class TestEventResolution
                 zmq.ZMQ.ZMQ_EVENT_CONNECT_DELAYED,
                 ev -> {
                     Object value = ev.getValue();
-                    assertThat(value, is(Error.NOERROR));
+                    assertThat(value, is(Errors.NOERROR));
                     assertThat(ev.isError(), is(false));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));
@@ -219,11 +218,11 @@ public class TestEventResolution
     @Test(timeout = 1000)
     public void testEventCloseFailed() throws ExecutionException, InterruptedException, IOException
     {
-        doTest((s, a) -> s.eventCloseFailed(a, Error.EINTR.getCode()),
+        doTest((s, a) -> s.eventCloseFailed(a, Errors.EINTR.getCode()),
                 zmq.ZMQ.ZMQ_EVENT_CLOSE_FAILED,
                 ev -> {
-                    Error err = ev.getValue();
-                    assertThat(err, is(Error.EINTR));
+                    Errors err = ev.getValue();
+                    assertThat(err, is(Errors.EINTR));
                     assertThat(ev.isError(), is(true));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));
@@ -234,11 +233,11 @@ public class TestEventResolution
     @Test(timeout = 1000)
     public void testEventAcceptFailed() throws ExecutionException, InterruptedException, IOException
     {
-        doTest((s, a) -> s.eventAcceptFailed(a, Error.EINTR.getCode()),
+        doTest((s, a) -> s.eventAcceptFailed(a, Errors.EINTR.getCode()),
                 zmq.ZMQ.ZMQ_EVENT_ACCEPT_FAILED,
                 ev -> {
-                    Error err = ev.getValue();
-                    assertThat(err, is(Error.EINTR));
+                    Errors err = ev.getValue();
+                    assertThat(err, is(Errors.EINTR));
                     assertThat(ev.isError(), is(true));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));
@@ -249,11 +248,11 @@ public class TestEventResolution
     @Test(timeout = 1000)
     public void testEventBindFailed() throws ExecutionException, InterruptedException, IOException
     {
-        doTest((s, a) -> s.eventBindFailed(a, Error.EADDRNOTAVAIL.getCode()),
+        doTest((s, a) -> s.eventBindFailed(a, Errors.EADDRNOTAVAIL.getCode()),
                 zmq.ZMQ.ZMQ_EVENT_BIND_FAILED,
                 ev -> {
-                    Error err = ev.getValue();
-                    assertThat(err, is(Error.EADDRNOTAVAIL));
+                    Errors err = ev.getValue();
+                    assertThat(err, is(Errors.EADDRNOTAVAIL));
                     assertThat(ev.isError(), is(true));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));
@@ -282,8 +281,8 @@ public class TestEventResolution
         doTest((s, a) -> s.eventHandshakeSucceeded(a, 0),
                 zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_SUCCEEDED,
                 ev -> {
-                    Error err = ev.getValue();
-                    assertThat(err, is(Error.NOERROR));
+                    Errors err = ev.getValue();
+                    assertThat(err, is(Errors.NOERROR));
                     assertThat(ev.isError(), is(false));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));
@@ -294,11 +293,11 @@ public class TestEventResolution
     @Test(timeout = 1000)
     public void testEventHandshakeFailedNoDetail() throws ExecutionException, InterruptedException, IOException
     {
-        doTest((s, a) -> s.eventHandshakeFailedNoDetail(a, Error.EFAULT.getCode()),
+        doTest((s, a) -> s.eventHandshakeFailedNoDetail(a, Errors.EFAULT.getCode()),
                 zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL,
                 ev -> {
-                    Error err = ev.getValue();
-                    assertThat(err, is(Error.EFAULT));
+                    Errors err = ev.getValue();
+                    assertThat(err, is(Errors.EFAULT));
                     assertThat(ev.isError(), is(true));
                     assertThat(ev.isWarn(), is(false));
                     assertThat(ev.isInformation(), is(false));

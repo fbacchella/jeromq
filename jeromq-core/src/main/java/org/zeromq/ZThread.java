@@ -1,6 +1,5 @@
 package org.zeromq;
 
-import org.zeromq.ZMQ.Error;
 import org.zeromq.ZMQ.Socket;
 
 import java.util.Locale;
@@ -59,7 +58,7 @@ public class ZThread
                     attachedRunnable.run(args, ctx, pipe);
                 }
                 catch (ZMQException e) {
-                    if (e.getErrorCode() != Error.ETERM.getCode()) {
+                    if (e.getErrorCode() != Errors.ETERM.getCode()) {
                         throw e;
                     }
                 }

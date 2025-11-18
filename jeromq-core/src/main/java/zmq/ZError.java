@@ -4,7 +4,7 @@ import java.net.SocketException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 
-import org.zeromq.ZMQ.Error;
+import org.zeromq.Errors;
 import org.zeromq.UncheckedZMQException;
 
 public class ZError
@@ -113,6 +113,6 @@ public class ZError
 
     public static String toString(int code)
     {
-        return Error.findByCode(code).getMessage();
+        return Errors.findByCode(code).getMessage();
     }
 }

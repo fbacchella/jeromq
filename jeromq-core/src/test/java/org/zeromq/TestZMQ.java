@@ -65,7 +65,7 @@ public class TestZMQ
             fail("Exception not thrown");
         }
         catch (ZMQException e) {
-            assertEquals(e.getErrorCode(), ZMQ.Error.EADDRINUSE.getCode());
+            assertEquals(e.getErrorCode(), Errors.EADDRINUSE.getCode());
             throw e;
         }
         finally {

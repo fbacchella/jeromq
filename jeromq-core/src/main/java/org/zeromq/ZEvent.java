@@ -28,7 +28,7 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>CONNECT_DELAYED</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>debug</td>
  *     </tr>
  *     <tr>
@@ -43,7 +43,7 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>BIND_FAILED</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>error</td>
  *     </tr>
  *     <tr>
@@ -53,7 +53,7 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>ACCEPT_FAILED</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>error</td>
  *     </tr>
  *     <tr>
@@ -63,7 +63,7 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>CLOSE_FAILED</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>error</td>
  *     </tr>
  *     <tr>
@@ -78,12 +78,12 @@ import zmq.ZError;
  *     </tr>
  *     <tr>
  *         <td>HANDSHAKE_FAILED_NO_DETAIL</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>error</td>
  *     </tr>
  *     <tr>
  *         <td>HANDSHAKE_SUCCEEDED</td>
- *         <td>{@link ZMQ.Error} or null if no error</td>
+ *         <td>{@link Errors} or null if no error</td>
  *         <td>debug</td>
  *     </tr>
  *     <tr>
@@ -142,7 +142,7 @@ public class ZEvent
         case HANDSHAKE_FAILED_NO_DETAIL:
         case CONNECT_DELAYED:
         case HANDSHAKE_SUCCEEDED:
-            return ZMQ.Error.findByCode((Integer) value);
+            return Errors.findByCode((Integer) value);
         case HANDSHAKE_FAILED_AUTH:
         case HANDSHAKE_PROTOCOL:
             return value;
@@ -172,7 +172,7 @@ public class ZEvent
      * It returns objects of type:
      * <ul>
      * <li> {@link ProtocolCode} for a handshake protocol error.</li>
-     * <li> {@link org.zeromq.ZMQ.Error} for any other error.</li>
+     * <li> {@link Errors} for any other error.</li>
      * <li> {@link Duration} when associated with a delay.</li>
      * <li> null when no relevant value available.</li>
      * </ul>

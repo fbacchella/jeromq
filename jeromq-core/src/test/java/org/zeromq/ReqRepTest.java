@@ -85,7 +85,7 @@ public class ReqRepTest
                         }
                     }
                     catch (ZMQException ex) {
-                        if (ex.getErrorCode() != ZMQ.Error.EINTR.getCode()) {
+                        if (ex.getErrorCode() != Errors.EINTR.getCode()) {
                             throw ex;
                         }
                     }

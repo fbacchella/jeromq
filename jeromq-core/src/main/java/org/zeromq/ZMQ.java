@@ -7,9 +7,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -479,93 +477,6 @@ public class ZMQ
     public static void sleep(long amount, TimeUnit unit)
     {
         zmq.ZMQ.sleep(amount, unit);
-    }
-
-    /**
-     * Resolve code from errornumber.
-     * <p>
-     * Messages are taken from https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/errno.h.html
-     */
-    public enum Error
-    {
-        NOERROR(0, "No error"),
-        ENOTSUP(ZError.ENOTSUP, "Not supported"),
-        EPROTONOSUPPORT(ZError.EPROTONOSUPPORT, "Protocol not supported"),
-        ENOBUFS(ZError.ENOBUFS, "No buffer space available"),
-        ENETDOWN(ZError.ENETDOWN, "Network is down"),
-        EADDRINUSE(ZError.EADDRINUSE, "Address already in use"),
-        EADDRNOTAVAIL(ZError.EADDRNOTAVAIL, "Address not available"),
-        ECONNREFUSED(ZError.ECONNREFUSED, "Connection refused"),
-        EINPROGRESS(ZError.EINPROGRESS, "Operation in progress"),
-        EHOSTUNREACH(ZError.EHOSTUNREACH, "Host unreachable"),
-        EMTHREAD(ZError.EMTHREAD, "No thread available"),
-        EFSM(ZError.EFSM, "Operation cannot be accomplished in current state"),
-        ENOCOMPATPROTO(ZError.ENOCOMPATPROTO, "The protocol is not compatible with the socket type"),
-        ETERM(ZError.ETERM, "Context was terminated"),
-        ENOTSOCK(ZError.ENOTSOCK, "Not a socket"),
-        EAGAIN(ZError.EAGAIN, "Resource unavailable, try again"),
-        ENOENT(ZError.ENOENT, "No such file or directory"),
-        EINTR(ZError.EINTR, "Interrupted function"),
-        EACCESS(ZError.EACCESS, "Permission denied"),
-        EFAULT(ZError.EFAULT, "Bad address"),
-        EINVAL(ZError.EINVAL, "Invalid argument"),
-        EISCONN(ZError.EISCONN, "Socket is connected"),
-        ENOTCONN(ZError.ENOTCONN, "The socket is not connected"),
-        EMSGSIZE(ZError.EMSGSIZE, "Message too large"),
-        EAFNOSUPPORT(ZError.EAFNOSUPPORT, "Address family not supported"),
-        ENETUNREACH(ZError.ENETUNREACH, "Network unreachable"),
-        ECONNABORTED(ZError.ECONNABORTED, "Connection aborted"),
-        ECONNRESET(ZError.ECONNRESET, "Connection reset"),
-        ETIMEDOUT(ZError.ETIMEDOUT, "Connection timed out"),
-        ENETRESET(ZError.ENETRESET, "Connection aborted by network"),
-        EIOEXC(ZError.EIOEXC),
-        ESOCKET(ZError.ESOCKET),
-        EMFILE(ZError.EMFILE, "File descriptor value too large"),
-        EPROTO(ZError.EPROTO, "Protocol error");
-
-        private static final Map<Integer, Error> map = new HashMap<>(Error.values().length);
-        static {
-            for (Error e : Error.values()) {
-                map.put(e.code, e);
-            }
-        }
-        private final int code;
-        private final String message;
-
-        Error(int code)
-        {
-            this.code = code;
-            this.message = "errno " + code;
-        }
-
-        Error(int code, String message)
-        {
-            this.code = code;
-            this.message = message;
-        }
-
-        public static Error findByCode(int code)
-        {
-            if (code <= 0) {
-                return NOERROR;
-            }
-            else if (map.containsKey(code)) {
-                return map.get(code);
-            }
-            else {
-                throw new IllegalArgumentException("Unknown " + Error.class.getName() + " enum code: " + code);
-            }
-        }
-
-        public int getCode()
-        {
-            return code;
-        }
-
-        public String getMessage()
-        {
-            return message;
-        }
     }
 
     /**
@@ -4463,7 +4374,7 @@ public class ZMQ
             case zmq.ZMQ.ZMQ_EVENT_ACCEPT_FAILED:
             case zmq.ZMQ.ZMQ_EVENT_BIND_FAILED:
             case zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL:
-                resolvedValue = Error.findByCode((Integer) e.arg);
+                resolvedValue = Errors.findByCode((int) e.arg);
                 break;
             case zmq.ZMQ.ZMQ_EVENT_CONNECTED:
             case zmq.ZMQ.ZMQ_EVENT_LISTENING:
@@ -4555,7 +4466,7 @@ public class ZMQ
          * It returns objects of type:
          * <ul>
          * <li> {@link ProtocolCode} for a handshake protocol error.</li>
-         * <li> {@link org.zeromq.ZMQ.Error} for any other error.</li>
+         * <li> {@link Errors} for any other error.</li>
          * <li> {@link java.lang.Integer} when available.</li>
          * <li> null when no relevant value available.</li>
          * </ul>

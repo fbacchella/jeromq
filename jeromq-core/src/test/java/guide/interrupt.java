@@ -6,6 +6,7 @@ package guide;
 *  Shows how to handle Ctrl-C
 */
 
+import org.zeromq.Errors;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
@@ -27,7 +28,7 @@ public class interrupt
                     socket.recv(0);
                 }
                 catch (ZMQException e) {
-                    if (e.getErrorCode() == ZMQ.Error.ETERM.getCode()) {
+                    if (e.getErrorCode() == Errors.ETERM.getCode()) {
                         break;
                     }
                 }
