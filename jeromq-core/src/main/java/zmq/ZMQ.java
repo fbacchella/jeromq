@@ -195,21 +195,22 @@ public class ZMQ
     public static final int ZMQ_EVENT_CLOSE_FAILED       = 1 << 8;
     public static final int ZMQ_EVENT_DISCONNECTED       = 1 << 9;
     public static final int ZMQ_EVENT_MONITOR_STOPPED    = 1 << 10;
-    public static final int ZMQ_EVENT_HANDSHAKE_PROTOCOL = 1 << 15;
-    public static final int ZMQ_EVENT_ALL                = 0xffff;
     /*  Unspecified system errors during handshake. Event value is an errno.      */
     public static final int ZMQ_EVENT_HANDSHAKE_FAILED_NO_DETAIL   = 1 << 11;
-
     /*  Handshake complete successfully with successful authentication (if        *
      *  enabled). Event value is unused.                                          */
     public static final int ZMQ_EVENT_HANDSHAKE_SUCCEEDED           = 1 << 12;
-
     /*  Protocol errors between ZMTP peers or between server and ZAP handler.     *
      *  Event value is one of ZMQ_PROTOCOL_ERROR_*                                */
     public static final int ZMQ_EVENT_HANDSHAKE_FAILED_PROTOCOL     = 1 << 13;
     /*  Failed authentication requests. Event value is the numeric ZAP status     *
      *  code, i.e. 300, 400 or 500.                                               */
     public static final int ZMQ_EVENT_HANDSHAKE_FAILED_AUTH         = 1 << 14;
+    public static final int ZMQ_EVENT_HANDSHAKE_PROTOCOL            = 1 << 15;
+    public static final int ZMQ_EVENT_EXCEPTION                     = 1 << 16;
+    /* Update this each time a new event is added                                 */
+    static final int ZMQ_EVENT_LAST                                 = ZMQ_EVENT_EXCEPTION;
+    public static final int ZMQ_EVENT_ALL                           = 0xffffffff;
 
     public static final int ZMQ_PROTOCOL_ERROR_ZMTP_UNSPECIFIED                   = 0x10000000;
     public static final int ZMQ_PROTOCOL_ERROR_ZMTP_UNEXPECTED_COMMAND            = 0x10000001;
@@ -457,6 +458,7 @@ public class ZMQ
     {
         private static final int VALUE_INTEGER = 1;
         private static final int VALUE_CHANNEL = 2;
+        private static final int VALUE_EXCEPTION = 3;
 
         public final int    event;
         public final String addr;
@@ -473,6 +475,9 @@ public class ZMQ
             }
             else if (arg instanceof SelectableChannel) {
                 flag = VALUE_CHANNEL;
+            }
+            else if (arg instanceof Throwable) {
+                flag = VALUE_EXCEPTION;
             }
             else {
                 flag = 0;
@@ -496,7 +501,7 @@ public class ZMQ
         private ByteBuffer serialize(Ctx ctx)
         {
             int size = 4 + 1 + addr.length() + 1;
-            if (flag == VALUE_INTEGER || flag == VALUE_CHANNEL) {
+            if (flag == VALUE_INTEGER || flag == VALUE_CHANNEL || flag == VALUE_EXCEPTION) {
                 size += 4;
             }
 
@@ -508,9 +513,9 @@ public class ZMQ
             if (flag == VALUE_INTEGER) {
                 buffer.putInt((Integer) arg);
             }
-            else if (flag == VALUE_CHANNEL) {
-                int channeldId = ctx.forwardChannel((SelectableChannel) arg);
-                buffer.putInt(channeldId);
+            else if (flag == VALUE_CHANNEL || flag == VALUE_EXCEPTION) {
+                int channelId = ctx.forwardObject(arg);
+                buffer.putInt(channelId);
             }
             buffer.flip();
             return buffer;
@@ -528,6 +533,24 @@ public class ZMQ
         {
             if (flag == VALUE_CHANNEL) {
                 return (SelectableChannel) arg;
+            }
+            else {
+                return null;
+            }
+        }
+
+        /**
+         * Resolve the exception that was associated with this event.
+         * <p>
+         * Internally exception are kept using weak values, so it's better to retrieve the exception as early
+         * as possible, otherwise it might get lost.
+         *
+         * @return the exception in the event, or null if was not a exception event.
+         */
+        public Throwable getException()
+        {
+            if (flag == VALUE_EXCEPTION) {
+                return (Throwable) arg;
             }
             else {
                 return null;
@@ -553,9 +576,9 @@ public class ZMQ
             if (flag == VALUE_INTEGER) {
                 arg = buffer.getInt();
             }
-            else if (flag == VALUE_CHANNEL) {
+            else if (flag == VALUE_CHANNEL || flag == VALUE_EXCEPTION) {
                 int handle = buffer.getInt();
-                arg = s.getCtx().getForwardedChannel(handle);
+                arg = s.getCtx().getForwardedObject(handle);
             }
 
             return new Event(event, new String(addr, CHARSET), arg, flag);

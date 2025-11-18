@@ -162,8 +162,8 @@ public class StreamEngine implements IEngine, IPollEvents
     // Socket
     private SocketBase socket;
 
-    private final Address peerAddress;
-    private final Address selfAddress;
+    private final Address<?> peerAddress;
+    private final Address<?> selfAddress;
 
     private final Errno errno;
 
@@ -407,7 +407,6 @@ public class StreamEngine implements IEngine, IPollEvents
 
             inpos = decoder.getBuffer();
             int rc = read(inpos);
-
             if (rc == 0) {
                 error(ErrorReason.CONNECTION);
             }
@@ -1115,6 +1114,7 @@ public class StreamEngine implements IEngine, IPollEvents
     //  Function to handle network disconnections.
     private void error(ErrorReason error)
     {
+        errno.getException().ifPresent(ex -> socket.eventException(endpoint, ex));
         if (options.rawSocket) {
             //  For raw sockets, send a final 0-length message to the application
             //  so that it knows the peer has been disconnected.
@@ -1258,7 +1258,7 @@ public class StreamEngine implements IEngine, IPollEvents
             }
         }
         catch (IOException e) {
-            errno.set(ZError.ENOTCONN);
+            errno.set(ZError.ENOTCONN, e);
             nbytes = -1;
         }
 
@@ -1290,7 +1290,7 @@ public class StreamEngine implements IEngine, IPollEvents
             }
         }
         catch (IOException e) {
-            errno.set(ZError.ENOTCONN);
+            errno.set(ZError.ENOTCONN, e);
             nbytes = -1;
         }
 

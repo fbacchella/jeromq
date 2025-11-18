@@ -308,6 +308,12 @@ public class ZMQ
      * (0 for unversioned, 3 for V3).
      */
     public static final int EVENT_HANDSHAKE_PROTOCOL = zmq.ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL;
+
+    /**
+     * An exception was caught by errno and needs to be forwarded
+     */
+    public static final int ZMQ_EVENT_EXCEPTION = zmq.ZMQ.ZMQ_EVENT_EXCEPTION;
+
     /**
      * EVENT_ALL: all events known.
      * The EVENT_ALL constant can be used to set up a monitor for all known events.
@@ -4388,6 +4394,9 @@ public class ZMQ
             case zmq.ZMQ.ZMQ_EVENT_MONITOR_STOPPED:
                 resolvedValue = null;
                 break;
+            case ZMQ_EVENT_EXCEPTION:
+                resolvedValue = e.getException();
+                break;
             default:
                 resolvedValue = e.arg;
             }
@@ -4437,6 +4446,7 @@ public class ZMQ
             case EVENT_BIND_FAILED:
             case HANDSHAKE_FAILED_PROTOCOL:
             case HANDSHAKE_FAILED_NO_DETAIL:
+            case ZMQ_EVENT_EXCEPTION:
                 return true;
             default:
                 return false;

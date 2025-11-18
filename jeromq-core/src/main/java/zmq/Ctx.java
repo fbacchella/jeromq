@@ -176,10 +176,20 @@ public class Ctx
     private static class ChannelForwardHolder
     {
         private final AtomicInteger handleSource = new AtomicInteger(0);
-        private final Map<Integer, WeakReference<SelectableChannel>> map = new ConcurrentHashMap<>();
+        private final Map<Integer, WeakReference<?>> map = new ConcurrentHashMap<>();
         // The WeakReference is empty when the reference is empty, so keep a reverse empty to clean the direct map.
-        private final Map<WeakReference<SelectableChannel>, Integer> reversemap = new ConcurrentHashMap<>();
-        private final ReferenceQueue<SelectableChannel> queue = new ReferenceQueue<>();
+        private final Map<WeakReference<?>, Integer> reversemap = new ConcurrentHashMap<>();
+        private final ReferenceQueue<?> queue = new ReferenceQueue<>();
+
+        /**
+         * A not very useful method used to help generic type cast
+         * @return the queue with the expected type
+         * @param <T>
+         */
+        @SuppressWarnings("unchecked")
+        private <T> ReferenceQueue<T> getQueue() {
+            return (ReferenceQueue<T>) queue;
+        }
     }
 
     private ChannelForwardHolder forwardHolder = null;
@@ -658,7 +668,6 @@ public class Ctx
     //  Send command to the destination thread.
     void sendCommand(int tid, Command command)
     {
-        //        System.out.println(Thread.currentThread().getName() + ": Sending command " + command);
         slots[tid].send(command);
     }
 
@@ -863,16 +872,58 @@ public class Ctx
     /**
      * Forward a channel in a monitor socket.
      * @param channel a channel to forward
-     * @return the handle of the channel to be forwarded, used to retrieve it in {@link #getForwardedChannel(Integer)}
+     * @return the handle of the channel to be forwarded, used to retrieve it in {@link #getForwardedChannel(int)}
      */
     int forwardChannel(SelectableChannel channel)
+    {
+        return forwardObject(channel);
+    }
+
+    /**
+     * Retrieve a channel, using the handle returned by {@link #forwardChannel(SelectableChannel)}. As WeakReference are used, if the channel was discarded
+     * and a GC ran, it will not be found and this method will return null.
+     * @param handle the handle
+     * @return the referenced channel
+     */
+    SelectableChannel getForwardedChannel(int handle)
+    {
+        return getForwardedObject(handle);
+    }
+
+    /**
+     * Forward an exception in a monitor socket.
+     * @param exception an exception to forward
+     * @return the handle of the exception to be forwarded, used to retrieve it in {@link #getForwardedException(int)}
+     */
+    int forwardException(Throwable exception)
+    {
+        return forwardObject(exception);
+    }
+
+    /**
+     * Retrieve a channel, using the handle returned by {@link #forwardException(Throwable)}. As WeakReference are used, if the channel was discarded
+     * and a GC ran, it will not be found and this method will return null.
+     * @param handle the handle
+     * @return the referenced exception
+     */
+    Throwable getForwardedException(int handle)
+    {
+        return getForwardedObject(handle);
+    }
+
+    /**
+     * Forward a generic object in a monitor socket.
+     * @param object an object to forward
+     * @return the handle of the object to be forwarded, used to retrieve it in {@link #getForwardedObject(int)}
+     */
+    <T> int forwardObject(T object)
     {
         synchronized (ChannelForwardHolder.class) {
             if (forwardHolder == null) {
                 forwardHolder = new ChannelForwardHolder();
             }
         }
-        WeakReference<SelectableChannel> ref = new WeakReference<>(channel, forwardHolder.queue);
+        WeakReference<T> ref = new WeakReference<>(object, forwardHolder.getQueue());
         int handle = forwardHolder.handleSource.getAndIncrement();
         forwardHolder.map.put(handle, ref);
         forwardHolder.reversemap.put(ref, handle);
@@ -881,15 +932,16 @@ public class Ctx
     }
 
     /**
-     * Retrieve a channel, using the handle returned by {@link #forwardChannel(SelectableChannel)}. As WeakReference are used, if the channel was discarded
+     * Retrieve a generic object, using the handle returned by {@link #forwardObject(Object)}. As WeakReference are used, if the channel was discarded
      * and a GC ran, it will not be found and this method will return null.
-     * @param handle
-     * @return
+     * @param handle the handle
+     * @return the referenced object
      */
-    SelectableChannel getForwardedChannel(Integer handle)
+    @SuppressWarnings("unchecked")
+    <T> T getForwardedObject(int handle)
     {
         cleanForwarded();
-        WeakReference<SelectableChannel> ref = forwardHolder.map.remove(handle);
+        WeakReference<T> ref = (WeakReference<T>) forwardHolder.map.remove(handle);
         if (ref != null) {
             return ref.get();
         }
@@ -903,7 +955,7 @@ public class Ctx
      */
     private void cleanForwarded()
     {
-        Reference<? extends SelectableChannel> ref;
+        Reference<?> ref;
         while ((ref = forwardHolder.queue.poll()) != null) {
             Integer handle = forwardHolder.reversemap.remove(ref);
             forwardHolder.map.remove(handle);

@@ -101,6 +101,11 @@ import zmq.ZError;
  *         <td>{@link java.lang.Integer}</td>
  *         <td>debug</td>
  *     </tr>
+ *     <tr>
+ *         <td>EXCEPTION</td>
+ *         <td>{@link java.lang.Throwable}</td>
+ *         <td>error</td>
+ *     </tr>
  * </table>
  */
 public class ZEvent
@@ -145,6 +150,7 @@ public class ZEvent
             return Errors.findByCode((Integer) value);
         case HANDSHAKE_FAILED_AUTH:
         case HANDSHAKE_PROTOCOL:
+        case EXCEPTION:
             return value;
         case CONNECTED:
         case LISTENING:
@@ -205,6 +211,7 @@ public class ZEvent
         case CLOSE_FAILED:
         case HANDSHAKE_FAILED_NO_DETAIL:
         case HANDSHAKE_FAILED_PROTOCOL:
+        case EXCEPTION:
             return true;
         default:
             return false;

@@ -155,7 +155,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         }
         catch (IOException e) {
             close();
-            errno.set(ZError.EADDRINUSE);
+            errno.set(ZError.EADDRINUSE, e);
             return false;
         }
         socket.eventListening(endpoint, fd);

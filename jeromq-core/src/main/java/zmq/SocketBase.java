@@ -227,7 +227,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             return proto;
         }
         catch (IllegalArgumentException e) {
-            errno.set(ZError.EPROTONOSUPPORT);
+            errno.set(ZError.EPROTONOSUPPORT, e);
             return null;
         }
     }
@@ -1561,6 +1561,11 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     public void eventHandshakeSucceeded(String addr, int errno)
     {
         event(addr, errno, ZMQ.ZMQ_EVENT_HANDSHAKE_SUCCEEDED);
+    }
+
+    public void eventException(String addr, Throwable exception)
+    {
+        event(addr, exception, ZMQ.ZMQ_EVENT_EXCEPTION);
     }
 
     private void event(String addr, Object arg, int event)

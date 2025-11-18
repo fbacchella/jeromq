@@ -174,7 +174,7 @@ class Signaler implements Closeable
             return false;
         }
         catch (IOException e) {
-            errno.set(ZError.exccode(e));
+            errno.set(ZError.exccode(e), e);
             return false;
         }
 
