@@ -105,13 +105,13 @@ public class TcpUtils
      * Return the {@link  Address} of the channel
      * @param channel the channel, should be a TCP socket channel
      * @return The {@link Address} of the channel
-     * @deprecated Use {@link zmq.util.Utils#getPeerIpAddress(SocketChannel)} instead
+     * @deprecated Use {@link zmq.util.Utils#getPeerSocketAddress(SocketChannel)} instead
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
     @Deprecated
-    public static Address<SocketAddress> getPeerIpAddress(SocketChannel channel)
+    public static <S extends SocketAddress> Address<S> getPeerSocketAddress(SocketChannel channel)
     {
-        return Utils.getPeerIpAddress(channel);
+        return Utils.getPeerSocketAddress(channel);
     }
 }

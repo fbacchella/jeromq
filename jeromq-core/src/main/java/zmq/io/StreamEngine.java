@@ -192,8 +192,8 @@ public class StreamEngine implements IEngine, IPollEvents
             throw new ZError.IOException(e);
         }
 
-        peerAddress = Utils.getPeerIpAddress(fd);
-        selfAddress = Utils.getLocalIpAddress(fd);
+        peerAddress = Utils.getPeerSocketAddress(fd);
+        selfAddress = Utils.getLocalSockedAddress(fd);
 
         heartbeatTimeout = heartbeatTimeout();
         heartbeatContext = Arrays.copyOf(options.heartbeatContext, options.heartbeatContext.length);

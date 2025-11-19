@@ -149,10 +149,11 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
-    public static Address<SocketAddress> getPeerIpAddress(SocketChannel fd)
+    @SuppressWarnings("unchecked")
+    public static <S extends SocketAddress> Address<S> getPeerSocketAddress(SocketChannel fd)
     {
         try {
-            SocketAddress address = fd.getRemoteAddress();
+            S address = (S) fd.getRemoteAddress();
             return new Address<>(address);
         }
         catch (IOException e) {
@@ -167,7 +168,8 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
-    public static <S extends SocketAddress> Address<S> getLocalIpAddress(SocketChannel fd)
+    @SuppressWarnings("unchecked")
+    public static <S extends SocketAddress> Address<S> getLocalSockedAddress(SocketChannel fd)
     {
         try {
             S address = (S) fd.getLocalAddress();

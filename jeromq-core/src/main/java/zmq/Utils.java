@@ -57,8 +57,8 @@ public class Utils
         return zmq.util.Utils.delete(path);
     }
 
-    public static Address<SocketAddress> getPeerIpAddress(SocketChannel fd)
+    public static <S extends SocketAddress> Address<S> getPeerSocketAddress(SocketChannel fd)
     {
-        return zmq.util.Utils.getPeerIpAddress(fd);
+        return zmq.util.Utils.getPeerSocketAddress(fd);
     }
 }
