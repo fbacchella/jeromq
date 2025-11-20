@@ -13,12 +13,16 @@ import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
 import zmq.io.net.Address.IZAddress;
+import zmq.io.net.SocketFactory;
 import zmq.io.net.Listener;
 import zmq.io.net.NetProtocol;
 import zmq.io.net.NetworkProtocolProvider;
+import zmq.io.net.tcp.TcpChannelFactory;
 
 public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
+    private final SocketFactory factory = new TcpChannelFactory();
+
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
@@ -70,5 +74,10 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetS
     public boolean wantsIOThread()
     {
         return true;
+    }
+
+    @Override
+    public SocketFactory channelFactory() {
+        return factory;
     }
 }

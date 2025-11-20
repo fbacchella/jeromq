@@ -32,4 +32,5 @@ public interface NetworkProtocolProvider<SA extends SocketAddress>
         throw new IllegalArgumentException("Unhandled address protocol " + socketAddress);
     }
     boolean wantsIOThread();
+    SocketFactory channelFactory();
 }

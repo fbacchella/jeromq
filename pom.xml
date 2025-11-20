@@ -26,6 +26,7 @@
         <module>jeromq-core</module>
         <module>jeromq-ipcsockets</module>
         <module>jeromq</module>
+        <module>jeromq-tls</module>
     </modules>
 
     <dependencies>

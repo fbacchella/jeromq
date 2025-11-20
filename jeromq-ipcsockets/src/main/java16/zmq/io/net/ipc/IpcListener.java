@@ -1,10 +1,7 @@
 package zmq.io.net.ipc;
 
 import java.io.IOException;
-import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -12,6 +9,9 @@ import zmq.Options;
 import zmq.SocketBase;
 import zmq.io.IOThread;
 import zmq.io.net.AbstractSocketListener;
+import zmq.io.net.ServerSocketWrapper;
+import zmq.io.net.SocketFactory;
+import zmq.io.net.SocketWrapper;
 
 public class IpcListener extends AbstractSocketListener<UnixDomainSocketAddress, IpcAddress>
 {
@@ -37,42 +37,36 @@ public class IpcListener extends AbstractSocketListener<UnixDomainSocketAddress,
     }
 
     @Override
-    protected ServerSocketChannel openServer(IpcAddress address) throws IOException
+    protected ServerSocketWrapper<UnixDomainSocketAddress> openServer(IpcAddress address) throws IOException
     {
-        if (options.selectorChooser == null) {
-            return ServerSocketChannel.open(StandardProtocolFamily.UNIX);
-        }
-        else {
-            return options.selectorChooser.choose(address, options).openServerSocketChannel(StandardProtocolFamily.UNIX);
-        }
+        // Template resolution might need a little help sometimes
+        SocketFactory<UnixDomainSocketAddress> f = options.getFactory();
+        return f.makeServerSocket(options);
     }
 
     @Override
-    protected void bindServer(ServerSocketChannel fd, IpcAddress address) throws IOException
+    protected void bindServer(ServerSocketWrapper<UnixDomainSocketAddress> fd, IpcAddress address) throws IOException
     {
         fd.configureBlocking(false);
-
-        UnixDomainSocketAddress socketAddress = address.address();
-        fd.bind(socketAddress, options.backlog);
-
+        fd.bind(address.address());
         assert (boundSocketPath == null);
-        boundSocketPath = socketAddress.getPath();
+        boundSocketPath = address.address().getPath();
     }
 
     @Override
-    protected SocketChannel accept(ServerSocketChannel fd) throws IOException
+    protected SocketWrapper<UnixDomainSocketAddress> accept(ServerSocketWrapper<UnixDomainSocketAddress> fd) throws IOException
     {
-        return fd.accept();
+        return fd.accept(getZAddress());
     }
 
     @Override
-    protected void tuneAcceptedChannel(SocketChannel channel)
+    protected void tuneAcceptedChannel(SocketWrapper<UnixDomainSocketAddress> channel)
     {
         // no-op
     }
 
     @Override
-    protected void closeServerChannel(ServerSocketChannel fd) throws IOException
+    protected void closeServerChannel(ServerSocketWrapper<UnixDomainSocketAddress> fd) throws IOException
     {
         try {
             fd.close();

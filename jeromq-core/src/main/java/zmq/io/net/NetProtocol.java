@@ -189,6 +189,12 @@ public enum NetProtocol
     }
 
     @SuppressWarnings("unchecked")
+    public <S extends SocketAddress> SocketFactory<S> factory()
+    {
+        return resolve().channelFactory();
+    }
+
+    @SuppressWarnings("unchecked")
     private <S extends SocketAddress> NetworkProtocolProvider<S> resolve()
     {
         NetworkProtocolProvider<S> protocolProvider = (NetworkProtocolProvider<S>) providers.computeIfAbsent(this, NetProtocol::resolveProtocol);

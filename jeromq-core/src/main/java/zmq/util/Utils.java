@@ -76,7 +76,10 @@ public class Utils
 
     public static void unblockSocket(SelectableChannel... channels) throws IOException
     {
-        TcpUtils.unblockSocket(channels);
+        for (SelectableChannel ch : channels)
+        {
+            ch.configureBlocking(false);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -149,7 +152,6 @@ public class Utils
      * @throws ZError.IOException if the channel is closed or an I/O errors occurred
      * @throws IllegalArgumentException if the SocketChannel is not a TCP channel
      */
-    @SuppressWarnings("unchecked")
     public static <S extends SocketAddress> Address<S> getPeerSocketAddress(SocketChannel fd)
     {
         try {

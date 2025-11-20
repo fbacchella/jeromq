@@ -3,10 +3,11 @@ package zmq.io;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import org.zeromq.Errors;
 
 import zmq.Config;
 import zmq.Msg;
@@ -26,11 +27,11 @@ import zmq.io.coder.v2.V2Encoder;
 import zmq.io.mechanism.Mechanism;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
+import zmq.io.net.SocketWrapper;
 import zmq.poll.IPollEvents;
 import zmq.poll.Poller;
 import zmq.util.Blob;
 import zmq.util.Errno;
-import zmq.util.Utils;
 import zmq.util.ValueReference;
 import zmq.util.Wire;
 
@@ -81,7 +82,7 @@ public class StreamEngine implements IEngine, IPollEvents
     private IOObject ioObject;
 
     //  Underlying socket.
-    private SocketChannel fd;
+    private SocketWrapper fd;
 
     private Poller.Handle handle;
 
@@ -167,7 +168,7 @@ public class StreamEngine implements IEngine, IPollEvents
 
     private final Errno errno;
 
-    public StreamEngine(SocketChannel fd, Options options, String endpoint)
+    public StreamEngine(SocketWrapper fd, Options options, String endpoint)
     {
         this.errno = options.errno;
         this.fd = fd;
@@ -186,14 +187,14 @@ public class StreamEngine implements IEngine, IPollEvents
 
         //  Put the socket into non-blocking mode.
         try {
-            Utils.unblockSocket(this.fd);
+            fd.unblocking();
         }
         catch (IOException e) {
             throw new ZError.IOException(e);
         }
 
-        peerAddress = Utils.getPeerSocketAddress(fd);
-        selfAddress = Utils.getLocalSockedAddress(fd);
+        peerAddress = fd.getPeerSocketAddress();
+        selfAddress = fd.getLocalSocketAddress();
 
         heartbeatTimeout = heartbeatTimeout();
         heartbeatContext = Arrays.copyOf(options.heartbeatContext, options.heartbeatContext.length);
@@ -211,7 +212,7 @@ public class StreamEngine implements IEngine, IPollEvents
         return timeout;
     }
 
-    public void destroy()
+    private void destroy()
     {
         assert (!plugged);
 
@@ -240,6 +241,11 @@ public class StreamEngine implements IEngine, IPollEvents
     {
         assert (!plugged);
         plugged = true;
+        try {
+            fd.plug();
+        } catch (IOException e) {
+            throw new ZError.IOException(e);
+        }
 
         //  Connect to session object.
         assert (this.session == null);
@@ -250,7 +256,7 @@ public class StreamEngine implements IEngine, IPollEvents
         //  Connect to I/O threads poller object.
         ioObject = new IOObject(ioThread, this);
         ioObject.plug();
-        handle = ioObject.addFd(fd);
+        handle = ioObject.addFd(fd.getSelectableChannel());
         ioError = false;
 
         //  Make sure batch sizes match large buffer sizes
@@ -287,6 +293,8 @@ public class StreamEngine implements IEngine, IPollEvents
                 }
                 metadata.put(options.selfAddressPropertyName, selfAddress.address());
             }
+
+            fd.resolveMetadata(metadata);
 
             //  For raw sockets, send an initial 0-length message to the
             // application so that it knows a peer has connected.
@@ -518,6 +526,10 @@ public class StreamEngine implements IEngine, IPollEvents
         //  The engine is not terminated until we detect input error;
         //  this is necessary to prevent losing incoming messages.
         if (nbytes == -1) {
+            if (errno.is(ZError.ENOTSUP)) {
+                error(ErrorReason.PROTOCOL);
+                return;
+            }
             ioObject.resetPollOut(handle);
             return;
         }
@@ -991,6 +1003,9 @@ public class StreamEngine implements IEngine, IPollEvents
             && selfAddress != null && !selfAddress.address().isEmpty()) {
             metadata.put(options.selfAddressPropertyName, selfAddress.address());
         }
+
+        fd.resolveMetadata(metadata);
+
         //  Add ZAP properties.
         metadata.set(mechanism.zapProperties);
 
@@ -1122,7 +1137,7 @@ public class StreamEngine implements IEngine, IPollEvents
             processMsg.apply(terminator);
         }
         assert (session != null);
-        socket.eventDisconnected(endpoint, fd);
+        socket.eventDisconnected(endpoint, fd.getSelectableChannel());
         session.flush();
         session.engineError(!handshaking && (mechanism == null ||
                 mechanism.status() != Mechanism.Status.HANDSHAKING), error);

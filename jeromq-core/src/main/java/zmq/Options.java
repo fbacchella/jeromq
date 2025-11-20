@@ -2,6 +2,7 @@ package zmq;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +11,10 @@ import java.util.List;
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
 import zmq.io.mechanism.Mechanisms;
+import zmq.io.net.NetProtocol;
 import zmq.io.net.SelectorProviderChooser;
+import zmq.io.net.SocketFactory;
+import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.ipc.IpcAddress;
 import zmq.io.net.tcp.TcpAddress;
 import zmq.io.net.tcp.TcpAddress.TcpAddressMask;
@@ -190,6 +194,9 @@ public class Options
     public boolean rawSocket = false;
     public Class<? extends IDecoder> decoder = null;
     public Class<? extends IEncoder> encoder = null;
+
+    private ChannelFactoryWrapper<? extends SocketAddress> channelWrapperFactory = SocketFactory.TRANSPARENT;
+    private SocketFactory<? extends SocketAddress> effectiveFactory = null;
 
     /**
      * <p>Set an option with the given object.</p>
@@ -588,9 +595,30 @@ public class Options
             selfAddressPropertyName = parseString(option, optval);
             return true;
 
+        case ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY:
+            if (optval instanceof ChannelFactoryWrapper) {
+                channelWrapperFactory = ((ChannelFactoryWrapper) optval);
+                return true;
+            }
+            else {
+                return false;
+            }
+
         default:
             throw new IllegalArgumentException("Unknown Option " + option);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void setChannelFactory(NetProtocol protocol)
+    {
+        effectiveFactory = (SocketFactory<? extends SocketAddress>) channelWrapperFactory.wrap(protocol);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <S extends SocketAddress> SocketFactory<S> getFactory()
+    {
+        return (SocketFactory<S>) effectiveFactory;
     }
 
     private MsgAllocator allocator(Class<?> clazz)
@@ -848,6 +876,9 @@ public class Options
 
         case ZMQ.ZMQ_SELFADDR_PROPERTY_NAME:
             return (T) selfAddressPropertyName;
+
+        case ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY:
+            return (T) channelWrapperFactory;
 
         default:
             throw new IllegalArgumentException("option=" + option);

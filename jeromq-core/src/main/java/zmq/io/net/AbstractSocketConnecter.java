@@ -2,7 +2,6 @@ package zmq.io.net;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.nio.channels.SocketChannel;
 
 import zmq.Options;
 import zmq.Own;
@@ -29,7 +28,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
     private final Address<S> addr;
 
     //  Underlying socket.
-    private SocketChannel fd;
+    private SocketWrapper<S> fd;
     private Poller.Handle handle;
 
     //  If true, connecter is waiting a while before trying to connect.
@@ -111,7 +110,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         ioObject.removeHandle(handle);
         handle = null;
 
-        SocketChannel channel = connect();
+        SocketWrapper<S> channel = connect();
 
         if (channel == null) {
             //  Handle the error condition by attempt to reconnect.
@@ -148,7 +147,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         //  Shut the connecter down.
         terminate();
 
-        socket.eventConnected(addr.toString(), channel);
+        socket.eventConnected(addr.toString(), channel.getSelectableChannel());
     }
 
     @Override
@@ -167,7 +166,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         try {
             boolean rc = open();
 
-            handle = ioObject.addFd(fd);
+            handle = ioObject.addFd(fd.getSelectableChannel());
             //  Connect may succeed in synchronous manner.
             if (rc) {
                 connectEvent();
@@ -244,7 +243,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
             throw new IOException("Address not resolved");
         }
 
-        SocketAddress sa = resolved.address();
+        S sa = resolved.address();
         if (sa == null) {
             throw new IOException("Socket address not resolved");
         }
@@ -271,13 +270,13 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         return rc;
     }
 
-    protected abstract SocketChannel openClient(Address.IZAddress<S> address) throws IOException;
+    protected abstract SocketWrapper<S> openClient(Address.IZAddress<S> address) throws IOException;
 
-    protected abstract void tuneConnectedChannel(SocketChannel channel) throws IOException;
+    protected abstract void tuneConnectedChannel(SocketWrapper<S> channel) throws IOException;
 
     //  Get the file descriptor of newly created connection. Returns
     //  null if the connection was unsuccessful.
-    private SocketChannel connect()
+    private SocketWrapper<S> connect()
     {
         try {
             //  Async connect has finished. Check whether an error occurred
@@ -296,7 +295,7 @@ public abstract class AbstractSocketConnecter<S extends SocketAddress> extends O
         assert (fd != null);
         try {
             fd.close();
-            socket.eventClosed(addr.toString(), fd);
+            socket.eventClosed(addr.toString(), fd.getSelectableChannel());
         }
         catch (IOException e) {
             socket.eventCloseFailed(addr.toString(), ZError.exccode(e));

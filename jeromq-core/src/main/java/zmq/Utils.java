@@ -32,11 +32,6 @@ public class Utils
         return zmq.util.Utils.findOpenPort();
     }
 
-    public static void unblockSocket(SelectableChannel... channels) throws IOException
-    {
-        TcpUtils.unblockSocket(channels);
-    }
-
     public static <T> T[] realloc(Class<T> klass, T[] src, int size, boolean ended)
     {
         return zmq.util.Utils.realloc(klass, src, size, ended);
@@ -55,10 +50,5 @@ public class Utils
     public static boolean delete(File path)
     {
         return zmq.util.Utils.delete(path);
-    }
-
-    public static <S extends SocketAddress> Address<S> getPeerSocketAddress(SocketChannel fd)
-    {
-        return zmq.util.Utils.getPeerSocketAddress(fd);
     }
 }

@@ -1,15 +1,15 @@
 package zmq.io.net.ipc;
 
 import java.io.IOException;
-import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
-import java.nio.channels.SocketChannel;
 
 import zmq.Options;
 import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.AbstractSocketConnecter;
 import zmq.io.net.Address;
+import zmq.io.net.SocketFactory;
+import zmq.io.net.SocketWrapper;
 
 public class IpcConnecter extends AbstractSocketConnecter<UnixDomainSocketAddress>
 {
@@ -19,21 +19,17 @@ public class IpcConnecter extends AbstractSocketConnecter<UnixDomainSocketAddres
     }
 
     @Override
-    protected SocketChannel openClient(Address.IZAddress<UnixDomainSocketAddress> address) throws IOException
+    protected SocketWrapper<UnixDomainSocketAddress> openClient(Address.IZAddress<UnixDomainSocketAddress> address) throws IOException
     {
-        SocketChannel fd;
-        if (options.selectorChooser == null) {
-            fd = SocketChannel.open(StandardProtocolFamily.UNIX);
-        }
-        else {
-            fd = options.selectorChooser.choose(address, options).openSocketChannel(StandardProtocolFamily.UNIX);
-        }
+        // Template resolution might need a little help sometimes
+        SocketFactory<UnixDomainSocketAddress> f = options.getFactory();
+        SocketWrapper<UnixDomainSocketAddress> fd = f.makeSocket(options);
         fd.configureBlocking(false);
         return fd;
     }
 
     @Override
-    protected void tuneConnectedChannel(SocketChannel channel)
+    protected void tuneConnectedChannel(SocketWrapper<UnixDomainSocketAddress> channel)
     {
         // no-op
     }

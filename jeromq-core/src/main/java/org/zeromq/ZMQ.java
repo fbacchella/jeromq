@@ -2,6 +2,7 @@ package org.zeromq;
 
 import java.io.Closeable;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
@@ -25,6 +26,7 @@ import zmq.ZError.CtxTerminatedException;
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
 import zmq.io.mechanism.Mechanisms;
+import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
@@ -3110,6 +3112,16 @@ public class ZMQ
         public boolean setHelloMsg(byte[] helloMsg)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_HELLO_MSG, helloMsg);
+        }
+
+        public boolean setChannelWrapper(ChannelFactoryWrapper<? extends SocketAddress> wrapper)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY, wrapper);
+        }
+
+        public ChannelFactoryWrapper<? extends SocketAddress> getChannelWrapper()
+        {
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY);
         }
 
         /**

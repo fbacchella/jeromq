@@ -218,7 +218,7 @@ public class Poller extends PollerBase implements Runnable
                                 key = handle.fd.register(selector, handle.ops, handle);
                                 assert (key != null);
                             }
-                            catch (CancelledKeyException | ClosedSelectorException | ClosedChannelException e) {
+                            catch (RuntimeException | ClosedChannelException e) {
                                 exnotification.uncaughtException(worker, e);
                             }
                         }

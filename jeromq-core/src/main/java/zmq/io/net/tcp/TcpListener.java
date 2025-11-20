@@ -2,24 +2,18 @@ package zmq.io.net.tcp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardProtocolFamily;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Locale;
 
 import zmq.Options;
 import zmq.SocketBase;
 import zmq.io.IOThread;
 import zmq.io.net.AbstractSocketListener;
 import zmq.io.net.Address;
+import zmq.io.net.SocketFactory;
+import zmq.io.net.SocketWrapper;
+import zmq.io.net.ServerSocketWrapper;
 
 public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAddress>
 {
-    private static final boolean isWindows;
-    static {
-        String os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
-        isWindows = os.contains("win");
-    }
 
     public TcpListener(IOThread ioThread, SocketBase socket, Options options)
     {
@@ -34,8 +28,12 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
 
     protected String address(Address.IZAddress<InetSocketAddress> address)
     {
-        int port = getFd().socket().getLocalPort();
-        return address.toString(port);
+        try {
+            int port = getFd().getAddress().getPort();
+            return address.toString(port);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -53,104 +51,39 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
     }
 
     @Override
-    protected ServerSocketChannel openServer(TcpAddress address) throws IOException
+    protected ServerSocketWrapper<InetSocketAddress> openServer(TcpAddress address) throws IOException
     {
-        if (options.selectorChooser == null) {
-            return ServerSocketChannel.open();
-        }
-        else {
-            return options.selectorChooser.choose(address, options).openServerSocketChannel();
-        }
+        // Template resolution might need a little help sometimes
+        SocketFactory<InetSocketAddress> f = options.getFactory();
+        return f.makeServerSocket(options);
     }
 
     @Override
-    protected void bindServer(ServerSocketChannel fd, TcpAddress address) throws IOException
+    protected void bindServer(ServerSocketWrapper<InetSocketAddress> fd, TcpAddress address) throws IOException
     {
-        // On some systems, IPv4 mapping in IPv6 sockets is disabled by default.
-        // Switch it on in such cases.
-        // The method enableIpv4Mapping is empty. Still to be written
-        if (address.family() == StandardProtocolFamily.INET6) {
-            TcpUtils.enableIpv4Mapping(fd);
-        }
 
         fd.configureBlocking(false);
-
-        //  Set the socket buffer limits for the underlying socket.
-        if (options.sndbuf != 0) {
-            TcpUtils.setTcpSendBuffer(fd, options.sndbuf);
-        }
-        if (options.rcvbuf != 0) {
-            TcpUtils.setTcpReceiveBuffer(fd, options.rcvbuf);
-        }
-
-        if (!isWindows) {
-            TcpUtils.setReuseAddress(fd, true);
-        }
-
-        fd.bind(address.address(), options.backlog);
+        fd.bind(address.address());
     }
 
     @Override
-    protected SocketChannel accept(ServerSocketChannel fd) throws IOException
+    protected SocketWrapper<InetSocketAddress> accept(ServerSocketWrapper<InetSocketAddress> fd) throws IOException
     {
         //  The situation where connection cannot be accepted due to insufficient
         //  resources is considered valid and treated by ignoring the connection.
         //  Accept one connection and deal with different failure modes.
-        Address.IZAddress<InetSocketAddress> address = getZAddress();
         assert (fd != null);
-
-        SocketChannel sock = fd.accept();
-
-        if (!options.tcpAcceptFilters.isEmpty()) {
-            boolean matched = false;
-            for (TcpAddress.TcpAddressMask am : options.tcpAcceptFilters) {
-                if (am.matchAddress(address.address())) {
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                try {
-                    sock.close();
-                }
-                catch (IOException ignored) {
-                    // Ignored
-                }
-                return null;
-            }
-        }
-        if (options.tos != 0) {
-            TcpUtils.setIpTypeOfService(sock, options.tos);
-        }
-        //  Set the socket buffer limits for the underlying socket.
-        if (options.sndbuf != 0) {
-            TcpUtils.setTcpSendBuffer(sock, options.sndbuf);
-        }
-        if (options.rcvbuf != 0) {
-            TcpUtils.setTcpReceiveBuffer(sock, options.rcvbuf);
-        }
-
-        if (!isWindows) {
-            TcpUtils.setReuseAddress(sock, true);
-        }
-
-        return sock;
+        return fd.accept(getZAddress());
     }
 
     @Override
-    protected void tuneAcceptedChannel(SocketChannel channel) throws IOException
+    protected void tuneAcceptedChannel(SocketWrapper<InetSocketAddress> channel) throws IOException
     {
-        TcpUtils.tuneTcpSocket(channel);
-        TcpUtils.tuneTcpKeepalives(
-                channel,
-                options.tcpKeepAlive,
-                options.tcpKeepAliveCnt,
-                options.tcpKeepAliveIdle,
-                options.tcpKeepAliveIntvl);
+        channel.tune();
     }
 
     @Override
-    protected void closeServerChannel(ServerSocketChannel fd) throws IOException
+    protected void closeServerChannel(ServerSocketWrapper<InetSocketAddress> fd) throws IOException
     {
         fd.close();
     }

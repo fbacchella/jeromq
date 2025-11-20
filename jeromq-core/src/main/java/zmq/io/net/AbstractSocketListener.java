@@ -2,8 +2,6 @@ package zmq.io.net;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 
 import zmq.Options;
 import zmq.SocketBase;
@@ -21,7 +19,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
     private A address;
 
     //  Underlying socket.
-    private ServerSocketChannel fd;
+    private ServerSocketWrapper<S> fd;
     private Poller.Handle       handle;
 
     // String representation of endpoint to bind to
@@ -37,7 +35,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         fd = null;
     }
 
-    protected ServerSocketChannel getFd()
+    protected ServerSocketWrapper<S> getFd()
     {
         return this.fd;
     }
@@ -60,7 +58,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
     {
         //  Start polling for incoming connections.
         ioObject.plug();
-        handle = ioObject.addFd(fd);
+        handle = ioObject.addFd(fd.getSelectableChannel());
         ioObject.setPollAccept(handle);
     }
 
@@ -76,7 +74,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
     @Override
     public void acceptEvent()
     {
-        SocketChannel channel;
+        SocketWrapper<S> channel;
 
         try {
             channel = accept(fd);
@@ -86,7 +84,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
                 socket.eventAcceptFailed(endpoint, ZError.EADDRNOTAVAIL);
                 return;
             }
-            tuneAcceptedChannel(channel);
+            channel.tune();
         }
         catch (IOException e) {
             //  If connection was reset by the peer in the meantime, just ignore it.
@@ -120,7 +118,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         session.incSeqnum();
         launchChild(session);
         sendAttach(session, engine, false);
-        socket.eventAccepted(endpoint, channel);
+        socket.eventAccepted(endpoint, channel.getSelectableChannel());
     }
 
     //  Close the listening socket.
@@ -130,7 +128,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
 
         try {
             closeServerChannel(fd);
-            socket.eventClosed(endpoint, fd);
+            socket.eventClosed(endpoint, fd.getSelectableChannel());
         }
         catch (IOException e) {
             socket.eventCloseFailed(endpoint, ZError.exccode(e));
@@ -138,7 +136,7 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
         fd = null;
     }
 
-    protected abstract void closeServerChannel(ServerSocketChannel fd) throws IOException;
+    protected abstract void closeServerChannel(ServerSocketWrapper<S> fd) throws IOException;
 
     protected boolean setZAddress(A address)
     {
@@ -158,21 +156,21 @@ public abstract class AbstractSocketListener<S extends SocketAddress, A extends 
             errno.set(ZError.EADDRINUSE, e);
             return false;
         }
-        socket.eventListening(endpoint, fd);
+        socket.eventListening(endpoint, fd.getSelectableChannel());
         return true;
     }
 
-    protected abstract ServerSocketChannel openServer(A address) throws IOException;
+    protected abstract ServerSocketWrapper<S> openServer(A address) throws IOException;
 
-    protected abstract void bindServer(ServerSocketChannel fd, A address) throws IOException;
+    protected abstract void bindServer(ServerSocketWrapper<S> fd, A address) throws IOException;
 
     //  Accept the new connection. Returns the file descriptor of the
     //  newly created connection. The function may throw IOException
     //  if the connection was dropped while waiting in the listen backlog
     //  or was denied because of accept filters.
-    protected abstract SocketChannel accept(ServerSocketChannel fd) throws IOException;
+    protected abstract SocketWrapper<S> accept(ServerSocketWrapper<S> fd) throws IOException;
 
-    protected abstract void tuneAcceptedChannel(SocketChannel channel) throws IOException;
+    protected abstract void tuneAcceptedChannel(SocketWrapper<S> channel) throws IOException;
 
     @Override
     public String toString()

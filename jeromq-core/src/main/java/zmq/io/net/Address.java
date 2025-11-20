@@ -51,7 +51,7 @@ public class Address<S extends SocketAddress>
      * @param socketAddress
      * @throws IllegalArgumentException if the SocketChannel is not an IP socket address
      */
-    public Address(SocketAddress socketAddress)
+    public Address(S socketAddress)
     {
         protocol = NetProtocol.findByAddress(socketAddress);
         address = protocol.formatSocketAddress(socketAddress);

@@ -15,6 +15,7 @@ import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
 import zmq.io.net.Address.IZAddress;
+import zmq.io.net.SocketFactory;
 import zmq.io.net.Listener;
 import zmq.io.net.NetProtocol;
 import zmq.pipe.Pipe;
@@ -398,6 +399,8 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
             if (protocol == null) {
                 return false;
             }
+            SocketFactory<? extends SocketAddress> factory = protocol.factory();
+            options.setChannelFactory(protocol);
 
             if (protocol == NetProtocol.inproc) {
                 Ctx.Endpoint endpoint = new Ctx.Endpoint(this, options);
@@ -500,6 +503,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
         if (protocol == null || !protocol.isValid()) {
             return false;
         }
+        options.setChannelFactory(protocol);
 
         if (protocol == NetProtocol.inproc) {
             //  TODO: inproc connect is specific with respect to creating pipes

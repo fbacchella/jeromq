@@ -12,6 +12,7 @@ import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
 import zmq.io.net.Address.IZAddress;
+import zmq.io.net.SocketFactory;
 import zmq.io.net.Listener;
 import zmq.io.net.NetProtocol;
 import zmq.io.net.NetworkProtocolProvider;
@@ -56,5 +57,10 @@ public class InprocNetworkProtocolProvider implements NetworkProtocolProvider<In
     public boolean wantsIOThread()
     {
         return false;
+    }
+
+    @Override
+    public SocketFactory channelFactory() {
+        return null;
     }
 }

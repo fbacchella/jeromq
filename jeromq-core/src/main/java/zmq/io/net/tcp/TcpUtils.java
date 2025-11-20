@@ -29,22 +29,22 @@ public class TcpUtils
         setOption(channel, StandardSocketOptions.TCP_NODELAY, true);
     }
 
-    public static void tuneTcpKeepalives(Channel channel, int tcpKeepAlive, int tcpKeepAliveCnt,
-            int tcpKeepAliveIdle, int tcpKeepAliveIntvl)
-    {
+    public static void tuneTcpKeepalives(NetworkChannel channel, int tcpKeepAlive, int tcpKeepAliveCnt,
+            int tcpKeepAliveIdle, int tcpKeepAliveIntvl) throws IOException {
         if (tcpKeepAlive != -1) {
             if (channel instanceof SocketChannel) {
-                setOption(channel, StandardSocketOptions.SO_KEEPALIVE, tcpKeepAlive == 1);
+                //  ServerSocketChannel don't accept SO_KEEPALIVE
+                channel.setOption(StandardSocketOptions.SO_KEEPALIVE, tcpKeepAlive == 1);
             }
             if (tcpKeepAlive == 1) {
                 if (tcpKeepAliveCnt > 0) {
-                    setOption(channel, ExtendedSocketOptions.TCP_KEEPCOUNT, tcpKeepAliveCnt);
+                    channel.setOption(ExtendedSocketOptions.TCP_KEEPCOUNT, tcpKeepAliveCnt);
                 }
                 if (tcpKeepAliveIdle > 0) {
-                    setOption(channel, ExtendedSocketOptions.TCP_KEEPIDLE, tcpKeepAliveIdle);
+                    channel.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, tcpKeepAliveIdle);
                 }
                 if (tcpKeepAliveIntvl > 0) {
-                    setOption(channel, ExtendedSocketOptions.TCP_KEEPINTERVAL, tcpKeepAliveIntvl);
+                    channel.setOption(ExtendedSocketOptions.TCP_KEEPINTERVAL, tcpKeepAliveIntvl);
                 }
             }
         }
@@ -87,18 +87,6 @@ public class TcpUtils
         catch (IOException e) {
             throw new ZError.IOException(e);
         }
-    }
-
-    public static void unblockSocket(SelectableChannel... channels) throws IOException
-    {
-        for (SelectableChannel ch : channels) {
-            ch.configureBlocking(false);
-        }
-    }
-
-    public static void enableIpv4Mapping(SelectableChannel channel)
-    {
-        // TODO V4 enable ipv4 mapping
     }
 
     /**
