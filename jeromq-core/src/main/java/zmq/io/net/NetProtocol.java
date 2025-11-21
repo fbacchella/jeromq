@@ -191,7 +191,7 @@ public enum NetProtocol
     @SuppressWarnings("unchecked")
     public <S extends SocketAddress> SocketFactory<S> factory()
     {
-        return resolve().channelFactory();
+        return (SocketFactory<S>) resolve().channelFactory();
     }
 
     @SuppressWarnings("unchecked")

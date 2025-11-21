@@ -21,7 +21,7 @@ import zmq.io.net.tcp.TcpChannelFactory;
 
 public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
-    private final SocketFactory factory = new TcpChannelFactory();
+    private final SocketFactory<InetSocketAddress> factory = new TcpChannelFactory();
 
     @Override
     public boolean handleProtocol(NetProtocol protocol)
@@ -77,7 +77,7 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetS
     }
 
     @Override
-    public SocketFactory channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory() {
         return factory;
     }
 }

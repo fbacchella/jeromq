@@ -13,17 +13,16 @@ import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
 import zmq.io.net.Address.IZAddress;
-import zmq.io.net.SocketFactory;
 import zmq.io.net.Listener;
 import zmq.io.net.NetProtocol;
 import zmq.io.net.NetworkProtocolProvider;
+import zmq.io.net.SocketFactory;
 
 public class NormNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -31,14 +30,12 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     public Listener getListener(IOThread ioThread, SocketBase socket,
                                 Options options)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -75,7 +72,7 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     }
 
     @Override
-    public SocketFactory channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory() {
         return null;
     }
 }

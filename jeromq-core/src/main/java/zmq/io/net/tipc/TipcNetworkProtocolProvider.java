@@ -22,7 +22,6 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     @Override
     public boolean handleProtocol(NetProtocol protocol)
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -36,7 +35,6 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     @Override
     public IZAddress<InetSocketAddress> zresolve(String addr, boolean ipv6)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -57,7 +55,7 @@ public class TipcNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     }
 
     @Override
-    public SocketFactory channelFactory()
+    public SocketFactory<InetSocketAddress> channelFactory()
     {
         return null;
     }

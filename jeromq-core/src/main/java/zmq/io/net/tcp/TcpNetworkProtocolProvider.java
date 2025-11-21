@@ -20,7 +20,7 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class TcpNetworkProtocolProvider implements NetworkProtocolProvider<InetSocketAddress>
 {
-    private final SocketFactory factory = new TcpChannelFactory();
+    private final SocketFactory<InetSocketAddress> factory = new TcpChannelFactory();
 
     @Override
     public boolean handleProtocol(NetProtocol protocol)
@@ -83,7 +83,7 @@ public class TcpNetworkProtocolProvider implements NetworkProtocolProvider<InetS
     }
 
     @Override
-    public SocketFactory channelFactory()
+    public SocketFactory<InetSocketAddress> channelFactory()
     {
         return factory;
     }

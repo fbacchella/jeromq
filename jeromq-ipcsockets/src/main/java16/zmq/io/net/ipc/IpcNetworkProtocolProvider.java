@@ -20,7 +20,7 @@ import zmq.io.net.NetworkProtocolProvider;
 
 public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<UnixDomainSocketAddress>
 {
-    private final SocketFactory factory = new IpcChannelFactory();
+    private final SocketFactory<UnixDomainSocketAddress> factory = new IpcChannelFactory();
     @Override
     public boolean handleAdress(SocketAddress socketAddress)
     {
@@ -75,7 +75,7 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<UnixD
     }
 
     @Override
-    public SocketFactory channelFactory()
+    public SocketFactory<UnixDomainSocketAddress> channelFactory()
     {
         return factory;
     }

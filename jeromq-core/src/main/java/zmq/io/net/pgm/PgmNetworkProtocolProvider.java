@@ -82,7 +82,7 @@ public class PgmNetworkProtocolProvider implements NetworkProtocolProvider<InetS
     }
 
     @Override
-    public SocketFactory channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory() {
         return null;
     }
 }
