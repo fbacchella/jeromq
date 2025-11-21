@@ -156,8 +156,7 @@ public class ZMQ
     public static final int ZMQ_MSG_ALLOCATOR                 = ZMQ_CUSTOM_OPTION + 3;
     public static final int ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD = ZMQ_CUSTOM_OPTION + 4;
     public static final int ZMQ_HEARTBEAT_CONTEXT             = ZMQ_CUSTOM_OPTION + 5;
-    public static final int ZMQ_SELECTOR_PROVIDERCHOOSER      = ZMQ_CUSTOM_OPTION + 6;
-    public static final int ZMQ_CHANNEL_WRAPPER_FACTORY       = ZMQ_CUSTOM_OPTION + 7;
+    public static final int ZMQ_CHANNEL_WRAPPER_FACTORY       = ZMQ_CUSTOM_OPTION + 6;
 
     /*  Message options                                                           */
     public static final int ZMQ_MORE = 1;
@@ -386,10 +385,6 @@ public class ZMQ
      * Default value for {@link ZMQ#ZMQ_SNDTIMEO}
      */
     public static final int DEFAULT_SEND_TIMEOUT = -1;
-    /**
-     * Default value for {@link ZMQ#ZMQ_SELECTOR_PROVIDERCHOOSER}
-     */
-    public static final SelectorProviderChooser DEFAULT_SELECTOR_CHOOSER = null;
     /**
      * Default value for {@link ZMQ#ZMQ_SNDBUF}
      */

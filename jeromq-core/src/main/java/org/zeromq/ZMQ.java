@@ -2292,27 +2292,6 @@ public class ZMQ
         }
 
         /**
-         * Set a custom {@link java.nio.channels.spi.SelectorProvider} chooser.
-         *
-         * @param chooser the custom chooser.
-         * @return true if the option was set, otherwise false.
-         */
-        public boolean setSelectorChooser(SelectorProviderChooser chooser)
-        {
-            return base.setSocketOpt(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, chooser);
-        }
-
-        /**
-         * Return the custom {@link java.nio.channels.spi.SelectorProvider} chooser.
-         *
-         * @return the {@link java.nio.channels.spi.SelectorProvider} chooser.
-         */
-        public SelectorProviderChooser getSelectorProviderChooser()
-        {
-            return base.getSocketOptx(zmq.ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER);
-        }
-
-        /**
          * The ZMQ_CONNECT_RID option sets the peer id of the next host connected via the connect() call,
          * and immediately readies that connection for data transfer with the named id.
          * This option applies only to the first subsequent call to connect(),

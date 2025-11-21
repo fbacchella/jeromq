@@ -6,7 +6,6 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.zeromq.SelectorProviderTest.DefaultSelectorProviderChooser;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
@@ -256,50 +255,6 @@ public class OptionsTest
         options.setSocketOpt(ZMQ.ZMQ_HANDSHAKE_IVL, -1);
     }
 
-    @Test(timeout = 5000)
-    public void testSelectorObject()
-    {
-        try (ZContext ctx = new ZContext();
-             Socket socket = ctx.createSocket(SocketType.PUB)) {
-            SelectorProviderChooser chooser = new DefaultSelectorProviderChooser();
-            socket.setSelectorChooser(chooser);
-            Assert.assertEquals(chooser, socket.getSelectorProviderChooser());
-        }
-    }
-
-    @Test
-    public void testSelectorClass()
-    {
-        Options opt = new Options();
-        Class<DefaultSelectorProviderChooser> chooser = DefaultSelectorProviderChooser.class;
-        opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, chooser);
-        Assert.assertTrue(opt.getSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER) instanceof SelectorProviderChooser);
-    }
-
-    @Test
-    public void testSelectorClassName()
-    {
-        Options opt = new Options();
-        Class<DefaultSelectorProviderChooser> chooser = DefaultSelectorProviderChooser.class;
-        opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, chooser.getName());
-        Assert.assertTrue(opt.getSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER) instanceof SelectorProviderChooser);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testSelectorClassNameFailed()
-    {
-        Options opt = new Options();
-        opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, String.class.getName());
-    }
-
-    @Test
-    public void testSelectorFailed()
-    {
-        Options opt = new Options();
-        IllegalArgumentException ex = Assert.assertThrows(IllegalArgumentException.class, () -> opt.setSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER, ""));
-        Assert.assertEquals("java.lang.ClassNotFoundException: ", ex.getMessage());
-    }
-
     @Test
     public void testIdentityOk()
     {
@@ -354,7 +309,6 @@ public class OptionsTest
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_IVL), is(options.heartbeatInterval));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_TIMEOUT), is(options.heartbeatTimeout));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HEARTBEAT_TTL), is(options.heartbeatTtl));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER), nullValue());
         assertThat(options.getSocketOpt(ZMQ.ZMQ_IDENTITY), is(new byte[0]));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_SELFADDR_PROPERTY_NAME), nullValue());
     }

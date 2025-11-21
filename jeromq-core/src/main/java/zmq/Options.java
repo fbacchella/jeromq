@@ -147,8 +147,6 @@ public class Options
     // Set to <= 0 to disable this system.
     public MsgAllocator allocator = ZMQ.DEFAULT_MSG_ALLOCATOR;
 
-    public SelectorProviderChooser selectorChooser = ZMQ.DEFAULT_SELECTOR_CHOOSER;
-
     // Hello msg to send to peer upon connecting
     public Msg helloMsg = ZMQ.DEFAULT_HELLO_MSG;
     public boolean canSendHelloMsg = false;
@@ -520,28 +518,6 @@ public class Options
             allocator = new MsgAllocatorThreshold(allocationHeapThreshold);
             return true;
 
-        case ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER:
-            if (optval instanceof String) {
-                try {
-                    selectorChooser = chooser(Class.forName((String) optval));
-                    return true;
-                }
-                catch (ClassNotFoundException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            }
-            else if (optval instanceof Class) {
-                selectorChooser = chooser((Class<?>) optval);
-                return true;
-            }
-            else if (optval instanceof SelectorProviderChooser) {
-                selectorChooser = (SelectorProviderChooser) optval;
-                return true;
-            }
-            else {
-                return false;
-            }
-
         case ZMQ.ZMQ_HELLO_MSG:
             if (optval == null) {
                 helloMsg = null;
@@ -631,23 +607,6 @@ public class Options
             throw new IllegalArgumentException(e);
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e.getCause());
-        }
-    }
-
-    private SelectorProviderChooser chooser(Class<?> clazz)
-    {
-        try {
-            Class<? extends SelectorProviderChooser> selectorClazz = clazz.asSubclass(SelectorProviderChooser.class);
-            return selectorClazz.getConstructor().newInstance();
-        }
-        catch (ClassCastException e) {
-            throw new IllegalArgumentException(e);
-        }
-        catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
-            throw new ZError.InstantiationException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw new ZError.InstantiationException(e.getCause());
         }
     }
 
@@ -867,9 +826,6 @@ public class Options
             else {
                 return (T) Integer.valueOf(-1);
             }
-
-        case ZMQ.ZMQ_SELECTOR_PROVIDERCHOOSER:
-            return (T) selectorChooser;
 
         case ZMQ.ZMQ_AS_TYPE:
             return (T) Integer.valueOf(asType);
