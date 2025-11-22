@@ -710,8 +710,6 @@ public class StreamEngine implements IEngine, IPollEvents
                         greetingSend.mark();
                         greetingSend.put(new byte[20]);
 
-                        assert (mechanism == Mechanisms.NULL || mechanism == Mechanisms.PLAIN
-                                || mechanism == Mechanisms.CURVE || mechanism == Mechanisms.GSSAPI);
                         greetingSend.reset();
                         greetingSend.put(mechanism.name().getBytes(ZMQ.CHARSET));
                         greetingSend.reset();

@@ -29,6 +29,7 @@ import zmq.ZError;
 import zmq.ZError.CtxTerminatedException;
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
+import zmq.io.mechanism.Mechanism;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.SelectorProviderChooser;
@@ -3079,9 +3080,9 @@ public class ZMQ
          *
          * @return the current mechanism.
          */
-        public Mechanism getMechanism()
+        public Mechanisms getMechanism()
         {
-            return Mechanism.find(base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM));
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM);
         }
 
         /**
@@ -3919,31 +3920,6 @@ public class ZMQ
         public String toString()
         {
             return base.toString();
-        }
-
-        public enum Mechanism
-        {
-            NULL(Mechanisms.NULL),
-            PLAIN(Mechanisms.PLAIN),
-            CURVE(Mechanisms.CURVE);
-            // TODO add GSSAPI once it is implemented
-
-            private final Mechanisms mech;
-
-            Mechanism(Mechanisms zmq)
-            {
-                this.mech = zmq;
-            }
-
-            private static Mechanism find(Mechanisms mech)
-            {
-                for (Mechanism candidate : values()) {
-                    if (candidate.mech == mech) {
-                        return candidate;
-                    }
-                }
-                return null;
-            }
         }
 
         /**

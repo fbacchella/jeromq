@@ -15,8 +15,10 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.zeromq.ZMQ.Socket;
-import org.zeromq.ZMQ.Socket.Mechanism;
 import org.zeromq.util.ZMetadata;
+
+import zmq.io.mechanism.Mechanism;
+import zmq.io.mechanism.Mechanisms;
 
 /**
  * A ZAuth actor takes over authentication for all incoming connections in
@@ -333,13 +335,13 @@ public class ZAuth implements Closeable
             assert (ZAP_VERSION.equals(version));
 
             // Get mechanism-specific frames
-            if (Mechanism.PLAIN.name().equals(mechanism)) {
+            if (Mechanisms.PLAIN.name().equals(mechanism)) {
                 username = request.popString();
                 password = request.popString();
                 clientKey = null;
                 principal = null;
             }
-            else if (Mechanism.CURVE.name().equals(mechanism)) {
+            else if (Mechanisms.CURVE.name().equals(mechanism)) {
                 ZFrame frame = request.pop();
                 byte[] clientPublicKey = frame.getData();
                 username = null;
@@ -347,7 +349,7 @@ public class ZAuth implements Closeable
                 clientKey = ZMQ.Curve.z85Encode(clientPublicKey);
                 principal = null;
             }
-            else if (zmq.io.mechanism.Mechanisms.GSSAPI.name().equals(mechanism)) {
+            else if (Mechanisms.GSSAPI.name().equals(mechanism)) {
                 // TOD handle GSSAPI as well
                 username = null;
                 password = null;
@@ -434,9 +436,9 @@ public class ZAuth implements Closeable
     {
         Map<String, Auth> auths = new HashMap<>();
 
-        auths.put(Mechanism.PLAIN.name(), new SimplePlainAuth());
-        auths.put(Mechanism.CURVE.name(), new SimpleCurveAuth());
-        auths.put(Mechanism.NULL.name(), new SimpleNullAuth());
+        auths.put(Mechanisms.PLAIN.name(), new SimplePlainAuth());
+        auths.put(Mechanisms.CURVE.name(), new SimpleCurveAuth());
+        auths.put(Mechanisms.NULL.name(), new SimpleNullAuth());
         // TODO add GSSAPI once it is implemented
         return auths;
     }
@@ -444,7 +446,7 @@ public class ZAuth implements Closeable
     private static Map<String, Auth> curveVariant(ZCertStore.Fingerprinter fingerprinter)
     {
         Map<String, Auth> auths = makeSimpleAuths();
-        auths.put(Mechanism.CURVE.name(), new SimpleCurveAuth(fingerprinter));
+        auths.put(Mechanisms.CURVE.name(), new SimpleCurveAuth(fingerprinter));
         return auths;
     }
 
@@ -515,7 +517,7 @@ public class ZAuth implements Closeable
     {
         Objects.requireNonNull(domain, "Domain has to be supplied");
         Objects.requireNonNull(filename, "File name has to be supplied");
-        return send(Mechanism.PLAIN.name(), domain, filename);
+        return send(Mechanisms.PLAIN.name(), domain, filename);
     }
 
     /**
@@ -526,7 +528,7 @@ public class ZAuth implements Closeable
     public ZAuth configureCurve(String location)
     {
         Objects.requireNonNull(location, "Location has to be supplied");
-        return send(Mechanism.CURVE.name(), location);
+        return send(Mechanisms.CURVE.name(), location);
     }
 
     public ZAuth replies(boolean enable)
