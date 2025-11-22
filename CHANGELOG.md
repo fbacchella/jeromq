@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.0 (2026-??-??)
+
+## Added
+
+* Errno now embed the thrown exception if needed. So adding event to notify that an exception was thrown, that can be 
+  logged or handled. This needs to increase the value of zmq.ZMQ.ZMQ_EVENT_ALL to 0xffffffff.
+* Many inner Enum are now autonomous.
+* Event serialization now directly resolve serialized values.
+* Adding the protocol TLS protocol. As Java doesn’t provide a way to handle TLS in channel, it’s not supporterd in the
+  default package, an implementation using [tls-channel](https://github.com/marianobarrios/tls-channel) is available.
+
 ## v0.7.0 (2025-11-14)
 
 ### Added

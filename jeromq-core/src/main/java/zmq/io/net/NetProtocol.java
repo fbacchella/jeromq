@@ -32,6 +32,14 @@ public enum NetProtocol
             paddr.resolve(ipv6);
         }
     },
+    tls(false, false)
+    {
+        @Override
+        public <S extends SocketAddress> void resolve(Address<S> paddr, boolean ipv6)
+        {
+            paddr.resolve(ipv6);
+        }
+    },
     udp(true, true)
     {
         @Override

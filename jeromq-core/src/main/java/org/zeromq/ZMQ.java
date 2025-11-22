@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,6 +15,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 
 import org.zeromq.proto.ZPicture;
 
@@ -28,6 +32,7 @@ import zmq.io.coder.IEncoder;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.SelectorProviderChooser;
+import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
 import zmq.util.Z85;
@@ -3101,6 +3106,69 @@ public class ZMQ
         public ChannelFactoryWrapper<? extends SocketAddress> getChannelWrapper()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY);
+        }
+
+        /**
+         * When using the tls {@link zmq.io.net.NetProtocol}, it will set the {@link SSLContext} to be used.
+         * @param sslContext The {@link SSLContext} to used
+         *
+         * @return true if the option was set, otherwise false
+         */
+        public boolean setSslContext(SSLContext sslContext)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_TLS_CONTEXT, sslContext);
+        }
+
+        /**
+         * The {@link SSLContext} to use can be defined both in the factory or specific for the current socket using
+         * {@link #setSslContext}. This method return the effective one.
+         * @return The effective {@link SSLContext}
+         */
+        public SSLContext getSslContext()
+        {
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_TLS_CONTEXT);
+        }
+
+        /**
+         * When using the tls {@link zmq.io.net.NetProtocol}, it will set the {@link SSLParameters} to be used.
+         * @param sslParams The {@link SSLParameters} to used
+         *
+         * @return true if the option was set, otherwise false
+         */
+        public boolean setSslParameters(SSLParameters sslParams)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_TLS_PARAMETERS, sslParams);
+        }
+
+        /**
+         * The {@link SSLContext} to use can be defined both in the factory or specific for the current socket using
+         * {@link #setSslParameters}. This method return the effective one.
+         * @return The effective {@link SSLParameters}
+         */
+        public SSLParameters getSslParameter()
+        {
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_TLS_PARAMETERS);
+        }
+
+        /**
+         * When using the tls {@link zmq.io.net.NetProtocol}, it will set the {@link PrincipalConverter} to be used.
+         * @param principalConverter The {@link PrincipalConverter} to be used
+         *
+         * @return true if the option was set, otherwise false
+         */
+        public boolean setPrincipalConvert(PrincipalConverter principalConverter)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_TLS_PRINCIPAL_CONVERT, principalConverter);
+        }
+
+        /**
+         * The {@link PrincipalConverter} to use can be defined both in the factory or specific for the current socket using
+         * {@link #setPrincipalConvert}. This method return the effective one.
+         * @return The effective {@link PrincipalConverter}
+         */
+        public PrincipalConverter getPrincipalConverter()
+        {
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_TLS_PRINCIPAL_CONVERT);
         }
 
         /**

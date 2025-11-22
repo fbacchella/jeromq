@@ -1,4 +1,4 @@
-package org.zeromq;
+package zmq.io.net.tls;
 
 import java.io.IOException;
 import java.math.BigInteger;

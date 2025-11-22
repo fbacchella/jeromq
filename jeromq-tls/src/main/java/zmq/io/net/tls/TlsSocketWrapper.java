@@ -1,8 +1,7 @@
-package org.zeromq;
+package zmq.io.net.tls;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -28,29 +27,32 @@ import zmq.io.Metadata;
 import zmq.io.net.Address;
 import zmq.io.net.SocketWrapper;
 import zmq.util.Errno;
-import zmq.util.Utils;
 
-class TlsChannelWrapper implements SocketWrapper<InetSocketAddress>
+class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
 {
-    public static class Builder {
-        private final SocketWrapper rawSocket;
-        private final Errno errno;
+    static class Builder {
+        private final SocketWrapper<InetSocketAddress> rawSocket;
+        private Errno errno;
         private SSLContext ctx;
         private boolean asServer;
         private SSLParameters parameters;
         private SniSslContextFactory sniSslContextFactory;
-        private Function<SSLSession, Optional<String>> principalConverter;
-        private Builder(SocketWrapper rawSocket, Errno errno)
+        private PrincipalConverter principalConverter;
+        private Builder(SocketWrapper<InetSocketAddress> rawSocket)
         {
             this.rawSocket = rawSocket;
-            this.errno = errno;
         }
-        public Builder setCtx(SSLContext ctx)
+        Builder setErrno(Errno errno)
+        {
+            this.errno = errno;
+            return this;
+        }
+        Builder setCtx(SSLContext ctx)
         {
             this.ctx = ctx;
             return this;
         }
-        public Builder setAsServer(boolean asServer)
+        Builder setAsServer(boolean asServer)
         {
             this.asServer = asServer;
             if (! asServer) {
@@ -58,40 +60,41 @@ class TlsChannelWrapper implements SocketWrapper<InetSocketAddress>
             }
             return this;
         }
-        public Builder setParameters(SSLParameters parameters)
+        Builder setParameters(SSLParameters parameters)
         {
             this.parameters = parameters;
             return this;
         }
-        public Builder setSniSslContextFactory(SniSslContextFactory sniSslContextFactory)
+        Builder setSniSslContextFactory(SniSslContextFactory sniSslContextFactory)
         {
             this.sniSslContextFactory = sniSslContextFactory;
             this.asServer = true;
             return this;
         }
-        public Builder setPrincipalConverter(Function<SSLSession, Optional<String>> principalConverter)
+        Builder setPrincipalConverter(PrincipalConverter principalConverter)
         {
             this.principalConverter = principalConverter;
             return this;
         }
 
-        public TlsChannelWrapper build()
+        TlsSocketWrapper build()
         {
-            return new TlsChannelWrapper(this);
+            return new TlsSocketWrapper(this);
         }
     }
-    public static Builder newBuilder(SocketWrapper channel, Errno errno)
+    public static Builder newBuilder(SocketWrapper<InetSocketAddress> channel)
     {
-        return new Builder(channel, errno);
+        return new Builder(channel);
     }
 
-    private final SocketWrapper rawChannel;
+    private final SocketWrapper<InetSocketAddress> rawChannel;
     private final TlsChannel tlsChannel;
-    private final Function<SSLSession, Optional<String>> principalConverter;
+    private final PrincipalConverter principalConverter;
     private final Errno errno;
 
-    private TlsChannelWrapper(Builder builder)
+    private TlsSocketWrapper(Builder builder)
     {
+        assert builder.errno != null;
         if (builder.asServer) {
             tlsChannel = buildServer(builder.rawSocket, builder.ctx, builder.sniSslContextFactory, builder.parameters);
         } else {
@@ -109,7 +112,7 @@ class TlsChannelWrapper implements SocketWrapper<InetSocketAddress>
             builder = ServerTlsChannel.newBuilder(channel, sslContextFactory);
         }
         else {
-            builder = ServerTlsChannel.newBuilder(channel, ctx).withWaitForCloseConfirmation(false);
+            builder = ServerTlsChannel.newBuilder(channel, ctx);
         }
         if (sslParameters != null) {
             builder.withEngineFactory(c -> {
@@ -164,7 +167,8 @@ class TlsChannelWrapper implements SocketWrapper<InetSocketAddress>
     @Override
     public void resolveMetadata(Metadata metadata)
     {
-        principalConverter.apply(tlsChannel.getSslEngine().getSession()).ifPresent(s -> metadata.put(Metadata.USER_ID, s));
+        principalConverter.getPrincipal(tlsChannel.getSslEngine().getSession())
+                          .ifPresent(s -> metadata.put(Metadata.USER_ID, s));
         SocketWrapper.super.resolveMetadata(metadata);
     }
 
@@ -239,5 +243,4 @@ class TlsChannelWrapper implements SocketWrapper<InetSocketAddress>
     {
         tlsChannel.close();
     }
-
 }

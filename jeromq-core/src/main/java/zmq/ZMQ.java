@@ -156,7 +156,10 @@ public class ZMQ
     public static final int ZMQ_MSG_ALLOCATOR                 = ZMQ_CUSTOM_OPTION + 3;
     public static final int ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD = ZMQ_CUSTOM_OPTION + 4;
     public static final int ZMQ_HEARTBEAT_CONTEXT             = ZMQ_CUSTOM_OPTION + 5;
-    public static final int ZMQ_CHANNEL_WRAPPER_FACTORY       = ZMQ_CUSTOM_OPTION + 6;
+    public static final int ZMQ_CHANNEL_WRAPPER_FACTORY       = ZMQ_CUSTOM_OPTION + 7;
+    public static final int ZMQ_TLS_CONTEXT                   = ZMQ_CUSTOM_OPTION + 8;
+    public static final int ZMQ_TLS_PARAMETERS                = ZMQ_CUSTOM_OPTION + 9;
+    public static final int ZMQ_TLS_PRINCIPAL_CONVERT         = ZMQ_CUSTOM_OPTION + 10;
 
     /*  Message options                                                           */
     public static final int ZMQ_MORE = 1;

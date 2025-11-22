@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
 import zmq.io.mechanism.Mechanisms;
@@ -18,6 +21,7 @@ import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.ipc.IpcAddress;
 import zmq.io.net.tcp.TcpAddress;
 import zmq.io.net.tcp.TcpAddress.TcpAddressMask;
+import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.msg.MsgAllocatorThreshold;
 import zmq.util.Errno;
@@ -195,6 +199,11 @@ public class Options
 
     private ChannelFactoryWrapper<? extends SocketAddress> channelWrapperFactory = SocketFactory.TRANSPARENT;
     private SocketFactory<? extends SocketAddress> effectiveFactory = null;
+
+    // Must be kept as null, default values will be handled by the TLS socket factory
+    public SSLContext sslContext = null;
+    public SSLParameters sslParameters = null;
+    public PrincipalConverter principalConverter = null;
 
     /**
      * <p>Set an option with the given object.</p>
@@ -580,6 +589,33 @@ public class Options
                 return false;
             }
 
+        case ZMQ.ZMQ_TLS_CONTEXT:
+            if (optval instanceof SSLContext) {
+                sslContext = (SSLContext) optval;
+                return true;
+            }
+            else {
+                return false;
+            }
+
+        case ZMQ.ZMQ_TLS_PARAMETERS:
+            if (optval instanceof SSLParameters) {
+                sslParameters = (SSLParameters) optval;
+                return true;
+            }
+            else {
+                return false;
+            }
+
+        case ZMQ.ZMQ_TLS_PRINCIPAL_CONVERT:
+            if (optval instanceof PrincipalConverter) {
+                this.principalConverter = (PrincipalConverter) optval;
+                return true;
+            }
+            else {
+                return false;
+            }
+
         default:
             throw new IllegalArgumentException("Unknown Option " + option);
         }
@@ -835,6 +871,15 @@ public class Options
 
         case ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY:
             return (T) channelWrapperFactory;
+
+        case ZMQ.ZMQ_TLS_CONTEXT:
+            return (T) sslContext;
+
+        case ZMQ.ZMQ_TLS_PARAMETERS:
+            return (T) sslParameters;
+
+        case ZMQ.ZMQ_TLS_PRINCIPAL_CONVERT:
+            return (T) principalConverter;
 
         default:
             throw new IllegalArgumentException("option=" + option);
