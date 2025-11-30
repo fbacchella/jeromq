@@ -35,21 +35,6 @@ import zmq.io.Metadata;
 
 class TlsTest {
 
-    // To be executed before LogManager.getLogger() to ensure that log4j2 will use the basic context selector
-    // Not the smart one for web app.
-    static {
-        //System.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.selector.BasicContextSelector");
-        //System.setProperty("log4j.shutdownHookEnabled", "false");
-        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-        System.setProperty("log4j2.julLoggerAdapter", "org.apache.logging.log4j.jul.CoreLoggerAdapter");
-        //Configurator.setRootLevel(Level.TRACE);
-        //Configurator.setLevel("tlschannel", Level.ALL);
-        java.util.logging.Logger.getLogger("tlschannel").severe("severe");
-        java.util.logging.Logger.getLogger("tlschannel").warning("warning");
-        java.util.logging.Logger.getLogger("tlschannel").fine("fine");
-        java.util.logging.Logger.getLogger("tlschannel").finest("finest");
-    }
-
     private static SSLContext ssl;
 
     @BeforeAll
@@ -131,9 +116,7 @@ class TlsTest {
                 push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
                 pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
 
-                //int port = pull.bindToRandomPort("tls://*");
-                int port = 34228;
-                pull.bind("tls://*:" + port);
+                int port = pull.bindToRandomPort("tls://*");
                 push.connect("tls://127.0.0.1:" + port);
 
                 String expected = "Hello";
@@ -232,8 +215,6 @@ class TlsTest {
             future.complete(ex);
         } else if (e.getEvent() == Events.DISCONNECTED){
             disconnect.incrementAndGet();
-        } else {
-            System.err.format("%s %s%n", e.getAddress(), e);
         }
     }
 }
