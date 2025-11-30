@@ -1,22 +1,21 @@
 package org.zeromq;
 
-import org.zeromq.util.ZDigest;
-import org.zeromq.util.ZMetadata;
-
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.zeromq.util.ZDigest;
+import org.zeromq.util.ZMetadata;
 
 /**
- *
     To authenticate new clients using the ZeroMQ CURVE security mechanism,
     we have to check that the client's public key matches a key we know and
     accept. There are numerous ways to store accepted client public keys.
@@ -31,16 +30,16 @@ public class ZCertStore
 {
     public interface Fingerprinter
     {
-        byte[] print(File path);
+        byte[] print(Path path) throws IOException;
     }
 
-    public static final class Timestamper implements Fingerprinter
+    public static class Timestamper implements Fingerprinter
     {
         @Override
-        public byte[] print(File path)
+        public byte[] print(Path path) throws IOException
         {
-            final byte[] buf = new byte[8];
-            final long value = path.lastModified();
+            byte[] buf = new byte[8];
+            long value = Files.getLastModifiedTime(path).toMillis();
             buf[0] = (byte) ((value >>> 56) & 0xff);
             buf[1] = (byte) ((value >>> 48) & 0xff);
             buf[2] = (byte) ((value >>> 40) & 0xff);
@@ -53,45 +52,34 @@ public class ZCertStore
         }
     }
 
-    public static final class Hasher implements Fingerprinter
+    public static class Hasher implements Fingerprinter
     {
         // temporary buffer used for digest. Instance member for performance reasons.
         private final byte[] buffer = new byte[8192];
 
         @Override
-        public byte[] print(File path)
+        public byte[] print(Path path) throws IOException
         {
             InputStream input = stream(path);
             if (input != null) {
-                try (input) {
-                    try {
-                        return new ZDigest(buffer).update(input).data();
-                    }
-                    catch (IOException e) {
-                        return null;
-                    }
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
+                return new ZDigest(buffer).update(input).data();
             }
             return null;
         }
 
-        private InputStream stream(File path)
+        private InputStream stream(Path path) throws IOException
         {
-            if (path.isFile()) {
-                try {
-                    return new FileInputStream(path);
+            if (Files.isRegularFile(path)) {
+                return Files.newInputStream(path);
+            } else if (Files.isDirectory(path)) {
+                try(Stream<Path> files = Files.list(path)) {
+                    List<String> list = files.map(p -> p.getFileName().toString())
+                                             .sorted()
+                                             .collect(Collectors.toList());
+
+                    byte[] data = list.toString().getBytes(ZMQ.CHARSET);
+                    return new ByteArrayInputStream(data);
                 }
-                catch (FileNotFoundException e) {
-                    return null;
-                }
-            }
-            else if (path.isDirectory()) {
-                List<String> list = Arrays.asList(path.list());
-                Collections.sort(list);
-                return new ByteArrayInputStream(list.toString().getBytes(ZMQ.CHARSET));
             }
             return null;
         }
@@ -104,21 +92,21 @@ public class ZCertStore
          * @param file the file to visit.
          * @return true to stop the traversal, false to continue.
          */
-        boolean visitFile(File file);
+        boolean visitFile(Path file) throws IOException;
 
         /**
          * Visits a directory.
          * @param dir the directory to visit.
          * @return true to stop the traversal, false to continue.
          */
-        boolean visitDir(File dir);
+        boolean visitDir(Path dir) throws IOException;
     }
 
     //  Directory location
-    private final File location;
+    private final Path location;
 
     // the scanned files (and directories) along with their fingerprint
-    private final Map<File, byte[]> fingerprints = new HashMap<>();
+    private final Map<Path, byte[]> fingerprints = new HashMap<>();
 
     // collected public keys
     private final Map<String, ZMetadata> publicKeys = new HashMap<>();
@@ -127,35 +115,34 @@ public class ZCertStore
 
     /**
      * Create a Certificate Store at that file system folder location
-     * @param location
+     * @param location the location of the certificates store
      */
-    public ZCertStore(String location)
+    public ZCertStore(Path location) throws IOException
     {
         this(location, new Timestamper());
     }
 
-    public ZCertStore(String location, Fingerprinter fingerprinter)
+    public ZCertStore(Path location, Fingerprinter fingerprinter) throws IOException
     {
         this.finger = fingerprinter;
-        this.location = new File(location);
+        this.location = location;
         loadFiles();
     }
 
-    private boolean traverseDirectory(File root, IFileVisitor visitor)
+    private boolean traverseDirectory(Path root, IFileVisitor visitor) throws IOException
     {
-        assert (root.exists());
-        assert (root.isDirectory());
+        assert (Files.isDirectory(root));
 
         if (visitor.visitDir(root)) {
             return true;
         }
-        for (File file : root.listFiles()) {
-            if (file.isFile()) {
+        for (Path file : Files.list(root).collect(Collectors.toList())) {
+            if (Files.isRegularFile(file)) {
                 if (visitor.visitFile(file)) {
                     return true;
                 }
             }
-            else if (file.isDirectory()) {
+            else if (Files.isDirectory(file)) {
                 boolean rc = traverseDirectory(file, visitor);
                 if (rc) {
                     return true;
@@ -164,7 +151,7 @@ public class ZCertStore
             else {
                 System.out.printf(
                                   "WARNING: %s is neither file nor directory? This shouldn't happen....SKIPPING%n",
-                                  file.getAbsolutePath());
+                                  file);
             }
         }
         return false;
@@ -176,8 +163,7 @@ public class ZCertStore
      */
     public boolean containsPublicKey(byte[] publicKey)
     {
-        Utils.checkArgument(
-                            publicKey.length == 32,
+        Utils.checkArgument(publicKey.length == 32,
                             "publickey needs to have a size of 32 bytes. got only " + publicKey.length);
         return containsPublicKey(ZMQ.Curve.z85Encode(publicKey));
     }
@@ -185,12 +171,11 @@ public class ZCertStore
     /**
      * check if a z85-based public key is in the certificate store.
      * This method will scan the folder for changes on every call
-     * @param publicKey
+     * @param publicKey the public key to check
      */
     public boolean containsPublicKey(String publicKey)
     {
-        Utils.checkArgument(
-                            publicKey.length() == 40,
+        Utils.checkArgument(publicKey.length() == 40,
                             "z85 publickeys should have a length of 40 bytes but got " + publicKey.length());
         reloadIfNecessary();
         return publicKeys.containsKey(publicKey);
@@ -202,26 +187,26 @@ public class ZCertStore
         return publicKeys.get(publicKey);
     }
 
-    private void loadFiles()
+    private void loadFiles() throws IOException
     {
-        final Map<String, ZMetadata> keys = new HashMap<>();
-        if (!location.exists()) {
-            location.mkdirs();
+        Map<String, ZMetadata> keys = new HashMap<>();
+        if (!Files.exists(location)) {
+            Files.createDirectory(location);
         }
-        final Map<File, byte[]> collected = new HashMap<>();
+        Map<Path, byte[]> collected = new HashMap<>();
 
         traverseDirectory(location, new IFileVisitor()
         {
             @Override
-            public boolean visitFile(File file)
+            public boolean visitFile(Path file)
             {
                 try {
-                    ZConfig zconf = ZConfig.load(file.getAbsolutePath());
+                    ZConfig zconf = ZConfig.load(file);
                     String publicKey = zconf.getValue("curve/public-key");
                     if (publicKey == null) {
                         System.out.printf(
                                           "Warning!! File %s has no curve/public-key-element. SKIPPING!%n",
-                                          file.getAbsolutePath());
+                                          file);
                         return false;
                     }
                     if (publicKey.length() == 32) { // we want to store the public-key as Z85-String
@@ -238,7 +223,7 @@ public class ZCertStore
             }
 
             @Override
-            public boolean visitDir(File dir)
+            public boolean visitDir(Path dir) throws IOException
             {
                 collected.put(dir, finger.print(dir));
                 return false;
@@ -260,10 +245,16 @@ public class ZCertStore
     boolean reloadIfNecessary()
     {
         if (checkForChanges()) {
-            loadFiles();
-            return true;
+            try {
+                loadFiles();
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
         }
-        return false;
+        else {
+            return false;
+        }
     }
 
     /**
@@ -271,29 +262,30 @@ public class ZCertStore
      */
     boolean checkForChanges()
     {
-        // initialize with last checked files
-        final Map<File, byte[]> presents = new HashMap<>(fingerprints);
-        boolean modified = traverseDirectory(location, new IFileVisitor()
-        {
-            @Override
-            public boolean visitFile(File file)
+        try {
+            // initialize with last checked files
+            Map<Path, byte[]> presents = new HashMap<>(fingerprints);
+            boolean modified = traverseDirectory(location, new IFileVisitor()
             {
-                return modified(presents.remove(file), file);
-            }
+                @Override
+                public boolean visitFile(Path file) throws IOException {
+                    return modified(presents.remove(file), file);
+                }
 
-            @Override
-            public boolean visitDir(File dir)
-            {
-                return modified(presents.remove(dir), dir);
-            }
-        });
-        // if some files remain, that means they have been deleted since last scan
-        return modified || !presents.isEmpty();
+                @Override
+                public boolean visitDir(Path dir) throws IOException {
+                    return modified(presents.remove(dir), dir);
+                }
+            });
+            // if some files remain, that means they have been deleted since last scan
+            return modified || !presents.isEmpty();
+        } catch (IOException e) {
+            return false;
+        }
     }
 
-    private boolean modified(byte[] fingerprint, File path)
-    {
-        if (!path.exists()) {
+    private boolean modified(byte[] fingerprint, Path path) throws IOException {
+        if (Files.notExists(path)) {
             // run load-files if one file is not present
             return true;
         }
@@ -301,7 +293,7 @@ public class ZCertStore
             // file was not scanned before, it has been added
             return true;
         }
-        // true if file has been modified.
+        // true if file has been modified
         return !Arrays.equals(fingerprint, finger.print(path));
     }
 }

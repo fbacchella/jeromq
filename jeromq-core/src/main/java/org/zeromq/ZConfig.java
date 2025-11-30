@@ -1,12 +1,11 @@
 package org.zeromq;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -82,7 +81,7 @@ public class ZConfig
 
     private static final String  LEFT           = "^( *)([0-9a-zA-Z\\$\\-_@\\.&\\+\\/]+)";
     private static final Pattern PTRN_CONTAINER = Pattern.compile(LEFT + "( *#.*)?$");
-    private static final Pattern PTRN_KEYVALUE  = Pattern.compile(LEFT + " = ((\"|')(.*)(\\4)|(.*?))(#.*)?$");
+    private static final Pattern PTRN_KEYVALUE  = Pattern.compile(LEFT + " = (([\"'])(.*)(\\4)|(.*?))(#.*)?$");
 
     private final String               name;
     private final Map<String, ZConfig> children = new HashMap<>();
@@ -221,32 +220,13 @@ public class ZConfig
      * Saves the configuration to a file.
      * <p>
      * <strong>This method will overwrite contents of existing file</strong>
-     * @param filename the path of the file to save the configuration into, or "-" to dump it to standard output
-     * @return the saved file or null if dumped to the standard output
+     * @param filepath the path of the file to save the configuration into, or "-" to dump it to standard output
      * @throws IOException if unable to save the file.
      */
-    public File save(String filename) throws IOException
+    public void save(Path filepath) throws IOException
     {
-        if ("-".equals(filename)) {
-            // print to console
-            try (Writer writer = new PrintWriter(System.out)) {
-                save(writer);
-            }
-            return null;
-        }
-        else { // write to file
-            File file = new File(filename);
-            if (file.exists()) {
-                file.delete();
-            }
-            else {
-                // create necessary directories;
-                file.getParentFile().mkdirs();
-            }
-            try (Writer writer = new FileWriter(file)) {
-                save(writer);
-            }
-            return file;
+        try (Writer writer = Files.newBufferedWriter(filepath, ZMQ.CHARSET, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
+            save(writer);
         }
     }
 
@@ -268,15 +248,15 @@ public class ZConfig
                     writer.append(node.name).append("\n");
                 }
                 else {
-                    writer.append(String.format("%s = \"%s\"\n", node.name, node.value));
+                    writer.append(String.format("%s = \"%s\"%n", node.name, node.value));
                 }
             }
         }, 0);
     }
 
-    public static ZConfig load(String filename) throws IOException
+    public static ZConfig load(Path filepath) throws IOException
     {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+        try (BufferedReader reader = new BufferedReader(Files.newBufferedReader(filepath))) {
             List<String> content = new ArrayList<>();
 
             String line = reader.readLine();

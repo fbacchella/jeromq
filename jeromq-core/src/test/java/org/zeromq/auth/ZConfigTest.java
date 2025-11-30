@@ -1,42 +1,37 @@
 package org.zeromq.auth;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.zeromq.ZConfig;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.zeromq.TemporaryFolderFinder;
-import org.zeromq.ZConfig;
-
 public class ZConfigTest
 {
-    private static final String TEST_FOLDER = "target/testCertFolder";
+    @TempDir
+    private Path TEST_FOLDER;
     private static final ZConfig      conf        = new ZConfig("root", null);
 
-    private String  testFolder = TEST_FOLDER;
-
-    @Before
+    @BeforeEach
     public void init() throws IOException
     {
         // create test-passwords
-        testFolder = TemporaryFolderFinder.resolve(TEST_FOLDER);
         conf.putValue("/curve/public-key", "abcdefg");
         conf.putValue("/curve/secret-key", "(w3lSF/5yv&j*c&0h{4JHe(CETJSksTr.QSjcZE}");
         conf.putValue("metadata/name", "key-value tests");
 
-        // create test-file with values that should be compatible but are actually not created with this implementation
-        File dir = new File(testFolder);
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-        FileWriter write = new FileWriter(testFolder + "/test.zpl");
+        Writer write = Files.newBufferedWriter(TEST_FOLDER.resolve("test.zpl"));
         write.write("1. ZPL configuration file example\n"); // should be discarded
         write.write(" # some initial comment \n"); // should be discarded
         write.write("meta\n");
@@ -50,7 +45,7 @@ public class ZConfigTest
         write.write("        fortuna = f95\n");
         write.close();
 
-        write = new FileWriter(testFolder + "/reference.zpl");
+        write = Files.newBufferedWriter(TEST_FOLDER.resolve("reference.zpl"));
         write.write("context\n");
         write.write("    iothreads = 1\n");
         write.write("    verbose = 1      #   Ask for a trace\n");
@@ -94,7 +89,7 @@ public class ZConfigTest
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testGetKeyDoubleSlash()
     {
         ZConfig config = new ZConfig("root", null);
@@ -119,26 +114,28 @@ public class ZConfigTest
     @Test
     public void testLoadSave() throws IOException
     {
-        conf.save(testFolder + "/test.cert");
-        assertThat(isFileInPath(testFolder, "test.cert"), is(true));
-        ZConfig loadedConfig = ZConfig.load(testFolder + "/test.cert");
-        //        Object obj = loadedConfig.getValue("/curve/public-key");
+        Path certPath = TEST_FOLDER.resolve("test.cert");
+        conf.save(certPath);
+        Assertions.assertTrue(isFileInPath(TEST_FOLDER, "test.cert"));
+        ZConfig loadedConfig = ZConfig.load(TEST_FOLDER.resolve("test.cert"));
         assertThat(loadedConfig.getValue("/curve/public-key"), is("abcdefg"));
         // intentionally checking without leading /
         assertThat(loadedConfig.getValue("curve/secret-key"), is("(w3lSF/5yv&j*c&0h{4JHe(CETJSksTr.QSjcZE}"));
         assertThat(loadedConfig.getValue("/metadata/name"), is("key-value tests"));
     }
 
-    private boolean isFileInPath(String path, String filename)
-    {
-        File dir = new File(path);
-        if (!dir.isDirectory()) {
+    private boolean isFileInPath(Path dirPath, String filename) {
+        if (!Files.isDirectory(dirPath)) {
             return false;
         }
-        for (File file : dir.listFiles()) {
-            if (file.getName().equals(filename)) {
-                return true;
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
+            for (Path filePath : stream) {
+                if (filePath.getFileName().toString().equals(filename)) {
+                    return true;
+                }
             }
+        } catch (IOException e) {
+            return false;
         }
         return false;
     }
@@ -148,7 +145,7 @@ public class ZConfigTest
     {
         // this file was generated in the init-method and tests some cases that should be processed by the loader but are not
         // created with our writer.
-        ZConfig zplSpecials = ZConfig.load(testFolder + "/test.zpl");
+        ZConfig zplSpecials = ZConfig.load(TEST_FOLDER.resolve("test.zpl"));
         // test leading quotes
         assertThat(zplSpecials.getValue("meta/leadingquote"), is("\"abcde"));
         // test ending quotes
@@ -168,7 +165,7 @@ public class ZConfigTest
     @Test
     public void testReadReference() throws IOException
     {
-        ZConfig ref = ZConfig.load(testFolder + "/reference.zpl");
+        ZConfig ref = ZConfig.load(TEST_FOLDER.resolve("reference.zpl"));
         assertThat(ref.getValue("context/iothreads"), is("1"));
         assertThat(ref.getValue("context/verbose"), is("1"));
         assertThat(ref.getValue("main/type"), is("zqueue"));
@@ -176,11 +173,5 @@ public class ZConfigTest
         assertThat(ref.getValue("main/frontend/option/swap"), is("25000000"));
         assertThat(ref.getValue("main/frontend/bind"), is("ipc://addr2"));
         assertThat(ref.getValue("main/backend/bind"), is("inproc://addr3"));
-    }
-
-    @After
-    public void cleanup()
-    {
-        TestUtils.cleanupDir(testFolder);
     }
 }

@@ -1,8 +1,8 @@
 package org.zeromq;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -164,13 +164,12 @@ public class ZCert
      * Saves the public key to a file.
      * <p>
      * <strong>This method will overwrite contents of existing file</strong>
-     * @param filename the path of the file to save the certificate into.
-     * @return the saved file or null if dumped to the standard output
+     * @param filepath the path of the file to save the certificate into.
      * @throws IOException if unable to save the file.
      */
-    public File savePublic(String filename) throws IOException
+    public void savePublic(Path filepath) throws IOException
     {
-        return publicConfig().save(filename);
+        publicConfig().save(filepath);
     }
 
     /**
@@ -199,13 +198,12 @@ public class ZCert
      * Saves the public and secret keys to a file.
      * <p>
      * <strong>This method will overwrite contents of existing file</strong>
-     * @param filename the path of the file to save the certificate into.
-     * @return the saved file or null if dumped to the standard output
+     * @param filepath the path of the file to save the certificate into.
      * @throws IOException if unable to save the file.
      */
-    public File saveSecret(String filename) throws IOException
+    public void saveSecret(Path filepath) throws IOException
     {
-        return secretConfig().save(filename);
+        secretConfig().save(filepath);
     }
 
     /**

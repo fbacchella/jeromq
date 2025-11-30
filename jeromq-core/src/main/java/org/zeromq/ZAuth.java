@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.UUID;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.util.ZMetadata;
 
-import zmq.io.mechanism.Mechanism;
 import zmq.io.mechanism.Mechanisms;
 
 /**
@@ -162,7 +162,11 @@ public class ZAuth implements Closeable
                 if (verbose) {
                     System.out.printf("ZAuth: Using %s as certificates directory%n", location);
                 }
-                certStore = new ZCertStore(location, fingerprinter);
+                try {
+                    certStore = new ZCertStore(Path.of(location), fingerprinter);
+                } catch (IOException e) {
+                    return false;
+                }
             }
             return true;
         }

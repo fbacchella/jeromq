@@ -13,6 +13,7 @@ import org.zeromq.ZMQ;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -319,7 +320,7 @@ public class ZAuthTest
             // wait a second before overwriting a cert, otherwise the certstore won't see that the file actually changed and will deny
             // if creating new files, this is not needed
             //            ZMQ.sleep(1);
-            clientCert.savePublic(certificateFolder + "/testcert.pub");
+            clientCert.savePublic(Path.of(certificateFolder + "/testcert.pub"));
 
             ZCert serverCert = new ZCert();
 
