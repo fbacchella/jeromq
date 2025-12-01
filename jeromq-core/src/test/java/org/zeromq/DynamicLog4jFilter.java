@@ -4,12 +4,13 @@ import java.util.Optional;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Core;
+import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 
-@Plugin(name = "DynamicFilter", category = Core.CATEGORY_NAME)
+@Plugin(name = "DynamicFilter", category = Core.CATEGORY_NAME, elementType = Filter.ELEMENT_TYPE)
 public class DynamicLog4jFilter extends AbstractFilter
 {
     private final boolean inCircleCI;

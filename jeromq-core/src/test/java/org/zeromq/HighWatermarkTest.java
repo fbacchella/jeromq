@@ -1,8 +1,5 @@
 package org.zeromq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.concurrent.ExecutorService;
@@ -11,12 +8,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import zmq.util.AndroidProblematic;
 
 public class HighWatermarkTest
 {
+    private static final Logger logger = LogManager.getLogger(HighWatermarkTest.class);
+
     public static final int N_MESSAGES   = 30000;
     public static final int MESSAGE_SIZE = 50;
 
@@ -26,17 +28,14 @@ public class HighWatermarkTest
     public static class Dispatcher implements Runnable
     {
         private final String control;
+        private final String dispatch;
+        private final String msg;
 
-        private final String  dispatch;
-        private final boolean trace;
-        private final String  msg;
-
-        public Dispatcher(String msg, String dispatch, String control, boolean trace)
+        Dispatcher(String msg, String dispatch, String control)
         {
             this.msg = msg;
             this.dispatch = dispatch;
             this.control = control;
-            this.trace = trace;
         }
 
         @Override
@@ -56,51 +55,44 @@ public class HighWatermarkTest
             controller.connect(control);
 
             try {
-                System.out.println("Sending " + N_MESSAGES + " tasks (" + MESSAGE_SIZE + "b) to workers\n");
+                logger.info("Sending {} tasks ({}b) to workers", N_MESSAGES, MESSAGE_SIZE);
 
                 //  The first message is "0" and signals start of batch
                 sender.send("0", 0);
 
-                System.out.println("Started dispatcher on " + dispatch);
+                logger.info("Started dispatcher on {}", dispatch);
 
                 //  Send N_MESSAGES tasks
                 for (int taskNbr = 0; taskNbr < N_MESSAGES; taskNbr++) {
                     sender.send(taskNbr + " - " + msg, 0);
-                    if (trace) {
-                        System.out.println(taskNbr + " - Dispatcher sent msg");
-                    }
+                    logger.debug("{} - Dispatcher sent msg", taskNbr);
                 }
 
-                System.out.println("Dispatcher finished, awaiting for collector finish");
+                logger.info("Dispatcher finished, awaiting for collector finish");
                 controller.recvStr();
                 // We can finish NOW!
             }
             finally {
-                if (trace) {
-                    System.out.println("Dispatcher closing.");
-                }
+                logger.debug("Dispatcher closing.");
                 context.close();
-                System.out.println("Dispatcher done.");
+                logger.info("Dispatcher done.");
             }
         }
     }
 
-    public static class Worker implements Runnable
+    static class Worker implements Runnable
     {
         private final String control;
+        private final String dispatch;
+        private final String collect;
+        private final int index;
 
-        private final String  dispatch;
-        private final String  collect;
-        private final boolean trace;
-        private final int     index;
-
-        public Worker(String dispatch, String collect, String control, int index, boolean trace)
+        Worker(String dispatch, String collect, String control, int index)
         {
             this.dispatch = dispatch;
             this.collect = collect;
             this.control = control;
             this.index = index;
-            this.trace = trace;
         }
 
         @Override
@@ -132,7 +124,7 @@ public class HighWatermarkTest
             int idx = 0;
 
             try {
-                System.out.println("Started worker process #" + index);
+                logger.info("Started worker process #{}", index);
 
                 //  Process tasks forever
                 while (!Thread.currentThread().isInterrupted()) {
@@ -143,14 +135,12 @@ public class HighWatermarkTest
                     if (in && out) {
                         String msg = new String(receiver.recv(0), ZMQ.CHARSET).trim();
                         //  Simple progress indicator for the viewer
-                        if (trace) {
-                            System.out.println("Worker #" + index + " recv " + msg);
+                        logger.debug("#{} recv {}", index, msg);
+
+                        if (idx % TRACE == 0) {
+                            logger.info("#{} recv {} messages", index, idx);
                         }
-                        else {
-                            if (idx % TRACE == 0) {
-                                System.out.println("Worker #" + index + " recv " + idx + " messages");
-                            }
-                        }
+
                         ++idx;
                         // the pipes reach the watermark once in a while
                         if (idx % FILL_WATERMARK == 10) {
@@ -166,46 +156,35 @@ public class HighWatermarkTest
                 }
             }
             finally {
-                if (trace) {
-                    System.out.println("Worker #" + index + " closing.");
-                }
+                logger.debug("#{} closing.", index);
                 poller.close();
                 context.close();
-                if (trace) {
-                    System.out.println("Worker #" + index + " done.");
-                }
+                logger.debug("#{} done.", index);
             }
         }
     }
 
-    public static class Collector implements Runnable
+    static class Collector implements Runnable
     {
         private final String control;
-
-        private final boolean trace;
-        private final String  collect;
-        private final String  msg;
-
+        private final String collect;
+        private final String msg;
         private final int workers;
-
         private final AtomicBoolean success = new AtomicBoolean();
 
-        public Collector(String msg, String collect, String control, int workers, boolean trace)
+        public Collector(String msg, String collect, String control, int workers)
         {
             this.msg = msg;
             this.collect = collect;
             this.control = control;
             this.workers = workers;
-            this.trace = trace;
         }
 
         @Override
         public void run()
         {
             Thread.currentThread().setName("Collector");
-            if (trace) {
-                System.out.println("Started collector on " + collect);
-            }
+            logger.debug("Started collector on {}", collect);
 
             //  Prepare our context and socket
             ZContext context = new ZContext(1);
@@ -219,33 +198,30 @@ public class HighWatermarkTest
 
             try {
                 //  Wait for start of batch
-                String msg = new String(receiver.recv(0), ZMQ.CHARSET);
+                String msg;
 
-                if (trace) {
-                    System.out.println("Collector started");
-                }
+                logger.debug("Started");
 
                 for (int taskNbr = 0; taskNbr < N_MESSAGES; taskNbr++) {
                     if (taskNbr % FILL_WATERMARK == 10) {
                         LockSupport.parkNanos(TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS));
                     }
                     msg = new String(receiver.recv(0), ZMQ.CHARSET).trim();
-                    if (trace) {
-                        System.out.println("Collector recv : " + taskNbr + " -> " + msg);
-                    }
-                    else if (taskNbr % TRACE == 0 || taskNbr == 100) {
-                        System.out.println("Collector recv : " + taskNbr + " messages ");
+                    logger.debug("recv : {} -> {}", taskNbr, msg);
+
+                    if (taskNbr % TRACE == 0 || taskNbr == 100) {
+                        logger.info("recv : {} messages", taskNbr);
                     }
 
                     // Test received messages
                     if (workers == 1) {
                         if (msg.indexOf(" - " + taskNbr + " - ") != 2) {
-                            System.out.println(taskNbr + " - Message was not correct ! " + msg);
+                            logger.error("{} - Message was not correct ! {}", taskNbr, msg);
                             break;
                         }
                     }
                     if (!msg.endsWith(this.msg) && !msg.endsWith(" - 0")) {
-                        System.out.println(taskNbr + " - Message was not correct ! " + msg);
+                        logger.error("{} - Message was not correct ! {}", taskNbr, msg);
                         break;
                     }
                 }
@@ -254,7 +230,7 @@ public class HighWatermarkTest
             }
             finally {
                 context.close();
-                System.out.println("Collector done.");
+                logger.info("Done.");
             }
 
             success.set(true);
@@ -262,22 +238,20 @@ public class HighWatermarkTest
     }
 
     @Test
-    public void testReliabilityOnWatermark() throws IOException, InterruptedException
+    void testReliabilityOnWatermark() throws IOException, InterruptedException
     {
         testWatermark(1);
     }
 
     @Test
     @AndroidProblematic
-    public void testReliabilityOnWatermark2() throws IOException, InterruptedException
+    void testReliabilityOnWatermark2() throws IOException, InterruptedException
     {
         testWatermark(2);
     }
 
     private void testWatermark(int workers) throws IOException, InterruptedException
     {
-        long start = System.currentTimeMillis();
-
         ExecutorService threadPool = Executors.newFixedThreadPool(workers + 2);
 
         String control = "tcp://localhost:" + Utils.findOpenPort();
@@ -286,24 +260,23 @@ public class HighWatermarkTest
 
         String msg = randomString(MESSAGE_SIZE);
 
-        Dispatcher dispatcher = new Dispatcher(msg, dispatch, control, false);
-        Collector collector = new Collector(msg, collect, control, workers, false);
+        Dispatcher dispatcher = new Dispatcher(msg, dispatch, control);
+        Collector collector = new Collector(msg, collect, control, workers);
         threadPool.submit(dispatcher);
         threadPool.submit(collector);
         for (int idx = 0; idx < workers; ++idx) {
-            threadPool.submit(new Worker(dispatch, collect, control, idx + 1, false));
+            threadPool.submit(new Worker(dispatch, collect, control, idx + 1));
         }
 
         threadPool.shutdown();
         threadPool.awaitTermination(120, TimeUnit.SECONDS);
-        long end = System.currentTimeMillis();
-        assertThat(collector.success.get(), is(true));
-        System.out.println("Test done in " + (end - start) + " millis.");
+
+        Assertions.assertTrue(collector.success.get());
     }
 
     /*--------------------------------------------------------------*/
 
-    private static final String       ABC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final String ABC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static final SecureRandom rnd = new SecureRandom();
 
     // http://stackoverflow.com/a/157202

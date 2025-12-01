@@ -1,10 +1,5 @@
 package org.zeromq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,12 +11,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
-public class ParanoidPiratServerWithLazyPiratClientTest
+class ParanoidPiratServerWithLazyPiratClientTest
 {
+    private static final Logger logger = LogManager.getLogger(ParanoidPiratServerWithLazyPiratClientTest.class);
+
     private static final int HEARTBEAT_LIVENESS = 3;    //  3-5 is reasonable
     private static final int HEARTBEAT_INTERVAL = 1000; //  msecs
 
@@ -31,10 +32,10 @@ public class ParanoidPiratServerWithLazyPiratClientTest
 
     private static void failTest(String desc, ZMsg msg)
     {
-        msg.dump(System.out);
-        final StringBuilder builder = new StringBuilder(desc);
+        StringBuilder builder = new StringBuilder(desc);
         msg.dump(builder);
-        fail(builder.toString());
+        logger.error("Test failure: {}", builder);
+        Assertions.fail(builder.toString());
     }
 
     private static final class Queue implements Runnable
@@ -77,7 +78,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
             protected static ZFrame next(final List<Worker> workers)
             {
                 final Worker worker = workers.remove(0);
-                assertThat(worker, notNullValue());
+                Assertions.assertNotNull(worker);
                 return worker.address;
             }
 
@@ -85,9 +86,9 @@ public class ParanoidPiratServerWithLazyPiratClientTest
             //  from oldest to most recent, so we stop at the first alive worker:
             protected static void purge(List<Worker> workers)
             {
-                final Iterator<Worker> it = workers.iterator();
+                Iterator<Worker> it = workers.iterator();
                 while (it.hasNext()) {
-                    final Worker worker = it.next();
+                    Worker worker = it.next();
                     if (System.currentTimeMillis() < worker.expiry) {
                         break;
                     }
@@ -108,25 +109,25 @@ public class ParanoidPiratServerWithLazyPiratClientTest
         public void run()
         {
             Thread.currentThread().setName("Queue");
-            final ZContext ctx = new ZContext();
-            final Socket frontend = ctx.createSocket(SocketType.ROUTER);
-            final Socket backend = ctx.createSocket(SocketType.ROUTER);
+            ZContext ctx = new ZContext();
+            Socket frontend = ctx.createSocket(SocketType.ROUTER);
+            Socket backend = ctx.createSocket(SocketType.ROUTER);
             frontend.bind("tcp://*:" + portQueue); //  For clients
             backend.bind("tcp://*:" + portWorkers); //  For workers
 
             //  List of available workers
-            final List<Worker> workers = new ArrayList<>();
+            List<Worker> workers = new ArrayList<>();
 
             //  Send out heartbeats at regular intervals
             long heartbeatAt = System.currentTimeMillis() + HEARTBEAT_INTERVAL;
 
-            final Poller poller = ctx.createPoller(2);
+            Poller poller = ctx.createPoller(2);
             poller.register(backend, Poller.POLLIN);
             poller.register(frontend, Poller.POLLIN);
 
             while (active.get()) {
-                final boolean workersAvailable = !workers.isEmpty();
-                final int rc = poller.poll(HEARTBEAT_INTERVAL);
+                boolean workersAvailable = !workers.isEmpty();
+                int rc = poller.poll(HEARTBEAT_INTERVAL);
                 if (rc == -1) {
                     break; //  Interrupted
                 }
@@ -134,22 +135,22 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                 //  Handle worker activity on backend
                 if (poller.pollin(0)) {
                     //  Use worker address for LRU routing
-                    final ZMsg msg = ZMsg.recvMsg(backend);
+                    ZMsg msg = ZMsg.recvMsg(backend);
                     if (msg == null) {
                         break; //  Interrupted
                     }
 
                     //  Any sign of life from worker means it's ready
-                    final ZFrame address = msg.unwrap();
-                    final Worker worker = new Worker(address);
+                    ZFrame address = msg.unwrap();
+                    Worker worker = new Worker(address);
                     worker.ready(workers);
 
-                    //  Validate control message, or return reply to client
+                    //  Validate a control message or return a reply to a client
                     if (msg.size() == 1) {
-                        final ZFrame frame = msg.getFirst();
-                        final String data = new String(frame.getData(), ZMQ.CHARSET);
+                        ZFrame frame = msg.getFirst();
+                        String data = new String(frame.getData(), ZMQ.CHARSET);
                         if (!data.equals(PPP_READY) && !data.equals(PPP_HEARTBEAT)) {
-                            failTest("E: Queue ---- invalid message from worker", msg);
+                            failTest("Queue ---- invalid message from worker", msg);
                         }
                         msg.destroy();
                     }
@@ -159,7 +160,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                 }
                 if (workersAvailable && poller.pollin(1)) {
                     //  Now get next client request, route to next worker
-                    final ZMsg msg = ZMsg.recvMsg(frontend);
+                    ZMsg msg = ZMsg.recvMsg(frontend);
                     if (msg == null) {
                         break; //  Interrupted
                     }
@@ -172,9 +173,9 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                 //  dead workers:
 
                 if (System.currentTimeMillis() >= heartbeatAt) {
-                    for (final Worker worker : workers) {
+                    for (Worker worker : workers) {
                         worker.address.send(backend, ZFrame.REUSE + ZFrame.MORE);
-                        final ZFrame frame = new ZFrame(PPP_HEARTBEAT);
+                        ZFrame frame = new ZFrame(PPP_HEARTBEAT);
                         frame.send(backend, 0);
                     }
                     heartbeatAt = System.currentTimeMillis() + HEARTBEAT_INTERVAL;
@@ -206,12 +207,12 @@ public class ParanoidPiratServerWithLazyPiratClientTest
 
         private Socket workerSocket(ZContext ctx)
         {
-            final Socket worker = ctx.createSocket(SocketType.DEALER);
+            Socket worker = ctx.createSocket(SocketType.DEALER);
             worker.connect("tcp://localhost:" + portWorkers);
 
             //  Tell queue we're ready for work
-            System.out.println("I: Worker - ready");
-            final ZFrame frame = new ZFrame(PPP_READY);
+            logger.info("ready");
+            ZFrame frame = new ZFrame(PPP_READY);
             frame.send(worker, 0);
 
             return worker;
@@ -226,10 +227,10 @@ public class ParanoidPiratServerWithLazyPiratClientTest
         public void run()
         {
             Thread.currentThread().setName("Worker");
-            final ZContext ctx = new ZContext();
+            ZContext ctx = new ZContext();
             Socket worker = workerSocket(ctx);
 
-            final Poller poller = ctx.createPoller(1);
+            Poller poller = ctx.createPoller(1);
             poller.register(worker, Poller.POLLIN);
 
             //  If liveness hits zero, queue is considered disconnected
@@ -241,7 +242,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
 
             int cycles = 0;
             while (true) {
-                final int rc = poller.poll(HEARTBEAT_INTERVAL);
+                int rc = poller.poll(HEARTBEAT_INTERVAL);
                 if (rc == -1) {
                     break; //  Interrupted
                 }
@@ -250,7 +251,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                     //  Get message
                     //  - 3-part envelope + content -> request
                     //  - 1-part HEARTBEAT -> heartbeat
-                    final ZMsg msg = ZMsg.recvMsg(worker);
+                    ZMsg msg = ZMsg.recvMsg(worker);
                     if (msg == null) {
                         break; //  Interrupted
                     }
@@ -263,12 +264,12 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                     if (msg.size() == 3) {
                         cycles++;
                         if (cycles % 10 == 0) {
-                            System.out.println("I: Worker - simulating a crash");
+                            logger.info("Simulating a crash");
                             msg.destroy();
                             break;
                         }
                         else if (cycles % 5 == 0) {
-                            System.out.println("I: Worker - simulating CPU overload");
+                            logger.info("Simulating CPU overload");
                             try {
                                 Thread.sleep(3000);
                             }
@@ -276,7 +277,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                                 break;
                             }
                         }
-                        System.out.println("I: Worker - normal reply");
+                        logger.info("Normal reply");
                         msg.send(worker);
                         liveness = HEARTBEAT_LIVENESS;
                         try {
@@ -287,50 +288,50 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                         } //  Do some heavy work
                     }
                     else
-                    //  When we get a heartbeat message from the queue, it means the
-                    //  queue was (recently) alive, so reset our liveness indicator:
-                    if (msg.size() == 1) {
-                        final ZFrame frame = msg.getFirst();
-                        if (PPP_HEARTBEAT.equals(new String(frame.getData(), ZMQ.CHARSET))) {
-                            liveness = HEARTBEAT_LIVENESS;
+                        //  When we get a heartbeat message from the queue, it means the
+                        //  queue was (recently) alive, so reset our liveness indicator:
+                        if (msg.size() == 1) {
+                            final ZFrame frame = msg.getFirst();
+                            if (PPP_HEARTBEAT.equals(new String(frame.getData(), ZMQ.CHARSET))) {
+                                liveness = HEARTBEAT_LIVENESS;
+                            }
+                            else {
+                                failTest("Invalid message", msg);
+                            }
+                            msg.destroy();
                         }
                         else {
-                            failTest("E: Worker - invalid message", msg);
+                            failTest("Invalid message", msg);
                         }
-                        msg.destroy();
-                    }
-                    else {
-                        failTest("E: Worker - invalid message", msg);
-                    }
                     interval = INTERVAL_INIT;
                 }
                 else
-                //  If the queue hasn't sent us heartbeats in a while, destroy the
-                //  socket and reconnect. This is the simplest most brutal way of
-                //  discarding any messages we might have sent in the meantime://
-                if (--liveness == 0) {
-                    System.out.println("W: Worker ---- heartbeat failure, can't reach queue");
-                    System.out.printf("W: Worker ---- reconnecting in %sd msec\n", interval);
-                    try {
-                        Thread.sleep(interval);
-                    }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    //  If the queue hasn't sent us heartbeats in a while, destroy the
+                    //  socket and reconnect. This is the simplest most brutal way of
+                    //  discarding any messages we might have sent in the meantime://
+                    if (--liveness == 0) {
+                        logger.warn("Heartbeat failure, can't reach queue");
+                        logger.warn("Reconnecting in {} msec", interval);
+                        try {
+                            Thread.sleep(interval);
+                        }
+                        catch (InterruptedException e) {
+                            logger.error("Worker interrupted during reconnection sleep", e);
+                        }
 
-                    if (interval < INTERVAL_MAX) {
-                        interval *= 2;
+                        if (interval < INTERVAL_MAX) {
+                            interval *= 2;
+                        }
+                        worker.close();
+                        worker = workerSocket(ctx);
+                        liveness = HEARTBEAT_LIVENESS;
                     }
-                    worker.close();
-                    worker = workerSocket(ctx);
-                    liveness = HEARTBEAT_LIVENESS;
-                }
 
                 //  Send heartbeat to queue if it's time
                 if (System.currentTimeMillis() > heartbeatAt) {
                     heartbeatAt = System.currentTimeMillis() + HEARTBEAT_INTERVAL;
-                    System.out.println("I: Worker - heartbeat");
-                    final ZFrame frame = new ZFrame(PPP_HEARTBEAT);
+                    logger.info("Heartbeat");
+                    ZFrame frame = new ZFrame(PPP_HEARTBEAT);
                     frame.send(worker, 0);
                 }
             }
@@ -338,7 +339,7 @@ public class ParanoidPiratServerWithLazyPiratClientTest
         }
     }
 
-    private static final class Client implements Runnable
+    private static class Client implements Runnable
     {
         private final int portQueue;
 
@@ -354,20 +355,20 @@ public class ParanoidPiratServerWithLazyPiratClientTest
         public void run()
         {
             Thread.currentThread().setName("Client");
-            final ZContext ctx = new ZContext();
-            System.out.println("I: Client - connecting to server");
+            ZContext ctx = new ZContext();
+            logger.info("Connecting to server");
             Socket client = ctx.createSocket(SocketType.REQ);
-            assert (client != null);
+            Assertions.assertNotNull(client);
             client.connect("tcp://localhost:" + portQueue);
 
-            final Poller poller = ctx.createPoller(1);
+            Poller poller = ctx.createPoller(1);
             poller.register(client, Poller.POLLIN);
 
             int sequence = 0;
             int retriesLeft = REQUEST_RETRIES;
             while (retriesLeft > 0 && !Thread.currentThread().isInterrupted()) {
                 //  We send a request, then we work to get a reply
-                final String request = String.format("%d", ++sequence);
+                String request = String.format("%d", ++sequence);
                 client.send(request);
 
                 int expectReply = 1;
@@ -379,40 +380,40 @@ public class ParanoidPiratServerWithLazyPiratClientTest
                     }
 
                     //  Here we process a server reply and exit our loop if the
-                    //  reply is valid. If we didn't a reply we close the client
+                    //  reply is valid. If we don't get a reply, we close the client
                     //  socket and resend the request. We try a number of times
                     //  before finally abandoning:
 
                     if (poller.pollin(0)) {
                         //  We got a reply from the server, must match getSequence
-                        final String reply = client.recvStr();
+                        String reply = client.recvStr();
                         if (reply == null) {
                             break; //  Interrupted
                         }
                         if (Integer.parseInt(reply) == sequence) {
-                            System.out.printf("I: Client - server replied OK (%s)\n", reply);
+                            logger.info("Server replied OK ({})", reply);
                             retriesLeft = REQUEST_RETRIES;
                             expectReply = 0;
                         }
                         else {
-                            System.out.printf("E: Client ---- malformed reply from server: %s\n", reply);
+                            logger.error("Malformed reply from server: {}", reply);
                         }
 
                     }
                     else if (--retriesLeft == 0) {
-                        System.out.println("E: Client - server seems to be offline, abandoning");
+                        logger.error("Server seems to be offline, abandoning");
                         break;
                     }
                     else {
-                        System.out.println("W: Client - no response from server, retrying");
-                        //  Old socket is confused; close it and open a new one
+                        logger.warn("No response from server, retrying");
+                        // The old socket is confused; close it and open a new one
                         poller.unregister(client);
                         client.close();
-                        System.out.println("I: Client - reconnecting to server");
+                        logger.info("Reconnecting to server");
                         client = ctx.createSocket(SocketType.REQ);
                         client.connect("tcp://localhost:" + portQueue);
                         poller.register(client, Poller.POLLIN);
-                        //  Send request again, on new socket
+                        //  Send request again, on a new socket
                         client.send(request);
                     }
                 }
@@ -421,48 +422,33 @@ public class ParanoidPiratServerWithLazyPiratClientTest
         }
     }
 
-    //    @Test
-    public void testRepeated() throws IOException, InterruptedException, ExecutionException
-    {
-        for (int idx = 0; idx < 300; ++idx) {
-            System.out.println("+++++++++ " + idx);
-            testIssue408();
-        }
-    }
-
     @Test
-    public void testIssue408() throws IOException, InterruptedException, ExecutionException
+    void testIssue408() throws IOException, InterruptedException, ExecutionException
     {
-        final int portQueue = Utils.findOpenPort();
-        final int portWorkers = Utils.findOpenPort();
+        int portQueue = Utils.findOpenPort();
+        int portWorkers = Utils.findOpenPort();
 
-        final ExecutorService service = Executors.newFixedThreadPool(4);
-
-        final long start = System.currentTimeMillis();
-
-        final Queue queue = new Queue(portQueue, portWorkers);
+        ExecutorService service = Executors.newFixedThreadPool(4);
+        Queue queue = new Queue(portQueue, portWorkers);
         service.submit(queue);
-        final Future<?> worker = service.submit(new Worker(portWorkers));
+        Future<?> worker = service.submit(new Worker(portWorkers));
         service.submit(() -> {
+            Thread.currentThread().setName("Rebooter");
             try {
                 worker.get();
-                System.out.println("I: Rebooter - restarting new worker after crash ++++++++++++");
+                logger.info("Restarting new worker after crash");
                 service.submit(new Worker(portWorkers));
-            }
-            catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("Error in worker rebooter", e);
             }
         });
-        final Future<?> client = service.submit(new Client(portQueue));
+        Future<?> client = service.submit(new Client(portQueue));
 
         client.get();
         // client is terminated, time to stop the queue to complete the test.
         queue.active.set(false);
 
         service.shutdown();
-        assertThat(service.awaitTermination(20, TimeUnit.SECONDS), is(true));
-
-        final long end = System.currentTimeMillis();
-        System.out.printf("Test with Paranoid Server and Lazy client completed in %s millis%n", end - start);
+        Assertions.assertTrue(service.awaitTermination(20, TimeUnit.SECONDS));
     }
 }
