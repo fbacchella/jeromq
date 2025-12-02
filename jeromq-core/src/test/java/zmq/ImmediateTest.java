@@ -1,19 +1,23 @@
 package zmq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import org.junit.Test;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import zmq.util.Utils;
 
-public class ImmediateTest
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+class ImmediateTest
 {
+    private static Logger logger = LogManager.getLogger(ImmediateTest.class);
+
     @Test
-    public void testImmediateTrue() throws Exception
+    void testImmediateTrue() throws Exception
     {
-        System.out.println("Immediate = true");
+        logger.info("Immediate = true");
         // TEST 1.
         // First we're going to attempt to send messages to two
         // pipes, one connected, the other not. We should see
@@ -25,33 +29,33 @@ public class ImmediateTest
         int pushPort2 = Utils.findOpenPort();
 
         Ctx context = ZMQ.createContext();
-        assertThat(context, notNullValue());
+        Assertions.assertNotNull(context);
 
         SocketBase to = ZMQ.socket(context, ZMQ.ZMQ_PULL);
-        assertThat(to, notNullValue());
+        Assertions.assertNotNull(to);
 
         int val = 0;
         boolean rc = ZMQ.setSocketOption(to, ZMQ.ZMQ_LINGER, val);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
         rc = ZMQ.bind(to, "tcp://*:" + pushPort1);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         // Create a socket pushing to two endpoints - only 1 message should arrive.
         SocketBase from = ZMQ.socket(context, ZMQ.ZMQ_PUSH);
-        assertThat(from, notNullValue());
+        Assertions.assertNotNull(from);
 
         rc = ZMQ.setSocketOption(from, ZMQ.ZMQ_IMMEDIATE, true);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         val = 0;
         rc = ZMQ.setSocketOption(from, ZMQ.ZMQ_LINGER, val);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
         // This pipe will not connect
         rc = ZMQ.connect(from, "tcp://localhost:" + pushPort2);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
         // This pipe will
         rc = ZMQ.connect(from, "tcp://localhost:" + pushPort1);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         // We send 10 messages, 5 should just get stuck in the queue
         // for the not-yet-connected pipe
@@ -59,7 +63,7 @@ public class ImmediateTest
             String message = "message ";
             message += ('0' + i);
             int sent = ZMQ.send(from, message, 0);
-            assertThat(sent >= 0, is(true));
+            Assertions.assertTrue(sent >= 0);
         }
 
         ZMQ.sleep(1);
@@ -76,7 +80,7 @@ public class ImmediateTest
             }
             seen++;
         }
-        assertThat(seen, is(5));
+        Assertions.assertEquals(5, seen);
 
         ZMQ.close(from);
         ZMQ.close(to);
@@ -84,9 +88,8 @@ public class ImmediateTest
     }
 
     @Test
-    public void testImmediateFalse() throws Exception
-    {
-        System.out.println("Immediate = false");
+    void testImmediateFalse() throws IOException {
+        logger.info("Immediate = false");
         // TEST 2
         // This time we will do the same thing, connect two pipes,
         // one of which will succeed in connecting to a bound
@@ -99,38 +102,38 @@ public class ImmediateTest
         Ctx context = ZMQ.createContext();
 
         SocketBase to = ZMQ.socket(context, ZMQ.ZMQ_PULL);
-        assertThat(to, notNullValue());
+        Assertions.assertNotNull(to);
         boolean rc = ZMQ.bind(to, "tcp://*:" + validPort);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         int val = 0;
         rc = ZMQ.setSocketOption(to, ZMQ.ZMQ_LINGER, val);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         // Create a socket pushing to two endpoints - all messages should arrive.
         SocketBase from = ZMQ.socket(context, ZMQ.ZMQ_PUSH);
-        assertThat(from, notNullValue());
+        Assertions.assertNotNull(from);
 
         val = 0;
         rc = ZMQ.setSocketOption(from, ZMQ.ZMQ_LINGER, val);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         // Set the key flag
         rc = ZMQ.setSocketOption(from, ZMQ.ZMQ_IMMEDIATE, false);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         // Connect to the invalid socket
         rc = ZMQ.connect(from, "tcp://localhost:" + invalidPort);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
         // Connect to the valid socket
         rc = ZMQ.connect(from, "tcp://localhost:" + validPort);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         for (int i = 0; i < 10; ++i) {
             String message = "message ";
             message += ('0' + i);
             int sent = ZMQ.send(from, message, 0);
-            assertThat(sent, is(message.length()));
+            Assertions.assertEquals(message.length(), sent);
         }
 
         int timeout = 250;
@@ -144,17 +147,17 @@ public class ImmediateTest
             }
             seen++;
         }
-        assertThat(seen, is(10));
+        Assertions.assertEquals(10, seen);
 
         ZMQ.close(from);
         ZMQ.close(to);
         ZMQ.term(context);
     }
 
-    @Test(timeout = 5000)
-    public void testImmediateFalseWithBrokenConnection() throws Exception
-    {
-        System.out.print("Immediate = false with broken connection");
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void testImmediateFalseWithBrokenConnection() throws IOException {
+        logger.info("Immediate = false with broken connection");
         // TEST 3
         // This time we want to validate that the same blocking behaviour
         // occurs with an existing connection that is broken. We will send
@@ -164,12 +167,12 @@ public class ImmediateTest
         Ctx context = ZMQ.createContext();
 
         SocketBase backend = ZMQ.socket(context, ZMQ.ZMQ_DEALER);
-        assertThat(backend, notNullValue());
+        Assertions.assertNotNull(backend);
 
         SocketBase frontend = ZMQ.socket(context, ZMQ.ZMQ_DEALER);
-        assertThat(frontend, notNullValue());
+        Assertions.assertNotNull(frontend);
 
-        final int linger = 0;
+        int linger = 0;
         ZMQ.setSocketOption(backend, ZMQ.ZMQ_LINGER, linger);
         ZMQ.setSocketOption(frontend, ZMQ.ZMQ_LINGER, linger);
 
@@ -177,29 +180,29 @@ public class ImmediateTest
         ZMQ.setSocketOption(frontend, ZMQ.ZMQ_IMMEDIATE, false);
 
         boolean rc = ZMQ.bind(backend, "tcp://*:" + port);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         rc = ZMQ.connect(frontend, "tcp://localhost:" + port);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
-        System.out.print(".");
+        logger.debug("Connection established");
         //  Ping backend to frontend so we know when the connection is up
         int sent = ZMQ.send(backend, "Hello", 0);
-        assertThat(sent, is(5));
-        System.out.print("Ping");
+        Assertions.assertEquals(5, sent);
+        logger.debug("Ping sent");
         Msg msg = ZMQ.recv(frontend, 0);
-        System.out.print(".");
-        assertThat(msg.size(), is(5));
+        logger.debug("Ping received");
+        Assertions.assertEquals(5, msg.size());
 
         // Send message from frontend to backend
         sent = ZMQ.send(frontend, "Hello", ZMQ.ZMQ_DONTWAIT);
-        assertThat(sent, is(5));
+        Assertions.assertEquals(5, sent);
 
-        System.out.print("Message sent");
+        logger.debug("Message sent");
         ZMQ.close(backend);
-        System.out.print(".");
+        logger.debug("Backend closed");
 
-        System.out.print("Message send fail");
+        logger.debug("Testing message send failure");
         //  Send a message, should fail
         //  There's no way to do this except with a sleep and a loop
         while (ZMQ.send(frontend, "Hello", ZMQ.ZMQ_DONTWAIT) != -1) {
@@ -210,26 +213,24 @@ public class ImmediateTest
         backend = ZMQ.socket(context, ZMQ.ZMQ_DEALER);
         ZMQ.setSocketOption(backend, ZMQ.ZMQ_LINGER, linger);
         rc = ZMQ.bind(backend, "tcp://*:" + port);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
-        System.out.print(".");
+        logger.debug("Backend recreated");
         //  Ping backend to frontend so we know when the connection is up
         sent = ZMQ.send(backend, "Hello", 0);
-        assertThat(sent, is(5));
-        System.out.print("Ping");
+        Assertions.assertEquals(5, sent);
+        logger.debug("Ping sent after reconnect");
         msg = ZMQ.recv(frontend, 0);
-        System.out.print(".");
-        assertThat(msg.size(), is(5));
+        logger.debug("Ping received after reconnect");
+        Assertions.assertEquals(5, msg.size());
 
-        System.out.print("Message sent");
+        logger.debug("Testing message send after reconnect");
         // After the reconnect, should succeed
         sent = ZMQ.send(frontend, "Hello", ZMQ.ZMQ_DONTWAIT);
-        assertThat(sent, is(5));
+        Assertions.assertEquals(5, sent);
 
-        System.out.print(".");
         ZMQ.close(backend);
         ZMQ.close(frontend);
         ZMQ.term(context);
-        System.out.println("Done");
     }
 }

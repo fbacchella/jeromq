@@ -4,26 +4,27 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.zeromq.Errors;
 import org.zeromq.Events;
 import org.zeromq.ProtocolCode;
 import org.zeromq.ZEvent;
-import org.zeromq.Errors;
 
-public class EventsTest {
-
+class EventsTest
+{
     @Test
-    public void checkConsistency() throws IOException {
+    void checkConsistency() throws IOException
+    {
         Ctx ctx = new Ctx();
         SocketBase push = ctx.createSocket(ZMQ.ZMQ_PUSH);
         SocketBase pull = ctx.createSocket(ZMQ.ZMQ_PULL);
         ZMQ.bind(pull, "tcp://127.0.0.1:*");
-        String host = (String) ZMQ.getSocketOptionExt(pull, ZMQ.ZMQ_LAST_ENDPOINT);
+        String host = pull.getSocketOptx(ZMQ.ZMQ_LAST_ENDPOINT);
         ZMQ.connect(push, host);
         for (int i = 1; i <= zmq.ZMQ.ZMQ_EVENT_LAST; i *= 2) {
             Events ev = Events.findByCode(i);
-            Assert.assertNotEquals(Events.ALL, ev);
+            Assertions.assertNotEquals(Events.ALL, ev);
             switch (ev) {
             case CONNECTED:
                 withChannel(i, push, pull);
@@ -77,56 +78,58 @@ public class EventsTest {
                 withException(i, push, pull);
                 break;
             default:
-                Assert.fail("Missing " + ev);
+                Assertions.fail("Missing " + ev);
                 break;
             }
         }
     }
 
-    public void withNull(int evCode, SocketBase push, SocketBase pull) {
+    public void withNull(int evCode, SocketBase push, SocketBase pull)
+    {
         ZEvent zev = forward(evCode, null, push, pull);
-        Assert.assertNull(zev.getValue());
+        Assertions.assertNull(zev.getValue());
     }
 
-    public void withChannel(int evCode, SocketBase push, SocketBase pull) throws IOException {
+    public void withChannel(int evCode, SocketBase push, SocketBase pull) throws IOException
+    {
         SocketChannel channel = SocketChannel.open();
         ZEvent zev = forward(evCode, channel, push, pull);
-        Assert.assertEquals(channel, zev.getValue());
+        Assertions.assertEquals(channel, zev.getValue());
     }
 
     public void withDuration(int evCode, SocketBase push, SocketBase pull)
     {
         int duration = 1;
         ZEvent zev = forward(evCode, duration, push, pull);
-        Assert.assertEquals(Duration.ofMillis(duration), zev.getValue());
+        Assertions.assertEquals(Duration.ofMillis(duration), zev.getValue());
     }
 
     public void withError(int evCode, SocketBase push, SocketBase pull)
     {
         Errors error = Errors.EINTR;
         ZEvent zev = forward(evCode, error.getCode(), push, pull);
-        Assert.assertEquals(error, zev.getValue());
+        Assertions.assertEquals(error, zev.getValue());
     }
 
     public void withException(int evCode, SocketBase push, SocketBase pull)
     {
         Throwable ex = new RuntimeException();
         ZEvent zev = forward(evCode, ex, push, pull);
-        Assert.assertEquals(ex, zev.getValue());
+        Assertions.assertEquals(ex, zev.getValue());
     }
 
     public void withInteger(int evCode, SocketBase push, SocketBase pull)
     {
         Integer integer = 1;
         ZEvent zev = forward(evCode, integer, push, pull);
-        Assert.assertEquals(integer, zev.getValue());
+        Assertions.assertEquals(integer, zev.getValue());
     }
 
     private void withProtocolCode(int evCode, SocketBase push, SocketBase pull)
     {
         ProtocolCode pc = ProtocolCode.ZMQ_PROTOCOL_ERROR_ZAP_BAD_REQUEST_ID;
         ZEvent zev = forward(evCode, pc.getCode(), push, pull);
-        Assert.assertEquals(pc, zev.getValue());
+        Assertions.assertEquals(pc, zev.getValue());
     }
 
     private ZEvent forward(int eventCode, Object arg, SocketBase push, SocketBase pull)
@@ -135,9 +138,8 @@ public class EventsTest {
         Events evEnum = Events.findByCode(eventCode);
         ev.write(push);
         ZEvent zev = ZEvent.wrap(ZMQ.Event.read(pull));
-        Assert.assertEquals(evEnum, zev.getEvent());
-        Assert.assertEquals(eventCode, zev.getEvent().getCode());
+        Assertions.assertEquals(evEnum, zev.getEvent());
+        Assertions.assertEquals(eventCode, zev.getEvent().getCode());
         return zev;
     }
-
 }

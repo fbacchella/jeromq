@@ -1,9 +1,16 @@
 package org.zeromq;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.zeromq.ZMQ.Context;
+import org.zeromq.ZMQ.Socket;
+import org.zeromq.util.ZData;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -11,20 +18,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Test;
-import org.zeromq.ZMQ.Context;
-import org.zeromq.ZMQ.Socket;
-import org.zeromq.util.ZData;
+class TestProxy {
+    private static final Logger logger = LogManager.getLogger(TestProxy.class);
 
-public class TestProxy
-{
     static class Client implements Runnable
     {
-        private final String        frontend;
-        private final String        name;
+        private final String frontend;
+        private final String name;
         private final AtomicBoolean result = new AtomicBoolean();
 
-        public Client(String name, String frontend)
+        Client(String name, String frontend)
         {
             this.name = name;
             this.frontend = frontend;
@@ -34,53 +37,53 @@ public class TestProxy
         public void run()
         {
             Context ctx = ZMQ.context(1);
-            assertThat(ctx, notNullValue());
+            Assertions.assertNotNull(ctx);
 
             Socket socket = ctx.socket(SocketType.REQ);
             boolean rc;
             rc = socket.setIdentity(id(name));
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
-            System.out.println("Start " + name);
+            logger.info("Start {}", name);
             Thread.currentThread().setName(name);
 
             rc = socket.connect(frontend);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             result.set(process(socket));
             socket.close();
             ctx.close();
-            System.out.println("Stop " + name);
+            logger.info("Stop {}", name);
         }
 
         private boolean process(Socket socket)
         {
             boolean rc = socket.send("hello");
             if (!rc) {
-                System.out.println(name + " unable to send first message");
+                logger.error("{} unable to send first message", name);
                 return false;
             }
-            System.out.println(name + " sent 1st message");
+            logger.debug("{} sent 1st message", name);
             String msg = socket.recvStr(0);
-            System.out.println(name + " received " + msg);
+            logger.debug("{} received {}", name, msg);
             if (msg == null || !msg.startsWith("OK hello")) {
                 return false;
             }
             rc = socket.send("world");
             if (!rc) {
-                System.out.println(name + " unable to send second message");
+                logger.error("{} unable to send second message", name);
                 return false;
             }
             msg = socket.recvStr(0);
-            System.out.println(name + " received " + msg);
+            logger.debug("{} received {}", name, msg);
             return msg != null && msg.startsWith("OK world");
         }
     }
 
     static class Dealer implements Runnable
     {
-        private final String        backend;
-        private final String        name;
+        private final String backend;
+        private final String name;
         private final AtomicBoolean result = new AtomicBoolean();
 
         public Dealer(String name, String backend)
@@ -93,22 +96,22 @@ public class TestProxy
         public void run()
         {
             Context ctx = ZMQ.context(1);
-            assertThat(ctx, notNullValue());
+            Assertions.assertNotNull(ctx);
 
             Thread.currentThread().setName(name);
-            System.out.println("Start " + name);
+            logger.info("Start {}", name);
 
             Socket socket = ctx.socket(SocketType.DEALER);
             boolean rc;
             rc = socket.setIdentity(id(name));
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
             rc = socket.connect(backend);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             result.set(process(socket));
             socket.close();
             ctx.close();
-            System.out.println("Stop " + name);
+            logger.info("Stop {}", name);
         }
 
         private boolean process(Socket socket)
@@ -117,28 +120,28 @@ public class TestProxy
             while (count < 2) {
                 byte[] msg = socket.recv(0);
                 String msgAsString = new String(msg, ZMQ.CHARSET);
-                if (msg == null || !msgAsString.startsWith("Client-")) {
-                    System.out.println(name + " Wrong identity " + msgAsString);
+                if (!msgAsString.startsWith("Client-")) {
+                    logger.error("{} Wrong identity {}", name, msgAsString);
                     return false;
                 }
-                final byte[] identity = msg;
-                System.out.println(name + " received client identity " + ZData.strhex(identity));
+                byte[] identity = msg;
+                logger.debug("{} received client identity {}", name, ZData.strhex(identity));
 
                 msg = socket.recv(0);
                 msgAsString = new String(msg, ZMQ.CHARSET);
-                if (msg == null || msg.length != 0) {
-                    System.out.println("Not bottom " + Arrays.toString(msg));
+                if (msg.length != 0) {
+                    logger.error("Not bottom {}", Arrays.toString(msg));
                     return false;
                 }
-                System.out.println(name + " received bottom " + msgAsString);
+                logger.debug("{} received bottom {}", name, msgAsString);
 
                 msg = socket.recv(0);
                 if (msg == null) {
-                    System.out.println(name + " Not data " + msg);
+                    logger.error("{} Not data {}", name, msg);
                     return false;
                 }
                 msgAsString = new String(msg, ZMQ.CHARSET);
-                System.out.println(name + " received data " + msgAsString);
+                logger.debug("{} received data {}", name, msgAsString);
 
                 socket.send(identity, ZMQ.SNDMORE);
                 socket.send((byte[]) null, ZMQ.SNDMORE);
@@ -154,9 +157,9 @@ public class TestProxy
 
     static class Proxy extends Thread
     {
-        private final String        frontend;
-        private final String        backend;
-        private final String        control;
+        private final String frontend;
+        private final String backend;
+        private final String control;
         private final AtomicBoolean result = new AtomicBoolean();
 
         Proxy(String frontend, String backend, String control)
@@ -170,20 +173,20 @@ public class TestProxy
         public void run()
         {
             Context ctx = ZMQ.context(1);
-            assert (ctx != null);
+            Assertions.assertNotNull(ctx);
 
             setName("Proxy");
             Socket frontend = ctx.socket(SocketType.ROUTER);
 
-            assertThat(frontend, notNullValue());
+            Assertions.assertNotNull(frontend);
             frontend.bind(this.frontend);
 
             Socket backend = ctx.socket(SocketType.DEALER);
-            assertThat(backend, notNullValue());
+            Assertions.assertNotNull(backend);
             backend.bind(this.backend);
 
             Socket control = ctx.socket(SocketType.PAIR);
-            assertThat(control, notNullValue());
+            Assertions.assertNotNull(control);
             control.bind(this.control);
 
             ZMQ.proxy(frontend, backend, null, control);
@@ -206,8 +209,10 @@ public class TestProxy
     }
 
     @Test
-    public void testProxy() throws Exception
+    @Timeout(value = 50, unit = TimeUnit.SECONDS)
+    void testProxy() throws IOException, InterruptedException
     {
+        logger.info("Starting testProxy");
         String frontend = "tcp://localhost:" + Utils.findOpenPort();
         String backend = "tcp://localhost:" + Utils.findOpenPort();
         String controlEndpoint = "tcp://localhost:" + Utils.findOpenPort();
@@ -238,19 +243,11 @@ public class TestProxy
         control.close();
         ctx.close();
 
-        assertThat(c1.result.get(), is(true));
-        assertThat(c2.result.get(), is(true));
-        assertThat(d1.result.get(), is(true));
-        assertThat(d2.result.get(), is(true));
-        assertThat(proxy.result.get(), is(true));
-    }
-
-    public void testRepeated() throws Exception
-    {
-        for (int idx = 0; idx < 470; ++idx) {
-            System.out.println("---------- " + idx);
-            testProxy();
-            Thread.sleep(1000);
-        }
+        Assertions.assertTrue(c1.result.get());
+        Assertions.assertTrue(c2.result.get());
+        Assertions.assertTrue(d1.result.get());
+        Assertions.assertTrue(d2.result.get());
+        Assertions.assertTrue(proxy.result.get());
+        logger.info("testProxy completed successfully");
     }
 }

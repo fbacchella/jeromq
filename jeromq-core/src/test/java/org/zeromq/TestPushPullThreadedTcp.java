@@ -5,24 +5,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.zeromq.ZMQ.Socket;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Tests a PUSH-PULL dialog with several methods, each component being on a
  * separate thread.
  */
-public class TestPushPullThreadedTcp
+class TestPushPullThreadedTcp
 {
-    private static class Worker implements Runnable
-    {
-        private final int    count;
-        private final AtomicBoolean  finished = new AtomicBoolean();
-        private int          idx;
+    private static Logger logger = LogManager.getLogger(TestPushPullThreadedTcp.class);
+
+    private static class Worker implements Runnable {
+        private final int count;
+        private final AtomicBoolean finished = new AtomicBoolean();
+        private int idx;
         private final Socket receiver;
 
         public Worker(Socket receiver, int count)
@@ -50,9 +51,7 @@ public class TestPushPullThreadedTcp
     private static class Client implements Runnable
     {
         private final Socket sender;
-
         private final AtomicBoolean finished = new AtomicBoolean();
-
         private final int count;
 
         public Client(Socket sender, int count)
@@ -69,60 +68,48 @@ public class TestPushPullThreadedTcp
                 ZMsg msg = new ZMsg();
                 msg.add("DATA");
                 boolean sent = msg.send(sender);
-                assertThat(sent, is(true));
+                Assertions.assertTrue(sent);
             }
             finished.set(true);
         }
     }
 
-//    @Test
-    public void testRepeated() throws Exception
-    {
-        for (int idx = 0; idx < 2000; ++idx) {
-            System.out.println("+++++++++++ " + idx);
-            testPushPull1();
-            testPushPull500();
-            testPushPullWithWatermark();
-        }
-    }
-
     @Test
-    public void testPushPull1() throws Exception
-    {
+    @Timeout(value = 15, unit = TimeUnit.SECONDS)
+    void testPushPull1() throws Exception {
         test(1);
     }
 
     @Test
-    public void testPushPull500() throws Exception
-    {
-        System.out.println("Sending 500 messages");
+    @Timeout(value = 15, unit = TimeUnit.SECONDS)
+    void testPushPull500() throws Exception {
         test(500);
     }
 
     @Test
-    public void testPushPullWithWatermark() throws Exception
-    {
-        System.out.println("Sending 20000 messages to trigger watermark limit");
+    @Timeout(value = 15, unit = TimeUnit.SECONDS)
+    void testPushPullWithWatermark() throws Exception {
+        logger.info("Sending 20000 messages to trigger watermark limit");
         test(20000);
+        logger.info("testPushPullWithWatermark completed successfully");
     }
 
-    private void test(int count) throws InterruptedException
-    {
-        long start = System.currentTimeMillis();
+    private void test(int count) throws InterruptedException {
+        logger.debug("Test started with {} messages", count);
 
         ExecutorService threadPool = Executors.newFixedThreadPool(2);
 
         ZContext ctx = new ZContext();
 
         ZMQ.Socket receiver = ctx.createSocket(SocketType.PULL);
-        assertThat(receiver, notNullValue());
+        Assertions.assertNotNull(receiver);
         receiver.setImmediate(false);
-        final int port = receiver.bindToRandomPort("tcp://localhost");
+        int port = receiver.bindToRandomPort("tcp://localhost");
 
         ZMQ.Socket sender = ctx.createSocket(SocketType.PUSH);
-        assertThat(sender, notNullValue());
+        Assertions.assertNotNull(sender);
         boolean rc = sender.connect("tcp://localhost:" + port);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         Worker worker = new Worker(receiver, count);
         Client client = new Client(sender, count);
@@ -132,16 +119,13 @@ public class TestPushPullThreadedTcp
 
         threadPool.shutdown();
         threadPool.awaitTermination(10, TimeUnit.SECONDS);
-        long end = System.currentTimeMillis();
-        System.out.println("Worker received " + worker.idx + " messages");
-        assertThat("Unable to send messages", client.finished.get(), is(true));
-        assertThat("Unable to receive messages", worker.finished.get(), is(true));
+
+        logger.info("Worker received {} messages", worker.idx);
+        Assertions.assertTrue(client.finished.get(), "Unable to send messages");
+        Assertions.assertTrue(worker.finished.get(), "Unable to receive messages");
 
         receiver.close();
         sender.close();
         ctx.close();
-
-        System.out.println("Test done in " + (end - start) + " millis.");
     }
-
 }
