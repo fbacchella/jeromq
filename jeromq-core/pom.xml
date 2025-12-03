@@ -76,6 +76,9 @@
                                 <include>zmq/socket/reqrep/TestReqrepIpc.class</include>
                                 <include>zmq/Helper.class</include>
                                 <include>zmq/Helper*.class</include>
+                                <include>META-INF/**</include>
+                                <include>org/zeromq/JunitLoggingReconfigurator.class</include>
+                                <include>org/zeromq/DynamicLog4jFilter.class</include>
                             </includes>
                         </configuration>
                     </execution>
