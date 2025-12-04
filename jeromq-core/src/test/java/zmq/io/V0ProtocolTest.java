@@ -3,26 +3,29 @@ package zmq.io;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import zmq.ZMQ;
 
-public class V0ProtocolTest extends AbstractProtocolVersion
+class V0ProtocolTest extends AbstractProtocolVersion
 {
+    private static final Logger logger = LogManager.getLogger(V0ProtocolTest.class);
+
     @Test
-    public void testFixIssue524() throws IOException, InterruptedException
+    void testFixIssue524() throws IOException, InterruptedException
     {
         for (int idx = 0; idx < REPETITIONS; ++idx) {
-            if (idx % 100 == 0) {
-                System.out.print(idx + " ");
-            }
             testProtocolVersion0short();
         }
-        System.out.println();
     }
 
-    @Test(timeout = 2000)
+    @Test
+    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testProtocolVersion0short() throws IOException, InterruptedException
     {
         ByteBuffer raw = ByteBuffer.allocate(11)
@@ -36,7 +39,8 @@ public class V0ProtocolTest extends AbstractProtocolVersion
         assertProtocolVersion(0, raw, "abcdefg");
     }
 
-    @Test(timeout = 2000)
+    @Test
+    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testProtocolVersion0long() throws IOException, InterruptedException
     {
         ByteBuffer raw = ByteBuffer.allocate(35)

@@ -10,6 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
+
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -18,15 +22,11 @@ import zmq.ZMQ;
 import zmq.ZMQ.Event;
 import zmq.util.TestUtils;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 public abstract class AbstractProtocolVersion
 {
     protected static final int REPETITIONS = 1000;
     private static final AtomicReference<Throwable> monitorFailure = new AtomicReference<>();
+    private static final Logger logger = LogManager.getLogger(AbstractProtocolVersion.class);
 
     static class SocketMonitor extends Thread
     {
@@ -40,7 +40,7 @@ public abstract class AbstractProtocolVersion
             this.monitorAddr = monitorAddr;
             monitorFailure.set(null);
             this.setUncaughtExceptionHandler((t, ex) -> {
-                ex.printStackTrace();
+                logger.error("Uncaught exception in SocketMonitor", ex);
                 monitorFailure.set(ex);
             });
         }
@@ -50,7 +50,7 @@ public abstract class AbstractProtocolVersion
         {
             SocketBase s = ZMQ.socket(ctx, ZMQ.ZMQ_PAIR);
             boolean rc = s.connect(monitorAddr);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
             // Only some of the exceptional events could fire
 
             ZMQ.Event event = ZMQ.Event.read(s);
@@ -58,7 +58,7 @@ public abstract class AbstractProtocolVersion
                 s.close();
                 return;
             }
-            assertThat(event, notNullValue());
+            Assertions.assertNotNull(event);
 
             events[0] = event;
             s.close();
@@ -71,22 +71,22 @@ public abstract class AbstractProtocolVersion
         String host = "tcp://localhost:*";
 
         Ctx ctx = ZMQ.init(1);
-        assertThat(ctx, notNullValue());
+        Assertions.assertNotNull(ctx);
 
         SocketBase receiver = ZMQ.socket(ctx, ZMQ.ZMQ_PULL);
-        assertThat(receiver, notNullValue());
+        Assertions.assertNotNull(receiver);
 
         boolean rc = ZMQ.setSocketOption(receiver, ZMQ.ZMQ_LINGER, 0);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         rc = ZMQ.monitorSocket(receiver, "inproc://monitor", ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         SocketMonitor monitor = new SocketMonitor(ctx, "inproc://monitor");
         monitor.start();
 
         rc = ZMQ.bind(receiver, host);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         String ep = (String) ZMQ.getSocketOptionExt(receiver, ZMQ.ZMQ_LAST_ENDPOINT);
         int port = TestUtils.port(ep);
@@ -95,18 +95,17 @@ public abstract class AbstractProtocolVersion
         for (ByteBuffer raw : raws) {
             out.write(raw.array());
         }
-        assertThat(monitorFailure.get(), nullValue());
+        Assertions.assertNull(monitorFailure.get());
 
         Msg msg = ZMQ.recv(receiver, 0);
-        assertThat(msg, notNullValue());
-        assertThat(new String(msg.data(), ZMQ.CHARSET), is(payload));
+        Assertions.assertNotNull(msg);
+        Assertions.assertEquals(payload, new String(msg.data(), ZMQ.CHARSET));
 
         monitor.join();
-
-        final Event event = monitor.events[0];
-        assertThat(event, notNullValue());
-        assertThat(event.event, is(ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL));
-        assertThat((Integer) event.arg, is(version));
+        Event event = monitor.events[0];
+        Assertions.assertNotNull(event);
+        Assertions.assertEquals(ZMQ.ZMQ_EVENT_HANDSHAKE_PROTOCOL, event.event);
+        Assertions.assertEquals(version, (Integer) event.arg);
 
         InputStream in = sender.getInputStream();
         byte[] data = new byte[255];

@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import zmq.ZMQ;
 import zmq.util.Wire;
 
-public class V2ProtocolTest extends AbstractProtocolVersion
+class V2ProtocolTest extends AbstractProtocolVersion
 {
     @Override
     protected ByteBuffer identity()
@@ -22,19 +22,15 @@ public class V2ProtocolTest extends AbstractProtocolVersion
     }
 
     @Test
-    public void testFixIssue524() throws IOException, InterruptedException
+    void testFixIssue524() throws IOException, InterruptedException
     {
         for (int idx = 0; idx < REPETITIONS; ++idx) {
-            if (idx % 100 == 0) {
-                System.out.print(idx + " ");
-            }
             testProtocolVersion2short();
         }
-        System.out.println();
     }
 
     @Test
-    public void testProtocolVersion2short() throws IOException, InterruptedException
+    void testProtocolVersion2short() throws IOException, InterruptedException
     {
         List<ByteBuffer> raws = raws(1);
         raws.add(identity());
@@ -51,7 +47,7 @@ public class V2ProtocolTest extends AbstractProtocolVersion
     }
 
     @Test
-    public void testProtocolVersion2long() throws IOException, InterruptedException
+    void testProtocolVersion2long() throws IOException, InterruptedException
     {
         List<ByteBuffer> raws = raws(1);
         raws.add(identity());
