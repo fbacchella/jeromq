@@ -9,6 +9,7 @@ import org.junit.Test;
 import zmq.SocketBase;
 import zmq.ZMQ;
 import zmq.io.mechanism.curve.Curve;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -39,15 +40,21 @@ public class SecurityCurveTest
 
         BiFunction<SocketBase, CompletableFuture<Boolean>, ZapHandler> zapProvider = (s, f) -> new ZapHandler(s, f, testCtx.clientPublic);
         Runnable configurator = () -> {
+            MechanismSettings<?> serverSettings = CurveMechanismSettings.getBuilder()
+                                                               .setSecretKey(testCtx.serverSecret)
+                                                               .setPublicKey(testCtx.serverPublic)
+                                                               .build();
             // Preconfigure server with valid identity, might be changed for individual tests
-            ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_CURVE_SERVER, true);
-            ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_CURVE_SECRETKEY, testCtx.serverSecret);
+            ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_MECHANISM, serverSettings);
             ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_IDENTITY, "IDENT");
 
+            MechanismSettings<?> clientSettings = CurveMechanismSettings.getBuilder()
+                                                       .setSecretKey(testCtx.clientSecret)
+                                                       .setPublicKey(testCtx.clientPublic)
+                                                       .setServerKey(testCtx.serverPublic)
+                                                       .build();
             // Preconfigure client with valid identity, might be changed for individual tests
-            ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_CURVE_SERVERKEY, testCtx.serverPublic);
-            ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_CURVE_PUBLICKEY, testCtx.clientPublic);
-            ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_CURVE_SECRETKEY, testCtx.clientSecret);
+            ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_MECHANISM, clientSettings);
         };
 
         return MechanismTester.runTest(testCtx, withzap, tested, zapProvider, configurator);
@@ -246,70 +253,5 @@ public class SecurityCurveTest
         // Unauthenticated messages from a vanilla socket shouldn't be received
         Boolean zapCheck = runTest(false, MechanismTester::testRawSocket);
         assertThat(zapCheck, nullValue());
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent1()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, null);
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent2()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, null);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[32]);
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent3()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[31]);
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent4()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[31]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[32]);
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent5()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SERVERKEY, new byte[31]);
-        });
-    }
-
-    @Test
-    public void consistent1()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[32]);
-        });
-    }
-
-    @Test
-    public void consistent2()
-    {
-        MechanismTester.checkOptions(Mechanisms.CURVE, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, new byte[32]);
-            opt.setSocketOpt(ZMQ.ZMQ_CURVE_SERVERKEY, new byte[32]);
-        });
     }
 }

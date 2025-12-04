@@ -199,6 +199,8 @@ public abstract class Mechanism
         return comparison;
     }
 
+    public abstract String name();
+
     public Msg decode(Msg msg)
     {
         return msg;

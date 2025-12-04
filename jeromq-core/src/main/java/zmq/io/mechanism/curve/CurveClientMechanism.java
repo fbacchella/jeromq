@@ -1,8 +1,5 @@
 package zmq.io.mechanism.curve;
 
-import static zmq.io.Metadata.IDENTITY;
-import static zmq.io.Metadata.SOCKET_TYPE;
-
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
@@ -11,8 +8,12 @@ import zmq.ZError;
 import zmq.ZMQ;
 import zmq.io.SessionBase;
 import zmq.io.mechanism.Mechanism;
+import zmq.io.mechanism.Mechanisms;
 import zmq.util.Errno;
 import zmq.util.Wire;
+
+import static zmq.io.Metadata.IDENTITY;
+import static zmq.io.Metadata.SOCKET_TYPE;
 
 public class CurveClientMechanism extends Mechanism
 {
@@ -52,18 +53,15 @@ public class CurveClientMechanism extends Mechanism
 
     private final Errno errno;
 
-    public CurveClientMechanism(SessionBase session, Options options)
+    public CurveClientMechanism(SessionBase session, CurveMechanismSettings settings, Options options)
     {
         super(session, null, options);
         this.state = State.SEND_HELLO;
         cnNonce = 1;
         cnPeerNonce = 1;
-        publicKey = options.curvePublicKey;
-        assert (publicKey != null && publicKey.length == Curve.Size.PUBLICKEY.bytes());
-        secretKey = options.curveSecretKey;
-        assert (secretKey != null && secretKey.length == Curve.Size.SECRETKEY.bytes());
-        serverKey = options.curveServerKey;
-        assert (serverKey != null && serverKey.length == Curve.Size.PUBLICKEY.bytes());
+        publicKey = settings.publicKey();
+        secretKey = settings.secretKey();
+        serverKey = settings.serverKey();
 
         cryptoBox = new Curve();
         //  Generate short-term key pair
@@ -235,6 +233,11 @@ public class CurveClientMechanism extends Mechanism
         else {
             return Status.HANDSHAKING;
         }
+    }
+
+    @Override
+    public String name() {
+        return Mechanisms.CURVE.name();
     }
 
     @Override

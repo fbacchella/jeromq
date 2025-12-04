@@ -13,7 +13,11 @@ import javax.net.ssl.SSLParameters;
 
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
+import zmq.io.mechanism.MechanismSettings;
 import zmq.io.mechanism.Mechanisms;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.gssapi.GssapiMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 import zmq.io.net.NetProtocol;
 import zmq.io.net.SelectorProviderChooser;
 import zmq.io.net.SocketFactory;
@@ -25,8 +29,6 @@ import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.msg.MsgAllocatorThreshold;
 import zmq.util.Errno;
-import zmq.util.ValueReference;
-import zmq.util.Z85;
 
 public class Options
 {
@@ -98,33 +100,10 @@ public class Options
     public int tcpKeepAliveIntvl = ZMQ.DEFAULT_TCP_KEEP_ALIVE_INTVL;
 
     //  Security mechanism for all connections on this socket
-    public Mechanisms mechanism = ZMQ.DEFAULT_MECHANISM;
-
-    //  If peer is acting as server for PLAIN or CURVE mechanisms
-    public boolean asServer = ZMQ.DEFAULT_AS_SERVER;
+    public MechanismSettings mechanism = Mechanisms.NULLINSTANCE;
 
     //  ZAP authentication domain
     public String zapDomain = ZMQ.DEFAULT_ZAP_DOMAIN;
-
-    //  Security credentials for PLAIN mechanism
-    public String plainUsername = null;
-    public String plainPassword = null;
-
-    //  Security credentials for CURVE mechanism
-    //  Normal base 256 key is 32 bytes
-    public static final int CURVE_KEYSIZE = 32;
-    //  Key encoded using Z85 is 40 bytes
-    public static final int CURVE_KEYSIZE_Z85 = 40;
-    // No default, as an array can't really be a static final
-    public byte[]           curvePublicKey = new byte[CURVE_KEYSIZE];
-    public byte[]           curveSecretKey = new byte[CURVE_KEYSIZE];
-    public byte[]           curveServerKey = new byte[CURVE_KEYSIZE];
-
-    //  Principals for GSSAPI mechanism
-    String gssPrincipal = null;
-    String gssServicePrincipal = null;
-    //  If true, gss encryption will be disabled
-    boolean gssPlaintext = ZMQ.DEFAULT_GSS_PLAINTEXT;
 
     //  If true, socket conflates outgoing/incoming messages.
     //  Applicable to dealer, push/pull, pub/sub socket types.
@@ -361,32 +340,29 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_PLAIN_SERVER:
-            asServer = parseBoolean(option, optval);
-            mechanism = (asServer ? Mechanisms.PLAIN : Mechanisms.NULL);
-            return true;
-
         case ZMQ.ZMQ_PLAIN_USERNAME:
-            if (optval == null) {
-                mechanism = Mechanisms.NULL;
-                asServer = false;
-                return true;
-            }
-            plainUsername = parseString(option, optval);
-            asServer = false;
-            mechanism = Mechanisms.PLAIN;
-            return true;
-
         case ZMQ.ZMQ_PLAIN_PASSWORD:
-            if (optval == null) {
-                mechanism = Mechanisms.NULL;
-                asServer = false;
+        case ZMQ.ZMQ_CURVE_SERVER:
+        case ZMQ.ZMQ_CURVE_PUBLICKEY:
+        case ZMQ.ZMQ_CURVE_SECRETKEY:
+        case ZMQ.ZMQ_CURVE_SERVERKEY:
+        case ZMQ.ZMQ_GSSAPI_SERVER:
+        case ZMQ.ZMQ_GSSAPI_PRINCIPAL:
+        case ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL:
+        case ZMQ.ZMQ_GSSAPI_PLAINTEXT:
+            throw new IllegalArgumentException("Deprecated, use a MechanismSettings instance instead");
+
+        case ZMQ.ZMQ_MECHANISM:
+            if (optval instanceof MechanismSettings) {
+                mechanism = (MechanismSettings<?>) optval;
                 return true;
             }
-            plainPassword = parseString(option, optval);
-            asServer = false;
-            mechanism = Mechanisms.PLAIN;
-            return true;
-
+            else if (optval instanceof Mechanisms) {
+                throw new IllegalArgumentException("Deprecated, use a MechanismSettings instance instead");
+            }
+            else {
+                return false;
+            }
         case ZMQ.ZMQ_ZAP_DOMAIN:
             String domain = parseString(option, optval);
             if (domain.length() < 256) {
@@ -397,53 +373,8 @@ public class Options
                 throw new IllegalArgumentException("zap domain length shall be < 256 : " + optval);
             }
 
-        case ZMQ.ZMQ_CURVE_SERVER:
-            asServer = parseBoolean(option, optval);
-            mechanism = (asServer ? Mechanisms.CURVE : Mechanisms.NULL);
-            return true;
-
-        case ZMQ.ZMQ_CURVE_PUBLICKEY: {
-            ValueReference<Boolean> result = new ValueReference<>(false);
-            curvePublicKey = setCurveKey(option, optval, result);
-            return result.get();
-        }
-
-        case ZMQ.ZMQ_CURVE_SECRETKEY: {
-            ValueReference<Boolean> result = new ValueReference<>(false);
-            curveSecretKey = setCurveKey(option, optval, result);
-            return result.get();
-        }
-
-        case ZMQ.ZMQ_CURVE_SERVERKEY: {
-            ValueReference<Boolean> result = new ValueReference<>(false);
-            curveServerKey = setCurveKey(option, optval, result);
-            if (curveServerKey == null) {
-                asServer = false;
-            }
-            return result.get();
-        }
-
         case ZMQ.ZMQ_CONFLATE:
             conflate = parseBoolean(option, optval);
-            return true;
-
-        case ZMQ.ZMQ_GSSAPI_SERVER:
-            asServer = parseBoolean(option, optval);
-            mechanism = Mechanisms.GSSAPI;
-            return true;
-
-        case ZMQ.ZMQ_GSSAPI_PRINCIPAL:
-            gssPrincipal = parseString(option, optval);
-            mechanism = Mechanisms.GSSAPI;
-            return true;
-
-        case ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL:
-            gssServicePrincipal = parseString(option, optval);
-            mechanism = Mechanisms.GSSAPI;
-            return true;
-
-        case ZMQ.ZMQ_GSSAPI_PLAINTEXT:
-            gssPlaintext = parseBoolean(option, optval);
             return true;
 
         case ZMQ.ZMQ_HANDSHAKE_IVL:
@@ -664,47 +595,6 @@ public class Options
         }
     }
 
-    private byte[] setCurveKey(int option, Object optval, ValueReference<Boolean> result)
-    {
-        if (optval == null) {
-            // TODO V4 setting a curve key as null does change the mechanism type ?
-            result.set(false);
-            return null;
-        }
-        else {
-            byte[] key = null;
-            // if the optval is already the key don't do any parsing
-            if (optval instanceof byte[] && ((byte[]) optval).length == CURVE_KEYSIZE) {
-                key = (byte[]) optval;
-                result.set(true);
-                errno.set(0);
-            }
-            else {
-                String val = parseString(option, optval);
-                int length = val.length();
-                if (length == CURVE_KEYSIZE_Z85) {
-                    key = Z85.decode(val);
-                    result.set(true);
-                    errno.set(0);
-                }
-                else if (length == CURVE_KEYSIZE) {
-                    key = val.getBytes(ZMQ.CHARSET);
-                    result.set(true);
-                    errno.set(0);
-                }
-                else {
-                    result.set(false);
-                    errno.set(ZError.EINVAL);
-                }
-            }
-            if (key != null) {
-                mechanism = Mechanisms.CURVE;
-            }
-
-            return key;
-        }
-    }
-
     @SuppressWarnings({"deprecation", "unchecked"})
     public <T> T getSocketOpt(int option)
     {
@@ -794,13 +684,17 @@ public class Options
             return (T) mechanism;
 
         case ZMQ.ZMQ_PLAIN_SERVER:
-            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.PLAIN);
+            return (T) Boolean.valueOf((mechanism instanceof PlainMechanismSettings) && ((PlainMechanismSettings) mechanism).isServer());
 
         case ZMQ.ZMQ_PLAIN_USERNAME:
-            return (T) plainUsername;
+            return mechanism instanceof PlainMechanismSettings ?
+                           (T) ((PlainMechanismSettings)mechanism).username()
+                           : null;
 
         case ZMQ.ZMQ_PLAIN_PASSWORD:
-            return (T) plainPassword;
+            return mechanism instanceof PlainMechanismSettings ?
+                           (T) ((PlainMechanismSettings)mechanism).password()
+                           : null;
 
         case ZMQ.ZMQ_ZAP_DOMAIN:
             return (T) zapDomain;
@@ -809,31 +703,43 @@ public class Options
             return (T) lastEndpoint;
 
         case ZMQ.ZMQ_CURVE_SERVER:
-            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.CURVE);
+            return (T) Boolean.valueOf((mechanism instanceof CurveMechanismSettings) && ((CurveMechanismSettings)mechanism).isServer());
 
         case ZMQ.ZMQ_CURVE_PUBLICKEY:
-            return (T) curvePublicKey;
+            return mechanism instanceof CurveMechanismSettings ?
+                           (T) ((CurveMechanismSettings)mechanism).publicKey()
+                           : null;
 
         case ZMQ.ZMQ_CURVE_SERVERKEY:
-            return (T) curveServerKey;
+            return mechanism instanceof CurveMechanismSettings ?
+                           (T) ((CurveMechanismSettings)mechanism).serverKey()
+                           : null;
 
         case ZMQ.ZMQ_CURVE_SECRETKEY:
-            return (T) curveSecretKey;
+            return mechanism instanceof CurveMechanismSettings ?
+                           (T) ((CurveMechanismSettings)mechanism).secretKey()
+                           : null;
 
         case ZMQ.ZMQ_CONFLATE:
             return (T) Boolean.valueOf(conflate);
 
         case ZMQ.ZMQ_GSSAPI_SERVER:
-            return (T) Boolean.valueOf(asServer && mechanism == Mechanisms.GSSAPI);
+            return (T) Boolean.valueOf((mechanism instanceof GssapiMechanismSettings) && ((GssapiMechanismSettings) mechanism).isServer());
 
         case ZMQ.ZMQ_GSSAPI_PRINCIPAL:
-            return (T) gssPrincipal;
+            return mechanism instanceof GssapiMechanismSettings ?
+                           (T) ((GssapiMechanismSettings)mechanism).gssPrincipal()
+                           : null;
 
         case ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL:
-            return (T) gssServicePrincipal;
+            return mechanism instanceof GssapiMechanismSettings ?
+                           (T) ((GssapiMechanismSettings)mechanism).gssServicePrincipal()
+                           : null;
 
         case ZMQ.ZMQ_GSSAPI_PLAINTEXT:
-            return (T) Boolean.valueOf(gssPlaintext);
+            return mechanism instanceof GssapiMechanismSettings ?
+                           (T) ((GssapiMechanismSettings)mechanism).gssPlaintext()
+                           : null;
 
         case ZMQ.ZMQ_HANDSHAKE_IVL:
             return (T) Integer.valueOf(handshakeIvl);

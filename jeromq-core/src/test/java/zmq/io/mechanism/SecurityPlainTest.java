@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import zmq.SocketBase;
 import zmq.ZMQ;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -30,7 +31,6 @@ public class SecurityPlainTest
         BiFunction<SocketBase, CompletableFuture<Boolean>, ZapHandler> zapProvider = (s, f) -> new ZapHandler(s, f, "admin", "password");
         Runnable configurator = () -> {
             ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_IDENTITY, "IDENT");
-            ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_PLAIN_SERVER, true);
         };
 
         return MechanismTester.runTest(testCtx, withzap, tested, zapProvider, configurator);
@@ -44,8 +44,8 @@ public class SecurityPlainTest
         assertThat(rc, is(true));
 
         String host = (String) ZMQ.getSocketOptionExt(tctxt.server, ZMQ.ZMQ_LAST_ENDPOINT);
-        ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_USERNAME, tctxt.user);
-        ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_PASSWORD, tctxt.password);
+        PlainMechanismSettings settings = new PlainMechanismSettings(false, tctxt.user, tctxt.password);
+        ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
         rc = ZMQ.connect(tctxt.client, host);
         assertThat(rc, is(true));

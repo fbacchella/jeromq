@@ -627,9 +627,6 @@ public class StreamEngine implements IEngine, IPollEvents
         assert (handshaking);
         assert (greetingRecv.position() < greetingSize);
 
-        Mechanisms mechanism = options.mechanism;
-        assert (mechanism != null);
-
         //  Position of the version field in the greeting.
         int revisionPos = SIGNATURE_SIZE;
 
@@ -711,7 +708,7 @@ public class StreamEngine implements IEngine, IPollEvents
                         greetingSend.put(new byte[20]);
 
                         greetingSend.reset();
-                        greetingSend.put(mechanism.name().getBytes(ZMQ.CHARSET));
+                        greetingSend.put(options.mechanism.name().getBytes(ZMQ.CHARSET));
                         greetingSend.reset();
                         greetingSend.position(greetingSend.position() + 20);
                         outsize += 20;
@@ -814,8 +811,8 @@ public class StreamEngine implements IEngine, IPollEvents
             decoder = new V2Decoder(errno, inBatchSize, options.maxMsgSize, options.allocator);
 
             greetingRecv.position(V2_GREETING_SIZE);
-            if (mechanism.isMechanism(greetingRecv)) {
-                this.mechanism = mechanism.create(session, peerAddress, options);
+            if (options.mechanism.isMechanism(greetingRecv)) {
+                this.mechanism = options.mechanism.create(session, peerAddress, options);
             }
             else {
                 error(ErrorReason.PROTOCOL);

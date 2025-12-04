@@ -4,9 +4,9 @@ import zmq.Msg;
 import zmq.Options;
 import zmq.io.SessionBase;
 import zmq.io.mechanism.Mechanism;
+import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 
-// TODO V4 implement GSSAPI
 public class GssapiServerMechanism extends Mechanism
 {
     public GssapiServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
@@ -19,6 +19,11 @@ public class GssapiServerMechanism extends Mechanism
     public Status status()
     {
         return null;
+    }
+
+    @Override
+    public String name() {
+        return Mechanisms.GSSAPI.name();
     }
 
     @Override

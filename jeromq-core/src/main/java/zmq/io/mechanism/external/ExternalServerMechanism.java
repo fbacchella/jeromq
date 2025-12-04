@@ -1,7 +1,4 @@
-package zmq.io.mechanism.plain;
-
-import static zmq.io.Metadata.IDENTITY;
-import static zmq.io.Metadata.SOCKET_TYPE;
+package zmq.io.mechanism.external;
 
 import zmq.Msg;
 import zmq.Options;
@@ -9,30 +6,30 @@ import zmq.ZError;
 import zmq.ZMQ;
 import zmq.io.SessionBase;
 import zmq.io.mechanism.Mechanism;
-import zmq.io.mechanism.Mechanisms;
+import zmq.io.net.Address;
 
-public class PlainClientMechanism extends Mechanism
+import static zmq.io.Metadata.SOCKET_TYPE;
+
+public class ExternalServerMechanism extends Mechanism
 {
     private enum State
     {
-        SENDING_HELLO,
+        WAITING_FOR_ZAP_REPLY,
+        SENDING_ERROR,
+        SENDING_READY,
         WAITING_FOR_WELCOME,
-        SENDING_INITIATE,
         WAITING_FOR_READY,
         ERROR_COMMAND_RECEIVED,
         READY
     }
 
     private State state;
-    private final String username;
-    private final String password;
 
-    public PlainClientMechanism(SessionBase session, PlainMechanismSettings plainMechanismSettings, Options options)
+    public ExternalServerMechanism(SessionBase session, Address<?> peerAddress, ExternalMechanismSettings settings,
+            Options options)
     {
-        super(session, null, options);
-        this.state = State.SENDING_HELLO;
-        this.username = plainMechanismSettings.username();
-        this.password = plainMechanismSettings.password();
+        super(session, peerAddress, options);
+        this.state = State.SENDING_READY;
     }
 
     @Override
@@ -40,22 +37,17 @@ public class PlainClientMechanism extends Mechanism
     {
         int rc;
         switch (state) {
-        case SENDING_HELLO:
-            rc = produceHello(msg);
-            if (rc == 0) {
-                state = State.WAITING_FOR_WELCOME;
-            }
-            break;
-        case SENDING_INITIATE:
-            rc = produceInitiate(msg);
-            if (rc == 0) {
-                state = State.WAITING_FOR_READY;
-            }
+        case SENDING_READY:
+            msg.putShortString("READY");
+            rc = 0;
+            //  Add socket type property
+            String socketType = socketType();
+            addProperty(msg, SOCKET_TYPE, socketType);
+            state = State.READY;
             break;
         default:
             rc = ZError.EAGAIN;
             break;
-
         }
         return rc;
     }
@@ -77,7 +69,7 @@ public class PlainClientMechanism extends Mechanism
         }
         else {
             //  Temporary support for security debugging
-            System.out.println("PLAIN Client I: invalid handshake command");
+            System.out.println("EXTERNAL Client I: invalid handshake command");
             rc = ZError.EPROTO;
         }
         return rc;
@@ -99,23 +91,23 @@ public class PlainClientMechanism extends Mechanism
 
     @Override
     public String name() {
-        return Mechanisms.PLAIN.name();
+        return "";
     }
 
     @Override
     public int zapMsgAvailable()
     {
-        return 0;
+        if (state != State.WAITING_FOR_ZAP_REPLY) {
+            return ZError.EFSM;
+        }
+
+        int rc = receiveAndProcessZapReply();
+        if (rc == 0) {
+            state = "200".equals(statusCode) ? State.SENDING_READY : State.SENDING_ERROR;
+        }
+        return rc;
     }
 
-    private int produceHello(Msg msg)
-    {
-        msg.putShortString("HELLO");
-        msg.putShortString(username);
-        msg.putShortString(password);
-
-        return 0;
-    }
 
     private int processWelcome(Msg msg)
     {
@@ -125,24 +117,7 @@ public class PlainClientMechanism extends Mechanism
         if (msg.size() != 8) {
             return ZError.EPROTO;
         }
-        state = State.SENDING_INITIATE;
-        return 0;
-    }
-
-    private int produceInitiate(Msg msg)
-    {
-        //  Add mechanism string
-        msg.putShortString("INITIATE");
-
-        //  Add socket type property
-        String socketType = socketType();
-        addProperty(msg, SOCKET_TYPE, socketType);
-
-        //  Add identity property
-        if (options.type == ZMQ.ZMQ_REQ || options.type == ZMQ.ZMQ_DEALER || options.type == ZMQ.ZMQ_ROUTER) {
-            addProperty(msg, IDENTITY, options.identity);
-        }
-
+        state = State.SENDING_READY;
         return 0;
     }
 

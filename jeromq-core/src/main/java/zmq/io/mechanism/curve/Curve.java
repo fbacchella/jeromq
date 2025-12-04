@@ -9,9 +9,19 @@ import com.neilalexander.jnacl.crypto.xsalsa20poly1305;
 
 import zmq.util.Z85;
 
+import static com.neilalexander.jnacl.crypto.curve25519xsalsa20poly1305.crypto_secretbox_PUBLICKEYBYTES;
+
 // wrapper around the wrapper of libsodium (ahem), for shorter names.
 public class Curve
 {
+    //  Security credentials for CURVE mechanism
+    //  Normal base 256 key is 32 bytes
+    public static final int CURVE_KEYSIZE = crypto_secretbox_PUBLICKEYBYTES;
+    //  Key encoded using Z85 is 40 bytes
+    public static final int CURVE_KEYSIZE_Z85 = 40;
+    //  Key encoded using Z85 is 40 bytes
+    public static final int CURVE_KEYSIZE_BASE64 = 44;
+
     private static final SecureRandom strongRandom;
 
     static {
@@ -51,7 +61,7 @@ public class Curve
             @Override
             public int bytes()
             {
-                return curve25519xsalsa20poly1305.crypto_secretbox_PUBLICKEYBYTES;
+                return crypto_secretbox_PUBLICKEYBYTES;
             }
         },
         SECRETKEY {
@@ -65,7 +75,7 @@ public class Curve
             @Override
             public int bytes()
             {
-                return 32;
+                return CURVE_KEYSIZE;
             }
         },
         BEFORENM {

@@ -28,7 +28,8 @@ public class PlainServerMechanism extends Mechanism
 
     private State state;
 
-    public PlainServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
+    public PlainServerMechanism(SessionBase session, Address<?> peerAddress, PlainMechanismSettings settings,
+            Options options)
     {
         super(session, peerAddress, options);
         this.state = State.WAITING_FOR_HELLO;
@@ -99,6 +100,11 @@ public class PlainServerMechanism extends Mechanism
     }
 
     @Override
+    public String name() {
+        return Mechanisms.PLAIN.name();
+    }
+
+    @Override
     public int zapMsgAvailable()
     {
         if (state != State.WAITING_FOR_ZAP_REPLY) {
@@ -146,7 +152,6 @@ public class PlainServerMechanism extends Mechanism
         msg.getBytes(index, tmp, 0, length);
         byte[] password = tmp;
         bytesLeft -= length;
-        //        index += length;
 
         if (bytesLeft > 0) {
             return ZError.EPROTO;

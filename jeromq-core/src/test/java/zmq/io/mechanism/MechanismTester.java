@@ -153,7 +153,6 @@ class MechanismTester
     {
         Options opt = new Options();
         setOptions.accept(opt);
-        mechanism.check(opt);
     }
 
     private MechanismTester()

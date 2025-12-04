@@ -23,13 +23,11 @@ import org.zeromq.proto.ZPicture;
 
 import zmq.Ctx;
 import zmq.Msg;
-import zmq.Options;
 import zmq.SocketBase;
 import zmq.ZError;
 import zmq.ZError.CtxTerminatedException;
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
-import zmq.io.mechanism.Mechanism;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.SelectorProviderChooser;
@@ -37,6 +35,9 @@ import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
 import zmq.util.Z85;
+
+import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE;
+import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE_Z85;
 
 /**
  * <p>The ØMQ lightweight messaging kernel is a library which extends the standard socket interfaces
@@ -4581,8 +4582,8 @@ public class ZMQ
      */
     public static class Curve
     {
-        public static final int KEY_SIZE = Options.CURVE_KEYSIZE;
-        public static final int KEY_SIZE_Z85 = Options.CURVE_KEYSIZE_Z85;
+        public static final int KEY_SIZE = CURVE_KEYSIZE;
+        public static final int KEY_SIZE_Z85 = CURVE_KEYSIZE_Z85;
 
         /**
          * <p>Returns a newly generated random keypair consisting of a public key

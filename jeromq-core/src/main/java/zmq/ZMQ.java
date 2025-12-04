@@ -111,12 +111,19 @@ public class ZMQ
     public static final int ZMQ_ROUTER_RAW          = 41;
     public static final int ZMQ_IPV6                = 42;
     public static final int ZMQ_MECHANISM           = 43;
+    @Deprecated
     public static final int ZMQ_PLAIN_SERVER        = 44;
+    @Deprecated
     public static final int ZMQ_PLAIN_USERNAME      = 45;
+    @Deprecated
     public static final int ZMQ_PLAIN_PASSWORD      = 46;
+    @Deprecated
     public static final int ZMQ_CURVE_SERVER        = 47;
+    @Deprecated
     public static final int ZMQ_CURVE_PUBLICKEY     = 48;
+    @Deprecated
     public static final int ZMQ_CURVE_SECRETKEY     = 49;
+    @Deprecated
     public static final int ZMQ_CURVE_SERVERKEY     = 50;
     public static final int ZMQ_PROBE_ROUTER        = 51;
     public static final int ZMQ_REQ_CORRELATE       = 52;
@@ -336,10 +343,6 @@ public class ZMQ
      * Default value for {@link ZMQ#ZMQ_MAXMSGSIZE}
      */
     public static final long DEFAULT_MAX_MSG_SIZE = -1;
-    /**
-     * Default value for {@link ZMQ#ZMQ_MECHANISM}
-     */
-    public static final Mechanisms DEFAULT_MECHANISM = Mechanisms.NULL;
     /**
      * Default value for {@link ZMQ#ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD}
      */

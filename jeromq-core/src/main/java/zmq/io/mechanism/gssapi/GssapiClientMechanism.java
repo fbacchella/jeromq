@@ -4,8 +4,8 @@ import zmq.Msg;
 import zmq.Options;
 import zmq.io.SessionBase;
 import zmq.io.mechanism.Mechanism;
+import zmq.io.mechanism.Mechanisms;
 
-// TODO V4 implement GSSAPI
 public class GssapiClientMechanism extends Mechanism
 {
     public GssapiClientMechanism(SessionBase session, Options options)
@@ -18,6 +18,11 @@ public class GssapiClientMechanism extends Mechanism
     public Status status()
     {
         return null;
+    }
+
+    @Override
+    public String name() {
+        return Mechanisms.GSSAPI.name();
     }
 
     @Override

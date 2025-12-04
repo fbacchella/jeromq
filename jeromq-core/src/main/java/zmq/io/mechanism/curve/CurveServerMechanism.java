@@ -52,24 +52,21 @@ public class CurveServerMechanism extends Mechanism
 
     private final Errno errno;
 
-    public CurveServerMechanism(SessionBase session, Address<?> peerAddress, Options options)
+    public CurveServerMechanism(SessionBase session, Address<?> peerAddress, CurveMechanismSettings settings,
+            Options options)
     {
         super(session, peerAddress, options);
         this.state = State.EXPECT_HELLO;
         cnNonce = 1;
         cnPeerNonce = 1;
 
-        secretKey = options.curveSecretKey;
-        assert (secretKey != null && secretKey.length == Curve.Size.SECRETKEY.bytes());
+        secretKey = settings.secretKey();
         cryptoBox = new Curve();
         //  Generate short-term key pair
         byte[][] keys = cryptoBox.keypair();
         assert (keys != null && keys.length == 2);
         cnPublic = keys[0];
-        assert (cnPublic != null && cnPublic.length == Curve.Size.PUBLICKEY.bytes());
         cnSecret = keys[1];
-        assert (cnSecret != null && cnSecret.length == Curve.Size.SECRETKEY.bytes());
-
         errno = options.errno;
     }
 
@@ -235,6 +232,11 @@ public class CurveServerMechanism extends Mechanism
             state = "200".equals(statusCode) ? State.SEND_READY : State.SEND_ERROR;
         }
         return rc;
+    }
+
+    @Override
+    public String name() {
+        return Mechanisms.CURVE.name();
     }
 
     @Override

@@ -1,14 +1,14 @@
 package zmq.io.mechanism;
 
-import static zmq.io.Metadata.IDENTITY;
-import static zmq.io.Metadata.SOCKET_TYPE;
-
 import zmq.Msg;
 import zmq.Options;
 import zmq.ZError;
 import zmq.ZMQ;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
+
+import static zmq.io.Metadata.IDENTITY;
+import static zmq.io.Metadata.SOCKET_TYPE;
 
 class NullMechanism extends Mechanism
 {
@@ -40,47 +40,48 @@ class NullMechanism extends Mechanism
     @Override
     public int nextHandshakeCommand(Msg msg)
     {
+        int rc;
         if (readyCommandSent || errorCommandSent) {
-            return ZError.EAGAIN;
+            rc = ZError.EAGAIN;
         }
-
-        if (zapConnected && !zapReplyReceived) {
+        else if (zapConnected && !zapReplyReceived) {
             if (zapRequestSent) {
-                return ZError.EAGAIN;
+                rc = ZError.EAGAIN;
             }
+            else {
+                sendZapRequest(Mechanisms.NULL, false);
+                zapRequestSent = true;
 
-            sendZapRequest(Mechanisms.NULL, false);
-            zapRequestSent = true;
-
-            int rc = receiveAndProcessZapReply();
-            if (rc != 0) {
-                return rc;
+                rc = receiveAndProcessZapReply();
+                if (rc == 0) {
+                    zapReplyReceived = true;
+                }
             }
-            zapReplyReceived = true;
         }
-
-        if (zapReplyReceived && !OK.equals(statusCode)) {
+        else if (zapReplyReceived && !OK.equals(statusCode)) {
             msg.putShortString(ERROR);
             msg.putShortString(statusCode);
 
             errorCommandSent = true;
-            return 0;
+            rc = 0;
         }
+        else {
+            //  Add mechanism string
+            msg.putShortString(READY);
 
-        //  Add mechanism string
-        msg.putShortString(READY);
+            //  Add socket type property
+            String socketType = socketType();
+            addProperty(msg, SOCKET_TYPE, socketType);
 
-        //  Add socket type property
-        String socketType = socketType();
-        addProperty(msg, SOCKET_TYPE, socketType);
+            //  Add identity property
+            if (options.type == ZMQ.ZMQ_REQ || options.type == ZMQ.ZMQ_DEALER || options.type == ZMQ.ZMQ_ROUTER) {
+                addProperty(msg, IDENTITY, options.identity);
+            }
+            readyCommandSent = true;
 
-        //  Add identity property
-        if (options.type == ZMQ.ZMQ_REQ || options.type == ZMQ.ZMQ_DEALER || options.type == ZMQ.ZMQ_ROUTER) {
-            addProperty(msg, IDENTITY, options.identity);
+            rc = 0;
         }
-        readyCommandSent = true;
-
-        return 0;
+        return rc;
     }
 
     @Override
@@ -101,7 +102,7 @@ class NullMechanism extends Mechanism
         }
         else {
             session.getSocket().eventHandshakeFailedProtocol(session.getEndpoint(), ZMQ.ZMQ_PROTOCOL_ERROR_ZMTP_UNEXPECTED_COMMAND);
-            return ZError.EPROTO;
+            rc = ZError.EPROTO;
         }
         return rc;
     }
@@ -141,9 +142,51 @@ class NullMechanism extends Mechanism
         if (readyCommandSent && readyCommandReceived) {
             return Status.READY;
         }
-        if (commandSent && commandReceived) {
+        else if (commandSent && commandReceived) {
             return Status.ERROR;
         }
-        return Status.HANDSHAKING;
+        else {
+            return Status.HANDSHAKING;
+        }
+    }
+
+    @Override
+    public String name()
+    {
+        return Mechanisms.NULL.name();
+    }
+
+    static class NullMechanismSettings implements MechanismSettings<NullMechanismSettings> {
+        @Override
+        public Mechanisms getMechanism()
+        {
+            return Mechanisms.NULL;
+        }
+
+        public boolean isServer() {
+            return false;
+        }
+
+        @Override
+        public NullMechanismSettings resolve()
+        {
+            return this;
+        }
+
+         @Override
+        public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
+        {
+            return new NullMechanism(session, peerAddress, options);
+        }
+
+        @Override
+        public boolean canZap() {
+            return false;
+        }
+
+        @Override
+        public String name() {
+            return "NULL";
+        }
     }
 }
