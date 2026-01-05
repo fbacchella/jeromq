@@ -3,7 +3,6 @@ package zmq.io.coder.v2;
 import java.nio.ByteBuffer;
 
 import zmq.Msg;
-import zmq.ZError;
 import zmq.io.coder.Decoder;
 import zmq.msg.MsgAllocator;
 import zmq.util.Errno;
@@ -52,10 +51,6 @@ public class V2Decoder extends Decoder
         tmpbuf.position(0);
         tmpbuf.limit(8);
         long size = Wire.getUInt64(tmpbuf, 0);
-        if (size <= 0) {
-            errno(ZError.EPROTO);
-            return Step.Result.ERROR;
-        }
 
         Step.Result rc = sizeReady(size);
         if (rc != Step.Result.ERROR) {

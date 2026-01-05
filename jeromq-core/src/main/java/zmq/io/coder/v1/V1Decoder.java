@@ -61,12 +61,8 @@ public class V1Decoder extends Decoder
         //  for message body and read the message data into it.
         tmpbuf.position(0);
         tmpbuf.limit(8);
-        final long payloadLength = Wire.getUInt64(tmpbuf, 0);
+        long payloadLength = Wire.getUInt64(tmpbuf, 0);
 
-        if (payloadLength <= 0) {
-            errno(ZError.EPROTO);
-            return Step.Result.ERROR;
-        }
         tmpbuf.limit(1);
         Step.Result rc = sizeReady(payloadLength - 1);
         if (rc != Step.Result.ERROR) {

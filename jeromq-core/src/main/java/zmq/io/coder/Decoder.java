@@ -75,23 +75,16 @@ public abstract class Decoder extends DecoderBase
 
     protected Step.Result sizeReady(long size)
     {
-        //  Message size must not exceed the maximum allowed size.
-        if (maxmsgsize >= 0) {
-            if (size > maxmsgsize) {
-                errno(ZError.EMSGSIZE);
-                return Step.Result.ERROR;
-            }
-        }
-
-        //  Message size must fit within range of size_t data type.
-        if (size > Integer.MAX_VALUE) {
+        //  Message size must not exceed the maximum allowed size or be negative.
+        //  Also message size must fit within range of size_t data type.
+        if (size < 0 || size > Integer.MAX_VALUE || (maxmsgsize >= 0 && size > maxmsgsize)) {
             errno(ZError.EMSGSIZE);
             return Step.Result.ERROR;
         }
 
         //  inProgress is initialized at this point so in theory we should
         //  close it before calling init_size, however, it's a 0-byte
-        //  message and thus we can treat it as uninitialized.
+        //  message, and thus we can treat it as uninitialized.
         inProgress = allocate((int) size);
 
         return Step.Result.MORE_DATA;
