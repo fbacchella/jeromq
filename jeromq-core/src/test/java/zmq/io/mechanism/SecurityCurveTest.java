@@ -10,6 +10,7 @@ import zmq.SocketBase;
 import zmq.ZMQ;
 import zmq.io.mechanism.curve.Curve;
 import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -47,6 +48,10 @@ public class SecurityCurveTest
             // Preconfigure server with valid identity, might be changed for individual tests
             ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_MECHANISM, serverSettings);
             ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_IDENTITY, "IDENT");
+            if (withzap) {
+                ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_ZAP_DOMAIN, "global");
+                ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_ZAP_DOMAIN, "global");
+            }
 
             MechanismSettings<?> clientSettings = CurveMechanismSettings.getBuilder()
                                                        .setSecretKey(testCtx.clientSecret)
@@ -121,7 +126,11 @@ public class SecurityCurveTest
             rc = ZMQ.bind(ctx.server, ctx.host);
             assertThat(rc, is(true));
 
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_CURVE_SECRETKEY, "0000000000000000000000000000000000000000");
+            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                                    .setPublicKey(ctx.clientPublic)
+                                                                                    .setSecretKey("0000000000000000000000000000000000000000")
+                                                                                    .setServerKey(ctx.serverPublic)
+                                                                                    .build());
             String host = (String) ZMQ.getSocketOptionExt(ctx.server, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.client, host);
 
@@ -137,7 +146,10 @@ public class SecurityCurveTest
         Boolean zapCheck = runTest(true, ctx -> {
             boolean rc;
 
-            ZMQ.setSocketOption(ctx.server, ZMQ.ZMQ_CURVE_SECRETKEY, "0000000000000000000000000000000000000000");
+            ZMQ.setSocketOption(ctx.server, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                                    .setPublicKey(ctx.serverPublic)
+                                                                                    .setSecretKey("0000000000000000000000000000000000000000")
+                                                                                    .build());
             rc = ZMQ.bind(ctx.server, ctx.host);
             assertThat(rc, is(true));
 
@@ -165,8 +177,11 @@ public class SecurityCurveTest
             String bogusPublic = bogus[0];
             String bogusSecret = bogus[1];
 
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_CURVE_PUBLICKEY, bogusPublic);
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_CURVE_SECRETKEY, bogusSecret);
+            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                                    .setPublicKey(bogusPublic)
+                                                                                    .setSecretKey(bogusSecret)
+                                                                                    .setServerKey(ctx.serverPublic)
+                                                                                    .build());
             String host = (String) ZMQ.getSocketOptionExt(ctx.server, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.client, host);
             assertThat(rc, is(true));
@@ -191,8 +206,10 @@ public class SecurityCurveTest
             String bogusPublic = bogus[0];
             String bogusSecret = bogus[1];
 
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_CURVE_PUBLICKEY, bogusPublic);
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_CURVE_SECRETKEY, bogusSecret);
+            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                                    .setPublicKey(bogusPublic)
+                                                                                    .setSecretKey(bogusSecret)
+                                                                                    .build());
             String host = (String) ZMQ.getSocketOptionExt(ctx.client, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.server, host);
             assertThat(rc, is(true));
@@ -236,8 +253,7 @@ public class SecurityCurveTest
 
             ZMQ.closeZeroLinger(ctx.client);
             ctx.client = ZMQ.socket(ctx.zctxt, ZMQ.ZMQ_DEALER);
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_PLAIN_USERNAME, "user");
-            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_PLAIN_PASSWORD, "pass");
+            ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, new PlainMechanismSettings(false, "user", "pass"));
 
             String host = (String) ZMQ.getSocketOptionExt(ctx.server, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.client, host);

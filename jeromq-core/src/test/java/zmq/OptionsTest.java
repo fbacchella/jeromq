@@ -6,12 +6,11 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.zeromq.SocketType;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ.Socket;
 
-import zmq.io.mechanism.Mechanisms;
-import zmq.io.net.SelectorProviderChooser;
+import zmq.io.mechanism.NullMechanism.NullMechanismSettings;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.gssapi.GssapiMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 import zmq.msg.MsgAllocatorDirect;
 import zmq.msg.MsgAllocatorThreshold;
 
@@ -104,47 +103,39 @@ public class OptionsTest
     @Test
     public void testPlainUsername()
     {
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SERVER, true);
         String username = "username";
 
-        options.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, username);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME), is(username));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_SERVER), is(false));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(Mechanisms.PLAIN));
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, new PlainMechanismSettings(false, username, ""));
+        PlainMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
+        assertThat(settings.username(), is(username));
+        assertThat(settings.isServer(), is(false));
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(instanceOf(PlainMechanismSettings.class)));
     }
 
     @Test
     public void testPlainPassword()
     {
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SERVER, true);
         String password = "password";
 
-        options.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, password);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD), is(password));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_SERVER), is(false));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(Mechanisms.PLAIN));
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, new PlainMechanismSettings(false, "", password));
+        PlainMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
+        assertThat(settings.password(), is(password));
+        assertThat(settings.isServer(), is(false));
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(instanceOf(PlainMechanismSettings.class)));
     }
 
     @Test
     public void testPlainUsernameNull()
     {
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SERVER, true);
-
-        options.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, null);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME), nullValue());
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_SERVER), is(false));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(Mechanisms.NULL));
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, new NullMechanismSettings());
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(instanceOf(NullMechanismSettings.class)));
     }
 
     @Test
     public void testPlainPasswordNull()
     {
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SERVER, true);
-
-        options.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, null);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD), nullValue());
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_SERVER), is(false));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(Mechanisms.NULL));
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, new NullMechanismSettings());
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(instanceOf(NullMechanismSettings.class)));
     }
 
     @Test
@@ -152,33 +143,50 @@ public class OptionsTest
     {
         byte[] key = new byte[32];
         Arrays.fill(key, (byte) 11);
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY, key);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_CURVE_PUBLICKEY), is(key));
+        byte[] secret = new byte[32];
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                      .setPublicKey(key)
+                                                                      .setSecretKey(secret)
+                                                                      .build());
+        CurveMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
+        assertThat(settings.publicKey(), is(key));
     }
 
     @Test
     public void testCurveSecretKey()
     {
         byte[] key = new byte[32];
-        Arrays.fill(key, (byte) 12);
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY, key);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_CURVE_SECRETKEY), is(key));
+        byte[] secret = new byte[32];
+        Arrays.fill(secret, (byte) 12);
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                      .setPublicKey(key)
+                                                                      .setSecretKey(secret)
+                                                                      .build());
+        CurveMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
+        assertThat(settings.secretKey(), is(secret));
     }
 
     @Test
     public void testCurveServerKey()
     {
         byte[] key = new byte[32];
-        Arrays.fill(key, (byte) 14);
-        options.setSocketOpt(ZMQ.ZMQ_CURVE_SERVERKEY, key);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_CURVE_SERVERKEY), is(key));
+        byte[] secret = new byte[32];
+        byte[] server = new byte[32];
+        Arrays.fill(server, (byte) 14);
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
+                                                                      .setPublicKey(key)
+                                                                      .setSecretKey(secret)
+                                                                      .setServerKey(server)
+                                                                      .build());
+        CurveMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
+        assertThat(settings.serverKey(), is(server));
     }
 
     @Test
     public void testGssPlaintext()
     {
-        options.setSocketOpt(ZMQ.ZMQ_GSSAPI_PLAINTEXT, true);
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_GSSAPI_PLAINTEXT), is(true));
+        options.setSocketOpt(ZMQ.ZMQ_MECHANISM, new GssapiMechanismSettings());
+        assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(instanceOf(GssapiMechanismSettings.class)));
     }
 
     @Test
@@ -275,8 +283,8 @@ public class OptionsTest
     @Test
     public void testDefaultValue()
     {
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_GSSAPI_PRINCIPAL), is(options.gssPrincipal));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL), is(options.gssServicePrincipal));
+        //assertThat(options.getSocketOpt(ZMQ.ZMQ_GSSAPI_PRINCIPAL), is(options.gssPrincipal));
+        //assertThat(options.getSocketOpt(ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL), is(options.gssServicePrincipal));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_HANDSHAKE_IVL), is(options.handshakeIvl));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_IDENTITY), is(options.identity));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_IMMEDIATE), is(options.immediate));
@@ -287,8 +295,6 @@ public class OptionsTest
         assertThat(options.getSocketOpt(ZMQ.ZMQ_MAXMSGSIZE), is(options.maxMsgSize));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_MECHANISM), is(options.mechanism));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_MULTICAST_HOPS), is(options.multicastHops));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD), is(options.plainPassword));
-        assertThat(options.getSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME), is(options.plainUsername));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_RATE), is(options.rate));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_RCVBUF), is(options.rcvbuf));
         assertThat(options.getSocketOpt(ZMQ.ZMQ_RECONNECT_IVL), is(options.reconnectIvl));

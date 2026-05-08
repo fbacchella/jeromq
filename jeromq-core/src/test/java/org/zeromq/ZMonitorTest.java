@@ -14,6 +14,8 @@ import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMonitor.ZEvent;
 
 import zmq.io.mechanism.curve.Curve;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 
 public class ZMonitorTest
 {
@@ -109,12 +111,16 @@ public class ZMonitorTest
 
         final ZContext ctx = new ZContext();
         final Socket client = ctx.createSocket(SocketType.PUSH);
-        client.setCurveServerKey(serverPublicKey);
-        client.setCurvePublicKey(clientPublicKey);
-        client.setCurveSecretKey(clientSecretKey);
+        client.setMechanism(CurveMechanismSettings.getBuilder()
+                                                  .setServerKey(serverPublicKey)
+                                                  .setPublicKey(clientPublicKey)
+                                                  .setSecretKey(clientSecretKey)
+                                                  .build());
         final Socket server = ctx.createSocket(SocketType.PULL);
-        server.setCurveServer(true);
-        server.setCurveSecretKey(serverSecretKey);
+        server.setMechanism(CurveMechanismSettings.getBuilder()
+                                                  .setPublicKey(serverPublicKey)
+                                                  .setSecretKey(serverSecretKey)
+                                                  .build());
 
         final ZMonitor clientMonitor = new ZMonitor(ctx, client);
         clientMonitor.verbose(true);
@@ -185,12 +191,16 @@ public class ZMonitorTest
 
         final ZContext ctx = new ZContext();
         final Socket client = ctx.createSocket(SocketType.PUSH);
-        client.setCurveServerKey(serverPublicKey);
-        client.setCurvePublicKey(clientPublicKey);
-        client.setCurveSecretKey(serverSecretKey);
+        client.setMechanism(CurveMechanismSettings.getBuilder()
+                                                  .setServerKey(serverPublicKey)
+                                                  .setPublicKey(clientPublicKey)
+                                                  .setSecretKey(clientSecretKey)
+                                                  .build());
         final Socket server = ctx.createSocket(SocketType.PULL);
-        server.setCurveServer(true);
-        server.setCurveSecretKey(clientSecretKey);
+        server.setMechanism(CurveMechanismSettings.getBuilder()
+                                                  .setPublicKey(serverPublicKey)
+                                                  .setSecretKey(clientSecretKey)
+                                                  .build());
 
         final ZMonitor clientMonitor = new ZMonitor(ctx, client);
         clientMonitor.verbose(true);
@@ -280,7 +290,7 @@ public class ZMonitorTest
             serverMonitor.add(Events.ALL);
             serverMonitor.start();
 
-            server.setPlainServer(true);
+            server.setMechanism(new PlainMechanismSettings(true, "", ""));
             //  Start an authentication engine for this context. This engine
             //  allows or denies incoming connections (talking to the libzmq
             //  core over a protocol called ZAP).
@@ -290,13 +300,12 @@ public class ZMonitorTest
             auth.replies(true);
 
             //  Create and bind server socket
-            server.setPlainServer(true);
+            server.setMechanism(new PlainMechanismSettings(true, "", ""));
             server.setZapDomain("global".getBytes());
             final int port = server.bindToRandomPort("tcp://*");
 
             //  Create and connect client socket
-            client.setPlainUsername("admin".getBytes());
-            client.setPlainPassword("wrong".getBytes());
+            client.setMechanism(new PlainMechanismSettings(false, "admin", "wrong"));
             boolean rc = client.connect("tcp://127.0.0.1:" + port);
             Assert.assertTrue(rc);
 

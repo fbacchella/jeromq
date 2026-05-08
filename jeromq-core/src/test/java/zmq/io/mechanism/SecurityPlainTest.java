@@ -4,15 +4,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import zmq.SocketBase;
 import zmq.ZMQ;
 import zmq.io.mechanism.plain.PlainMechanismSettings;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class SecurityPlainTest
 {
@@ -30,7 +28,12 @@ public class SecurityPlainTest
 
         BiFunction<SocketBase, CompletableFuture<Boolean>, ZapHandler> zapProvider = (s, f) -> new ZapHandler(s, f, "admin", "password");
         Runnable configurator = () -> {
+            ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_MECHANISM, new PlainMechanismSettings(true, "", ""));
             ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_IDENTITY, "IDENT");
+            if (withzap) {
+                ZMQ.setSocketOption(testCtx.server, ZMQ.ZMQ_ZAP_DOMAIN, "global");
+                ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_ZAP_DOMAIN, "global");
+            }
         };
 
         return MechanismTester.runTest(testCtx, withzap, tested, zapProvider, configurator);
@@ -41,57 +44,61 @@ public class SecurityPlainTest
         boolean rc;
 
         rc = ZMQ.bind(tctxt.server, tctxt.host);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
 
         String host = (String) ZMQ.getSocketOptionExt(tctxt.server, ZMQ.ZMQ_LAST_ENDPOINT);
         PlainMechanismSettings settings = new PlainMechanismSettings(false, tctxt.user, tctxt.password);
         ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
         rc = ZMQ.connect(tctxt.client, host);
-        assertThat(rc, is(true));
+        Assertions.assertTrue(rc);
         return true;
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testNoZap() throws InterruptedException
     {
         //  We first test client/server with no ZAP domain
         Boolean status = runTest(false, this::runValid);
-        assertThat(status, nullValue());
+        Assertions.assertNull(status);
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testZap() throws InterruptedException
     {
         //  We first test client/server with no ZAP domain
         Boolean status = runTest(true, this::runValid);
-        assertThat(status, is(true));
+        Assertions.assertTrue(status);
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testZapInverted() throws InterruptedException
     {
         //  When ZAP is not used, always accept
         Boolean status = runTest(false, tctxt -> {
             boolean rc;
 
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_USERNAME, tctxt.user);
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_PASSWORD, tctxt.password);
+            PlainMechanismSettings settings = new PlainMechanismSettings(false, tctxt.user, tctxt.password);
+            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
             rc = ZMQ.bind(tctxt.client, tctxt.host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             String host = (String) ZMQ.getSocketOptionExt(tctxt.client, ZMQ.ZMQ_LAST_ENDPOINT);
 
             rc = ZMQ.connect(tctxt.server, host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             return true;
         });
-        assertThat(status, nullValue());
+        Assertions.assertNull(status);
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testBothServer() throws InterruptedException
     {
         //  We first test client/server with no ZAP domain
@@ -99,19 +106,21 @@ public class SecurityPlainTest
             boolean rc;
 
             rc = ZMQ.bind(tctxt.server, tctxt.host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             String host = (String) ZMQ.getSocketOptionExt(tctxt.server, ZMQ.ZMQ_LAST_ENDPOINT);
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_SERVER, true);
+            PlainMechanismSettings settings = new PlainMechanismSettings(true, "", "");
+            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
             rc = ZMQ.connect(tctxt.client, host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
             return false;
         });
-        assertThat(status, nullValue());
+        Assertions.assertNull(status);
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testFailedLoginZap() throws InterruptedException
     {
         //  We first test client/server with no ZAP domain
@@ -119,20 +128,21 @@ public class SecurityPlainTest
             boolean rc;
 
             rc = ZMQ.bind(tctxt.server, tctxt.host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             String host = (String) ZMQ.getSocketOptionExt(tctxt.server, ZMQ.ZMQ_LAST_ENDPOINT);
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_USERNAME, "wronguser");
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_PASSWORD, "wrongpass");
+            PlainMechanismSettings settings = new PlainMechanismSettings(false, "wronguser", "wrongpass");
+            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
             rc = ZMQ.connect(tctxt.client, host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
             return false;
         });
-        assertThat(status, is(false));
+        Assertions.assertFalse(status);
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void testSuccessBadPasswordNoZap() throws InterruptedException
     {
         //  When ZAP is not used, always accept
@@ -140,17 +150,17 @@ public class SecurityPlainTest
             boolean rc;
 
             rc = ZMQ.bind(tctxt.server, tctxt.host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
 
             String host = (String) ZMQ.getSocketOptionExt(tctxt.server, ZMQ.ZMQ_LAST_ENDPOINT);
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_USERNAME, "wronguser");
-            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_PLAIN_PASSWORD, "wrongpass");
+            PlainMechanismSettings settings = new PlainMechanismSettings(false, "wronguser", "wrongpass");
+            ZMQ.setSocketOption(tctxt.client, ZMQ.ZMQ_MECHANISM, settings);
 
             rc = ZMQ.connect(tctxt.client, host);
-            assertThat(rc, is(true));
+            Assertions.assertTrue(rc);
             return true;
         });
-        assertThat(status, nullValue());
+        Assertions.assertNull(status);
     }
 
     @Test
@@ -158,51 +168,19 @@ public class SecurityPlainTest
     {
         // Unauthenticated messages from a vanilla socket shouldn't be received
         Boolean zapCheck = runTest(false, MechanismTester::testRawSocket);
-        assertThat(zapCheck, nullValue());
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent1()
-    {
-        MechanismTester.checkOptions(Mechanisms.PLAIN, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, null);
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, "plainPassword");
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent2()
-    {
-        MechanismTester.checkOptions(Mechanisms.PLAIN, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, "plainUsername");
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, null);
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent3()
-    {
-        MechanismTester.checkOptions(Mechanisms.PLAIN, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, String.format("%256d", 1));
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, "plainPassword");
-        });
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void inconsistent4()
-    {
-        MechanismTester.checkOptions(Mechanisms.PLAIN, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, "plainUsername");
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, String.format("%256d", 1));
-        });
+        Assertions.assertNull(zapCheck);
     }
 
     @Test
-    public void consistent()
+    public void testDeprecatedOptions()
     {
         MechanismTester.checkOptions(Mechanisms.PLAIN, opt -> {
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, "plainUsername");
-            opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, "plainPassword");
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                opt.setSocketOpt(ZMQ.ZMQ_PLAIN_USERNAME, "plainUsername");
+            });
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                opt.setSocketOpt(ZMQ.ZMQ_PLAIN_PASSWORD, "plainPassword");
+            });
         });
     }
 }

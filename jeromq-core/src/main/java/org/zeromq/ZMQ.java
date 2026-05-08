@@ -28,9 +28,8 @@ import zmq.ZError;
 import zmq.ZError.CtxTerminatedException;
 import zmq.io.coder.IDecoder;
 import zmq.io.coder.IEncoder;
-import zmq.io.mechanism.Mechanisms;
+import zmq.io.mechanism.MechanismSettings;
 import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
-import zmq.io.net.SelectorProviderChooser;
 import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
@@ -1740,7 +1739,26 @@ public class ZMQ
          */
         public boolean setRecoveryInterval(long value)
         {
-            throw new UnsupportedOperationException();
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_RECOVERY_IVL, value);
+        }
+
+        /**
+         * The 'ZMQ_RECOVERY_IVL' option shall set the recovery interval for multicast transports
+         * using the specified 'socket'. The recovery interval determines the maximum time in
+         * seconds that a receiver can be absent from a multicast group before unrecoverable data
+         * loss will occur.
+         * <p>
+         * CAUTION: Exercise care when setting large recovery intervals as the data needed for
+         * recovery will be held in memory. For example, a 1 minute recovery interval at a data rate
+         * of 1Gbps requires a 7GB in-memory buffer. {Purpose of this Method}
+         *
+         * @param value recovery interval for multicast, default 10s
+         * @return true if the option was set, otherwise false.
+         * @see #getRecoveryInterval()
+         */
+        public boolean setRecoveryInterval(Duration value)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_RECOVERY_IVL, value);
         }
 
         /**
@@ -2299,6 +2317,16 @@ public class ZMQ
         }
 
         /**
+         * Return the used {@link MsgAllocator}.
+         *
+         * @return the {@link MsgAllocator}.
+         */
+        public MsgAllocator getMsgAllocator()
+        {
+            return base.getSocketOptx(zmq.ZMQ.ZMQ_MSG_ALLOCATOR);
+        }
+
+        /**
          * The ZMQ_CONNECT_RID option sets the peer id of the next host connected via the connect() call,
          * and immediately readies that connection for data transfer with the named id.
          * This option applies only to the first subsequent call to connect(),
@@ -2777,7 +2805,7 @@ public class ZMQ
          * @param server true if the role of the socket should be server for PLAIN security.
          * @return true if the option was set, otherwise false.
          * @see #isAsServerPlain()
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #setPlainServer(boolean)} instead
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
         @Deprecated
         public boolean setAsServerPlain(boolean server)
@@ -2795,7 +2823,9 @@ public class ZMQ
          * @param server true if the role of the socket should be server for PLAIN security.
          * @return true if the option was set, otherwise false.
          * @see #isAsServerPlain()
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setPlainServer(boolean server)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_SERVER, server);
@@ -2806,7 +2836,7 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for the PLAIN mechanism.
          * @see #setAsServerPlain(boolean)
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #getPlainServer()} instead
+         * @deprecated use {@link #getMechanism()} instead.
          */
         @Deprecated
         public boolean isAsServerPlain()
@@ -2819,7 +2849,7 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for the PLAIN mechanism.
          * @see #setAsServerPlain(boolean)
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #getPlainServer()} instead
+         * @deprecated use {@link #getMechanism()} instead.
          */
         @Deprecated
         public boolean getAsServerPlain()
@@ -2832,7 +2862,9 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for the PLAIN mechanism.
          * @see #setAsServerPlain(boolean)
+         * @deprecated use {@link #getMechanism()} instead.
          */
+        @Deprecated
         public boolean getPlainServer()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_SERVER);
@@ -2845,7 +2877,9 @@ public class ZMQ
          *
          * @param username the username to set.
          * @return true if the option was set, otherwise false.
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setPlainUsername(String username)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_USERNAME, username);
@@ -2859,7 +2893,9 @@ public class ZMQ
          *
          * @param password the password to set.
          * @return true if the option was set, otherwise false.
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setPlainPassword(String password)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_PASSWORD, password);
@@ -2872,7 +2908,9 @@ public class ZMQ
          *
          * @param username the username to set.
          * @return true if the option was set, otherwise false.
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setPlainUsername(byte[] username)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_USERNAME, username);
@@ -2886,7 +2924,9 @@ public class ZMQ
          *
          * @param password the password to set.
          * @return true if the option was set, otherwise false.
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.plain.PlainMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setPlainPassword(byte[] password)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_PLAIN_PASSWORD, password);
@@ -2897,7 +2937,9 @@ public class ZMQ
          * set for the PLAIN security mechanism.
          *
          * @return the plain username.
+         * @deprecated use {@link #getMechanism()} instead.
          */
+        @Deprecated
         public String getPlainUsername()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_USERNAME);
@@ -2909,7 +2951,9 @@ public class ZMQ
          * The returned value MAY be empty.
          *
          * @return the plain password.
+         * @deprecated use {@link #getMechanism()} instead.
          */
+        @Deprecated
         public String getPlainPassword()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_PLAIN_PASSWORD);
@@ -2927,7 +2971,8 @@ public class ZMQ
          * @param server true if the role of the socket should be server for CURVE mechanism
          * @return true if the option was set
          * @see #isAsServerCurve()
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #setCurveServer(boolean)} instead
+         * @deprecated the naming is inconsistent with jzmq, please use {@link #setCurveServer(boolean)} instead.
+         *             Consider using {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.curve.CurveMechanismSettings} instead.
          */
         @Deprecated
         public boolean setAsServerCurve(boolean server)
@@ -2947,7 +2992,9 @@ public class ZMQ
          * @param server true if the role of the socket should be server for CURVE mechanism
          * @return true if the option was set
          * @see #isAsServerCurve()
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.curve.CurveMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setCurveServer(boolean server)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SERVER, server);
@@ -2958,7 +3005,8 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for CURVE mechanism.
          * @see #setAsServerCurve(boolean)
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead
+         * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead.
+         *             Consider using {@link #getMechanism()} instead.
          */
         @Deprecated
         public boolean isAsServerCurve()
@@ -2971,7 +3019,9 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for CURVE mechanism.
          * @see #setAsServerCurve(boolean)
+         * @deprecated use {@link #getMechanism()} instead.
          */
+        @Deprecated
         public boolean getCurveServer()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVER);
@@ -2982,7 +3032,8 @@ public class ZMQ
          *
          * @return true if the role of the socket should be server for CURVE mechanism.
          * @see #setAsServerCurve(boolean)
-         * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead
+         * @deprecated the naming is inconsistent with jzmq, please use {@link #getCurveServer()} instead.
+         *             Consider using {@link #getMechanism()} instead.
          */
         @Deprecated
         public boolean getAsServerCurve()
@@ -3002,7 +3053,9 @@ public class ZMQ
          * @param key the curve public key
          * @return true if the option was set, otherwise false
          * @see #getCurvePublicKey()
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.curve.CurveMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setCurvePublicKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY, key);
@@ -3020,7 +3073,9 @@ public class ZMQ
          * @param key the curve server key
          * @return true if the option was set, otherwise false
          * @see #getCurveServerKey()
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.curve.CurveMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setCurveServerKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SERVERKEY, key);
@@ -3037,7 +3092,9 @@ public class ZMQ
          * @param key the curve secret key
          * @return true if the option was set, otherwise false
          * @see #getCurveSecretKey()
+         * @deprecated use {@link #setMechanism(MechanismSettings)} with {@link zmq.io.mechanism.curve.CurveMechanismSettings} instead.
          */
+        @Deprecated
         public boolean setCurveSecretKey(byte[] key)
         {
             return setSocketOpt(zmq.ZMQ.ZMQ_CURVE_SECRETKEY, key);
@@ -3049,6 +3106,7 @@ public class ZMQ
          * @return key the curve public key
          * @see #setCurvePublicKey(byte[])
          */
+        @Deprecated
         public byte[] getCurvePublicKey()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_PUBLICKEY);
@@ -3060,6 +3118,7 @@ public class ZMQ
          * @return key the curve server key
          * @see #setCurveServerKey(byte[])
          */
+        @Deprecated
         public byte[] getCurveServerKey()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SERVERKEY);
@@ -3071,19 +3130,37 @@ public class ZMQ
          * @return key the curve secret key
          * @see #setCurveSecretKey(byte[])
          */
+        @Deprecated
         public byte[] getCurveSecretKey()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_CURVE_SECRETKEY);
         }
 
         /**
-         * The ZMQ_MECHANISM option shall retrieve the current security mechanism for the socket.
+         * The ZMQ_MECHANISM option shall retrieve the current security mechanism settings for the socket.
          *
-         * @return the current mechanism.
+         * @return the current mechanism settings.
+         * @see zmq.io.mechanism.plain.PlainMechanismSettings
+         * @see zmq.io.mechanism.curve.CurveMechanismSettings
+         * @see zmq.io.mechanism.NullMechanism.NullMechanismSettings
          */
-        public Mechanisms getMechanism()
+        public <T extends MechanismSettings > T getMechanism()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM);
+        }
+
+        /**
+         * The ZMQ_MECHANISM option shall set the security mechanism for the socket.
+         *
+         * @param mechanism the mechanism settings to set.
+         * @return true if the option was set, otherwise false.
+         * @see zmq.io.mechanism.plain.PlainMechanismSettings
+         * @see zmq.io.mechanism.curve.CurveMechanismSettings
+         * @see zmq.io.mechanism.NullMechanism.NullMechanismSettings
+         */
+        public <T extends MechanismSettings > boolean setMechanism(T mechanism)
+        {
+            return base.setSocketOpt(zmq.ZMQ.ZMQ_MECHANISM, mechanism);
         }
 
         /**

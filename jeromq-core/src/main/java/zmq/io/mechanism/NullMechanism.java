@@ -10,7 +10,7 @@ import zmq.io.net.Address;
 import static zmq.io.Metadata.IDENTITY;
 import static zmq.io.Metadata.SOCKET_TYPE;
 
-class NullMechanism extends Mechanism
+public class NullMechanism extends Mechanism
 {
     private static final String OK    = "200";
     private static final String READY = "READY";
@@ -156,7 +156,7 @@ class NullMechanism extends Mechanism
         return Mechanisms.NULL.name();
     }
 
-    static class NullMechanismSettings implements MechanismSettings<NullMechanismSettings> {
+    public static class NullMechanismSettings implements MechanismSettings<NullMechanismSettings> {
         @Override
         public Mechanisms getMechanism()
         {

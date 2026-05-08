@@ -10,6 +10,8 @@ import org.zeromq.ZCert;
 import org.zeromq.ZCertStore;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -171,15 +173,14 @@ public class ZAuthTest
 
             //  Create and bind server socket
             ZMQ.Socket server = ctx.createSocket(SocketType.PUSH);
-            server.setPlainServer(true);
+            server.setMechanism(new PlainMechanismSettings(true, "", ""));
             server.setZapDomain("global".getBytes());
             boolean rc = server.bind("tcp://localhost:*");
             assertThat(rc, is(true));
 
             //  Create and connect client socket
             ZMQ.Socket client = ctx.createSocket(SocketType.PULL);
-            client.setPlainUsername("admin".getBytes());
-            client.setPlainPassword("secret".getBytes());
+            client.setMechanism(new PlainMechanismSettings(false, "admin", "secret"));
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
 
@@ -216,14 +217,13 @@ public class ZAuthTest
             auth.configurePlain("*", passwordsFile);
 
             //  Create and bind server socket
-            server.setPlainServer(true);
+            server.setMechanism(new PlainMechanismSettings(true, "", ""));
             server.setZapDomain("global".getBytes());
             boolean rc = server.bind("tcp://localhost:*");
             assertThat(rc, is(true));
 
             //  Create and connect client socket
-            client.setPlainUsername("admin".getBytes());
-            client.setPlainPassword("wrong".getBytes());
+            client.setMechanism(new PlainMechanismSettings(false, "admin", "wrong"));
 
             //  Create and connect client socket
             rc = client.connect(server.getLastEndpoint());
@@ -263,14 +263,19 @@ public class ZAuthTest
 
             //  Create and bind server socket
             server.setZapDomain("global".getBytes());
-            server.setCurveServer(true);
-            serverCert.apply(server);
+            server.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(serverCert.getPublicKey())
+                                                       .setSecretKey(serverCert.getSecretKey())
+                                                       .build());
             boolean rc = server.bind("tcp://localhost:*");
             assertThat(rc, is(true));
 
             //  Create and connect client socket
-            clientCert.apply(client);
-            client.setCurveServerKey(serverCert.getPublicKey());
+            client.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(clientCert.getPublicKey())
+                                                       .setSecretKey(clientCert.getSecretKey())
+                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
 
@@ -326,16 +331,19 @@ public class ZAuthTest
 
             //  Create and bind server socket
             server.setZapDomain("global".getBytes());
-            server.setCurveServer(true);
-            server.setCurvePublicKey(serverCert.getPublicKey());
-            server.setCurveSecretKey(serverCert.getSecretKey());
+            server.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(serverCert.getPublicKey())
+                                                       .setSecretKey(serverCert.getSecretKey())
+                                                       .build());
             boolean rc = server.bind("tcp://localhost:*");
             assertThat(rc, is(true));
 
             //  Create and connect client socket
-            client.setCurvePublicKey(clientCert.getPublicKey());
-            client.setCurveSecretKey(clientCert.getSecretKey());
-            client.setCurveServerKey(serverCert.getPublicKey());
+            client.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(clientCert.getPublicKey())
+                                                       .setSecretKey(clientCert.getSecretKey())
+                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
 
@@ -543,14 +551,19 @@ public class ZAuthTest
 
             //  Create and bind server socket
             server.setZapDomain("global".getBytes());
-            server.setCurveServer(true);
-            serverCert.apply(server);
+            server.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(serverCert.getPublicKey())
+                                                       .setSecretKey(serverCert.getSecretKey())
+                                                       .build());
             boolean rc = server.bind("tcp://localhost:*");
             assertThat(rc, is(true));
 
             //  Create and connect client socket
-            clientCert.apply(client);
-            client.setCurveServerKey(serverCert.getPublicKey());
+            client.setMechanism(CurveMechanismSettings.getBuilder()
+                                                       .setPublicKey(clientCert.getPublicKey())
+                                                       .setSecretKey(clientCert.getSecretKey())
+                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
 
