@@ -28,6 +28,7 @@
         <module>jeromq-ipcsockets</module>
         <module>jeromq</module>
         <module>jeromq-tls</module>
+        <module>jeromq-zactor</module>
     </modules>
 
     <dependencies>
