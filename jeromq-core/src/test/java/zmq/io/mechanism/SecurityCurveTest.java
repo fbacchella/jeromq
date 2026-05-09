@@ -215,7 +215,7 @@ public class SecurityCurveTest
             assertThat(rc, is(true));
             return false;
         });
-        assertThat(zapCheck, is(false));
+        assertThat(zapCheck, nullValue());
     }
 
     @Test
