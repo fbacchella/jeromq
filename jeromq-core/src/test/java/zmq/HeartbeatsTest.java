@@ -17,6 +17,7 @@ import java.util.function.BiFunction;
 
 import org.junit.Test;
 
+import zmq.io.mechanism.curve.CurveMechanismSettings;
 import zmq.util.AndroidProblematic;
 import zmq.util.TestUtils;
 
@@ -398,33 +399,22 @@ public class HeartbeatsTest
 
     private void setupCurve(SocketBase socket, boolean server)
     {
-        String secretKey;
-        String publicKey = "Yne@$w-vo<fVvi]a<NY6T1ed:M$fCG*[IaLV{hID";
-        String serverKey;
+        CurveMechanismSettings.Builder builder = CurveMechanismSettings.getBuilder();
         if (server) {
             boolean rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_IDENTITY, "IDENT");
             assertThat(rc, is(true));
 
-            secretKey = "JTKVSB%%)wK0E.X)V>+}o?pNmC{O&4W4b!Ni{Lh6";
-            publicKey = "rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7";
-            serverKey = null;
+            builder.setSecretKey("JTKVSB%%)wK0E.X)V>+}o?pNmC{O&4W4b!Ni{Lh6");
+            builder.setPublicKey("rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7");
+            builder.setServerKey(null);
         }
         else {
-            secretKey = "D:)Q[IlAW!ahhC2ac:9*A}h:p?([4%wOTJ%JR%cs";
-            serverKey = "rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7";
+            builder.setSecretKey("D:)Q[IlAW!ahhC2ac:9*A}h:p?([4%wOTJ%JR%cs");
+            builder.setPublicKey("Yne@$w-vo<fVvi]a<NY6T1ed:M$fCG*[IaLV{hID");
+            builder.setServerKey("rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7");
         }
-        boolean rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_CURVE_SECRETKEY, secretKey);
+        boolean rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_MECHANISM, builder.build());
         assertThat(rc, is(true));
-        rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_CURVE_PUBLICKEY, publicKey);
-        assertThat(rc, is(true));
-        if (server) {
-            rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_CURVE_SERVER, true);
-            assertThat(rc, is(true));
-        }
-        else {
-            rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_CURVE_SERVERKEY, serverKey);
-            assertThat(rc, is(true));
-        }
     }
 
     private void mockHandshake(Socket socket) throws IOException
