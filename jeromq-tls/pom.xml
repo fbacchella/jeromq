@@ -31,12 +31,12 @@
         <dependency>
             <groupId>com.github.marianobarrios</groupId>
             <artifactId>tls-channel</artifactId>
-            <version>0.9.1</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.82</version>
+            <version>1.84</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
