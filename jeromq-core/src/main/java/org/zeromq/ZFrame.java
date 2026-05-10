@@ -23,7 +23,7 @@ import zmq.SocketBase;
 public class ZFrame
 {
     public static final int MORE     = ZMQ.SNDMORE;
-    public static final int REUSE    = 128;         // no effect at java
+    public static final int REUSE    = 128;         // no effect on java
     public static final int DONTWAIT = ZMQ.DONTWAIT;
 
     private boolean more;
@@ -38,11 +38,13 @@ public class ZFrame
      */
     protected ZFrame()
     {
+        this.data = ByteBuffer.allocate(0);
+        this.more = false;
     }
 
     /**
      * Class Constructor
-     * Copies message data into ZFrame object
+     * Copies message data into an ZFrame object
      * @param data
      *          Data to copy into ZFrame object
      */
@@ -51,11 +53,15 @@ public class ZFrame
         if (data != null) {
             this.data = ByteBuffer.wrap(data);
         }
+        else {
+            this.data = ByteBuffer.allocate(0);
+        }
+        this.more = false;
     }
 
     /**
      * Class Constructor
-     * Copies message data into ZFrame object
+     * Copies message data into an ZFrame object
      * @param data
      *          Data to copy into ZFrame object
      */
@@ -64,6 +70,10 @@ public class ZFrame
         if (data != null) {
             this.data = data.duplicate();
         }
+        else {
+            this.data = ByteBuffer.allocate(0);
+        }
+        this.more = false;
     }
 
     /**
@@ -74,9 +84,13 @@ public class ZFrame
      */
     public ZFrame(String data)
     {
-        if (data != null) {
+        if (data == null || data.isEmpty()) {
+            this.data = ByteBuffer.allocate(0);
+        }
+        else {
             this.data = ZMQ.CHARSET.encode(data);
         }
+        this.more = false;
     }
 
     /**
@@ -87,11 +101,14 @@ public class ZFrame
     protected ZFrame(Msg msg)
     {
         if (msg == null) {
-            return;
+            this.data = ByteBuffer.allocate(0);
+            this.more = false;
         }
-        this.data = msg.buf();
-        this.more = msg.hasMore();
-        this.routingId = msg.getRoutingId();
+        else {
+            this.data = msg.buf();
+            this.more = msg.hasMore();
+            this.routingId = msg.getRoutingId();
+        }
     }
 
     /**
@@ -137,9 +154,8 @@ public class ZFrame
      */
     public void destroy()
     {
-        if (hasData()) {
-            data = null;
-        }
+        data.clear();
+        data.limit(0);
     }
 
     /**
@@ -147,8 +163,8 @@ public class ZFrame
      */
     public byte[] getData()
     {
-        if (data == null) {
-            return null;
+        if (! hasData()) {
+            return new byte[0];
         }
         else if (data.hasArray() && data.arrayOffset() == 0 && data.array().length == data.limit()) {
             // If the backing array is exactly what we need, return it without copy.
@@ -169,7 +185,7 @@ public class ZFrame
      */
     public ByteBuffer getDataBuffer()
     {
-        return data == null ? null : data.duplicate();
+        return data.duplicate();
     }
 
     public String getString(Charset charset)
@@ -198,12 +214,7 @@ public class ZFrame
      */
     public int size()
     {
-        if (hasData()) {
-            return data.limit();
-        }
-        else {
-            return 0;
-        }
+        return data.limit();
     }
 
     /**
@@ -213,7 +224,7 @@ public class ZFrame
      */
     public boolean hasData()
     {
-        return data != null;
+        return data.limit() != 0;
     }
 
     /**
@@ -228,8 +239,8 @@ public class ZFrame
     public boolean send(Socket socket, int flags)
     {
         Utils.checkArgument(socket != null, "socket parameter must be set");
-        final SocketBase base = socket.base();
-        final Msg msg = data == null ? new Msg() : new Msg(data);
+        SocketBase base = socket.base();
+        Msg msg = new Msg(data);
 
         if (group != null) {
             msg.setGroup(group);
@@ -260,7 +271,7 @@ public class ZFrame
     }
 
     /**
-     * Sends frame to socket if it contains any data.
+     * Sends a frame to socket if it contains any data.
      * Frame contents are kept after the send.
      * Uses default behaviour of Socket.send() method, with no flags set
      * @param socket
@@ -328,9 +339,6 @@ public class ZFrame
         if (other == null) {
             return false;
         }
-        else if (data == null) {
-            return other.data == null;
-        }
         else if (size() == other.size()) {
             return data.equals(other.data);
         }
@@ -360,6 +368,16 @@ public class ZFrame
     }
 
     /**
+     * Sets new contents for frame
+     * @param data
+     *          New byte array contents for frame
+     */
+    public void reset(ByteBuffer data)
+    {
+        this.data = data.duplicate();
+    }
+
+    /**
      * @return frame data as a printable hex string
      */
     public String strhex()
@@ -373,7 +391,7 @@ public class ZFrame
      * @param str
      *          String to compare with frame data
      * @return
-     *          True if frame body data matches given string
+     *          True if frame body data matches the given string
      */
     public boolean streq(String str)
     {
@@ -403,7 +421,7 @@ public class ZFrame
     }
 
     /**
-     * Returns a human - readable representation of frame's data
+     * Returns a human-readable representation of frame's data
      * @return
      *          A text string or hex-encoded string if data contains any non-printable ASCII characters
      */
@@ -415,7 +433,7 @@ public class ZFrame
 
     /**
      * Receives single frame from socket, returns the received frame object, or null if the recv
-     * was interrupted. Does a blocking recv, if you want to not block then use
+     * was interrupted. Does a blocking recv, if you want to not block, then use
      * recvFrame(socket, ZMQ.DONTWAIT);
      *
      * @param   socket
@@ -429,7 +447,7 @@ public class ZFrame
     }
 
     /**
-     * Receive a new frame off the socket, Returns newly-allocated frame, or
+     * Receive a new frame off the socket, Returns newly allocated frame, or
      * null if there was no input waiting, or if the read was interrupted.
      * @param   socket
      *              Socket to read from
