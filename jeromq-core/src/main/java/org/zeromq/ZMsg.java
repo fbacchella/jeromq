@@ -143,7 +143,7 @@ public class ZMsg implements Iterable<ZFrame>, Deque<ZFrame>
         }
         ZFrame f = pop();
         ZFrame empty = getFirst();
-        if (empty.hasData() && empty.size() == 0) {
+        if (empty.size() == 0) {
             empty = pop();
             empty.destroy();
         }
