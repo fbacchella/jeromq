@@ -190,7 +190,7 @@ public class ZMetadata
         try {
             ByteBuffer buffer = ZMQ.CHARSET.newEncoder().encode(CharBuffer.wrap(meta));
             Metadata data = new Metadata();
-            data.read(buffer, 0, null);
+            data.read(buffer, 0);
             return new ZMetadata(data);
         }
         catch (CharacterCodingException e) {

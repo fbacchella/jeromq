@@ -27,7 +27,10 @@ public class Metadata
 {
     /**
      * Call backs during parsing process
+     * @deprecated user {@link Metadata.ParseListenerBuffer} instead. It uses
+     * ByteBuffer and reduce memory copy.
      */
+    @Deprecated
     public interface ParseListener
     {
         /**
@@ -38,6 +41,21 @@ public class Metadata
          * @return 0 to continue the parsing process, any other value to interrupt it.
          */
         int parsed(String name, byte[] value, String valueAsString);
+    }
+
+    /**
+     * Call backs during parsing process
+     */
+    public interface ParseListenerBuffer
+    {
+        /**
+         * Called when a property has been parsed.
+         * @param name the name of the property.
+         * @param value the value of the property.
+         * @param valueAsString the value in a string representation.
+         * @return 0 to continue the parsing process, any other value to interrupt it.
+         */
+        int parsed(String name, ByteBuffer value, String valueAsString);
     }
 
     public static final String IDENTITY = "Identity";
@@ -357,7 +375,9 @@ public class Metadata
      * @param offset
      * @param listener an optional {@link ParseListener}, can be null.
      * @return 0 if successful. Otherwise, it returns {@code zmq.ZError.EPROTO} or the error value from the {@link ParseListener}.
+     * @deprecated use {@link #read(ByteBuffer, int, ParseListenerBuffer)} instead.
      */
+    @Deprecated
     public int read(ByteBuffer msg, int offset, ParseListener listener)
     {
         ByteBuffer data = msg.duplicate();
@@ -406,6 +426,81 @@ public class Metadata
             set(name, valueAsString);
         }
         if (bytesLeft > 0) {
+            return ZError.EPROTO;
+        }
+        return 0;
+    }
+
+    /**
+     * Deserialize metadata from a {@link ByteBuffer}, using the specifications of the ZMTP protocol
+     * <pre>
+     * property = name value
+     * name = OCTET 1*255name-char
+     * name-char = ALPHA | DIGIT | "-" | "_" | "." | "+"
+     * value = 4OCTET *OCTET       ; Size in network byte order
+     * </pre>
+     * @param msg
+     * @param offset
+     * @return 0 if successful. Otherwise, it returns {@code zmq.ZError.EPROTO}.
+     */
+    public final int read(ByteBuffer msg, int offset)
+    {
+        return read(msg, offset, (ParseListenerBuffer) null);
+    }
+
+    /**
+     * Deserialize metadata from a {@link ByteBuffer}, using the specifications of the ZMTP protocol
+     * <pre>
+     * property = name value
+     * name = OCTET 1*255name-char
+     * name-char = ALPHA | DIGIT | "-" | "_" | "." | "+"
+     * value = 4OCTET *OCTET       ; Size in network byte order
+     * </pre>
+     * @param msg
+     * @param offset
+     * @param listener an optional {@link ParseListenerBuffer}, can be null.
+     * @return 0 if successful. Otherwise, it returns {@code zmq.ZError.EPROTO} or the error value from the {@link ParseListener}.
+     */
+    public final int read(ByteBuffer msg, int offset, ParseListenerBuffer listener)
+    {
+        ByteBuffer data = msg.duplicate();
+
+        data.position(offset);
+
+        while (data.remaining() > 1) {
+            byte nameLength = data.get();
+            if (data.remaining() < nameLength) {
+                break;
+            }
+            ByteBuffer nameBuffer = data.slice();
+            nameBuffer.limit(nameLength);
+            String name = ZMQ.CHARSET.decode(nameBuffer).toString();
+            data.position(data.position() + nameLength);
+
+            if (data.remaining() < 4) {
+                break;
+            }
+
+            int valueLength = data.getInt();
+
+            if (data.remaining() < valueLength) {
+                break;
+            }
+
+            ByteBuffer value = data.slice();
+            value.limit(valueLength);
+            String valueAsString = ZMQ.CHARSET.decode(value).toString();
+            if (listener != null) {
+                value.rewind();
+                int rc = listener.parsed(name, value.slice(), valueAsString);
+                if (rc != 0) {
+                    return rc;
+                }
+            }
+            set(name, valueAsString);
+            data.position(data.position() + valueLength);
+        }
+        if (data.remaining() > 0) {
             return ZError.EPROTO;
         }
         return 0;
