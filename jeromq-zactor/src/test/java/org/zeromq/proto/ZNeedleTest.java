@@ -1,8 +1,5 @@
 package org.zeromq.proto;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +9,9 @@ import java.util.Map;
 import org.junit.Test;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ZNeedleTest
 {

@@ -19,8 +19,6 @@ import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 
-import org.zeromq.proto.ZPicture;
-
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
@@ -3642,75 +3640,6 @@ public class ZMQ
         }
 
         /**
-         * Queues a 'picture' message to the socket (or actor), so it can be sent.
-         *
-         * @param picture The picture is a string that defines the type of each frame.
-         *                This makes it easy to send a complex multiframe message in
-         *                one call. The picture can contain any of these characters,
-         *                each corresponding to zero or one arguments:
-         *                <table border="1">
-         *                <caption><strong>Type of arguments</strong></caption>
-         *                <tr><td>i = int  (stores signed integer)</td></tr>
-         *                <tr><td>1 = byte (stores 8-bit unsigned integer)</td></tr>
-         *                <tr><td>2 = int  (stores 16-bit unsigned integer)</td></tr>
-         *                <tr><td>4 = long (stores 32-bit unsigned integer)</td></tr>
-         *                <tr><td>8 = long (stores 64-bit unsigned integer)</td></tr>
-         *                <tr><td>s = String</td></tr>
-         *                <tr><td>b = byte[]</td></tr>
-         *                <tr><td>f = ZFrame</td></tr>
-         *                <tr><td>m = ZMsg (sends all frames in the ZMsg)</td></tr>
-         *                <tr><td>z = sends zero-sized frame (0 arguments)</td></tr>
-         *                </table>
-         *                Note that s, b, f and m are encoded the same way and the choice is
-         *                offered as a convenience to the sender, which may or may not already
-         *                have data in a ZFrame or ZMsg. Does not change or take ownership of
-         *                any arguments.
-         * <p>
-         *                Also see {@link #recvPicture(String)}} how to recv a
-         *                multiframe picture.
-         * @param args    Arguments according to the picture
-         * @return true if successful, false if sending failed for any reason
-         */
-        @Draft
-        public boolean sendPicture(String picture, Object... args)
-        {
-            return new ZPicture().sendPicture(this, picture, args);
-        }
-
-        /**
-         * Queues a binary encoded 'picture' message to the socket (or actor), so it can be sent.
-         * This method is similar to {@link #sendPicture(String, Object...)}, except the arguments
-         * are encoded in a binary format that is compatible with zproto, and is designed to reduce
-         * memory allocations.
-         *
-         * @param picture The picture argument is a string that defines the
-         *                type of each argument. Supports these argument types:
-         * <p>
-         *                <table border="1">
-         *                <caption><strong>Type of arguments</strong></caption>
-         *                <tr><th style="text-align:left">pattern</th><th style="text-align:left">java type</th><th style="text-align:left">zproto type</th></tr>
-         *                <tr><td>1</td><td>int</td><td>type = "number" size = "1"</td></tr>
-         *                <tr><td>2</td><td>int</td><td>type = "number" size = "2"</td></tr>
-         *                <tr><td>4</td><td>long</td><td>type = "number" size = "3"</td></tr>
-         *                <tr><td>8</td><td>long</td><td>type = "number" size = "4"</td></tr>
-         *                <tr><td>s</td><td>String, 0-255 chars</td><td>type = "string"</td></tr>
-         *                <tr><td>S</td><td>String, 0-2^32-1 chars</td><td>type = "longstr"</td></tr>
-         *                <tr><td>c</td><td>byte[], 0-2^32-1 bytes</td><td>type = "chunk"</td></tr>
-         *                <tr><td>f</td><td>ZFrame</td><td>type = "frame"</td></tr>
-         *                <tr><td>m</td><td>ZMsg</td><td>type = "msg"</td></tr>
-         *                </table>
-         * @param args    Arguments according to the picture
-         * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
-         * This does not indicate that the message has been transmitted to the network.
-         * @api.note Does not change or take ownership of any arguments.
-         */
-        @Draft
-        public boolean sendBinaryPicture(String picture, Object... args)
-        {
-            return new ZPicture().sendBinaryPicture(this, picture, args);
-        }
-
-        /**
          * Receives a message.
          *
          * @return the message received; null on error.
@@ -3964,58 +3893,6 @@ public class ZMQ
             }
 
             return null;
-        }
-
-        /**
-         * Receive a 'picture' message to the socket (or actor).
-         *
-         *
-         * @param picture The picture is a string that defines the type of each frame.
-         *                This makes it easy to recv a complex multiframe message in
-         *                one call. The picture can contain any of these characters,
-         *                each corresponding to zero or one elements in the result:
-         *
-         * <p>
-         *                <table border="1">
-         *                <caption><strong>Type of arguments</strong></caption>
-         *                <tr><td>i = int (stores signed integer)</td></tr>
-         *                <tr><td>1 = int (stores 8-bit unsigned integer)</td></tr>
-         *                <tr><td>2 = int (stores 16-bit unsigned integer)</td></tr>
-         *                <tr><td>4 = long (stores 32-bit unsigned integer)</td></tr>
-         *                <tr><td>8 = long (stores 64-bit unsigned integer)</td></tr>
-         *                <tr><td>s = String</td></tr>
-         *                <tr><td>b = byte[]</td></tr>
-         *                <tr><td>f = ZFrame (creates zframe)</td></tr>
-         *                <tr><td>m = ZMsg (creates a zmsg with the remaing frames)</td></tr>
-         *                <tr><td>z = null, asserts empty frame (0 arguments)</td></tr>
-         *                </table>
-         *
-         *                Also see {@link #sendPicture(String, Object...)} how to send a
-         *                multiframe picture.
-         *
-         * @return the picture elements as object array
-         */
-        @Draft
-        public Object[] recvPicture(String picture)
-        {
-            return new ZPicture().recvPicture(this, picture);
-        }
-
-        /**
-         * Receive a binary encoded 'picture' message from the socket (or actor).
-         * This method is similar to {@link #recv()}, except the arguments are encoded
-         * in a binary format that is compatible with zproto, and is designed to
-         * reduce memory allocations.
-         *
-         * @param picture The picture argument is a string that defines
-         *                the type of each argument. See {@link #sendBinaryPicture(String, Object...)}
-         *                for the supported argument types.
-         * @return the picture elements as object array
-         **/
-        @Draft
-        public Object[] recvBinaryPicture(String picture)
-        {
-            return new ZPicture().recvBinaryPicture(this, picture);
         }
 
         /**
