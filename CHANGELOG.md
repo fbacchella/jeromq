@@ -10,6 +10,7 @@
 * Event serialization now directly resolve serialized values.
 * Adding the protocol TLS protocol. As Java doesn’t provide a way to handle TLS in channel, it’s not supporterd in the
   default package, an implementation using [tls-channel](https://github.com/marianobarrios/tls-channel) is available.
+* A lot of APIs now use ByteBuffer instead of byte[], that should reduce the number of useless copy.
 
 ## v0.7.0 (2025-11-14)
 
