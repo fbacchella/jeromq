@@ -350,7 +350,7 @@ public class ZAuth implements Closeable
                 byte[] clientPublicKey = frame.getData();
                 username = null;
                 password = null;
-                clientKey = ZMQ.Curve.z85Encode(clientPublicKey);
+                clientKey = Curve.z85Encode(clientPublicKey);
                 principal = null;
             }
             else if (Mechanisms.GSSAPI.name().equals(mechanism)) {

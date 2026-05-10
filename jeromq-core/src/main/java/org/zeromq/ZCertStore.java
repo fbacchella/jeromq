@@ -165,7 +165,7 @@ public class ZCertStore
     {
         Utils.checkArgument(publicKey.length == 32,
                             "publickey needs to have a size of 32 bytes. got only " + publicKey.length);
-        return containsPublicKey(ZMQ.Curve.z85Encode(publicKey));
+        return containsPublicKey(Curve.z85Encode(publicKey));
     }
 
     /**
@@ -210,7 +210,7 @@ public class ZCertStore
                         return false;
                     }
                     if (publicKey.length() == 32) { // we want to store the public-key as Z85-String
-                        publicKey = ZMQ.Curve.z85Encode(publicKey.getBytes(ZMQ.CHARSET));
+                        publicKey = Curve.z85Encode(publicKey.getBytes(ZMQ.CHARSET));
                     }
                     assert (publicKey.length() == 40);
                     keys.put(publicKey, ZMetadata.read(zconf));

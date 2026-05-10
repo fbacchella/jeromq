@@ -51,13 +51,13 @@ public class ZCertTest
     @Test
     void testConstructorValidPublicKeyZ85()
     {
-        ZMQ.Curve.KeyPair keyPair = ZMQ.Curve.generateKeyPair();
+        Curve.KeyPair keyPair = Curve.generateKeyPair();
         assertEquals(40, keyPair.publicKey.length());
 
         ZCert cert = new ZCert(keyPair.publicKey);
 
         assertEquals(keyPair.publicKey, cert.getPublicKeyAsZ85());
-        assertArrayEquals(ZMQ.Curve.z85Decode(keyPair.publicKey), cert.getPublicKey());
+        assertArrayEquals(Curve.z85Decode(keyPair.publicKey), cert.getPublicKey());
         assertNull(cert.getSecretKeyAsZ85());
         assertNull(cert.getSecretKey());
     }
@@ -65,8 +65,8 @@ public class ZCertTest
     @Test
     void testConstructorValidPublicKey()
     {
-        ZMQ.Curve.KeyPair keyPair = ZMQ.Curve.generateKeyPair();
-        byte[] bytes = ZMQ.Curve.z85Decode(keyPair.publicKey);
+        Curve.KeyPair keyPair = Curve.generateKeyPair();
+        byte[] bytes = Curve.z85Decode(keyPair.publicKey);
 
         ZCert cert = new ZCert(bytes, null);
 
@@ -79,23 +79,23 @@ public class ZCertTest
     @Test
     void testConstructorValidKeysZ85()
     {
-        ZMQ.Curve.KeyPair keyPair = ZMQ.Curve.generateKeyPair();
+        Curve.KeyPair keyPair = Curve.generateKeyPair();
         assertEquals(40, keyPair.publicKey.length());
 
         ZCert cert = new ZCert(keyPair.publicKey, keyPair.secretKey);
 
         assertEquals(keyPair.publicKey, cert.getPublicKeyAsZ85());
         assertEquals(keyPair.secretKey, cert.getSecretKeyAsZ85());
-        assertArrayEquals(ZMQ.Curve.z85Decode(keyPair.publicKey), cert.getPublicKey());
-        assertArrayEquals(ZMQ.Curve.z85Decode(keyPair.secretKey), cert.getSecretKey());
+        assertArrayEquals(Curve.z85Decode(keyPair.publicKey), cert.getPublicKey());
+        assertArrayEquals(Curve.z85Decode(keyPair.secretKey), cert.getSecretKey());
     }
 
     @Test
     void testConstructorValidKeys()
     {
-        ZMQ.Curve.KeyPair keyPair = ZMQ.Curve.generateKeyPair();
-        byte[] bytes = ZMQ.Curve.z85Decode(keyPair.publicKey);
-        byte[] secret = ZMQ.Curve.z85Decode(keyPair.secretKey);
+        Curve.KeyPair keyPair = Curve.generateKeyPair();
+        byte[] bytes = Curve.z85Decode(keyPair.publicKey);
+        byte[] secret = Curve.z85Decode(keyPair.secretKey);
 
         ZCert cert = new ZCert(bytes, secret);
 

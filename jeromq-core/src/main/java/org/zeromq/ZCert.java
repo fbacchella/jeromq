@@ -9,8 +9,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
-import org.zeromq.ZMQ.Curve;
-import org.zeromq.ZMQ.Curve.KeyPair;
+import org.zeromq.Curve.KeyPair;
 import org.zeromq.util.ZMetadata;
 
 /**
@@ -47,7 +46,7 @@ public class ZCert
 
     public ZCert()
     {
-        this(ZMQ.Curve.generateKeyPair());
+        this(Curve.generateKeyPair());
     }
 
     public ZCert(String publicKey)
