@@ -2,6 +2,7 @@ package org.zeromq;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -254,25 +255,56 @@ public class ZConfig
         }, 0);
     }
 
-    public static ZConfig load(Path filepath) throws IOException
+    public static ZConfig load(Reader reader) throws IOException
     {
-        try (BufferedReader reader = new BufferedReader(Files.newBufferedReader(filepath))) {
-            List<String> content = new ArrayList<>();
+        if (reader instanceof BufferedReader) {
+            return load((BufferedReader) reader);
+        }
+        else {
+            try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+                List<String> content = new ArrayList<>();
 
-            String line = reader.readLine();
+                String line = bufferedReader.readLine();
 
-            while (line != null) {
-                boolean irrelevant = line.matches("^ *#.*|^ *[0-9]+.*") // ignore comments
-                        || line.trim().isEmpty(); // ignore empty lines;
-                if (!irrelevant) {
-                    content.add(line);
+                while (line != null) {
+                    boolean irrelevant = line.matches("^ *#.*|^ *[0-9]+.*") // ignore comments
+                                                 || line.trim().isEmpty(); // ignore empty lines;
+                    if (!irrelevant) {
+                        content.add(line);
+                    }
+
+                    line = bufferedReader.readLine();
                 }
 
-                line = reader.readLine();
+                return load(new ZConfig("root", null), content, 0, new AtomicInteger());
+            }
+        }
+    }
+
+    public static ZConfig load(Path filepath) throws IOException
+    {
+        try (BufferedReader reader = Files.newBufferedReader(filepath, ZMQ.CHARSET)) {
+            return load(reader);
+        }
+    }
+
+    private static ZConfig load(BufferedReader reader) throws IOException
+    {
+        List<String> content = new ArrayList<>();
+
+        String line = reader.readLine();
+
+        while (line != null) {
+            boolean irrelevant = line.matches("^ *#.*|^ *[0-9]+.*") // ignore comments
+                                         || line.trim().isEmpty(); // ignore empty lines;
+            if (!irrelevant) {
+                content.add(line);
             }
 
-            return load(new ZConfig("root", null), content, 0, new AtomicInteger());
+            line = reader.readLine();
         }
+
+        return load(new ZConfig("root", null), content, 0, new AtomicInteger());
     }
 
     private static ZConfig load(ZConfig parent, List<String> content, int currentLevel, AtomicInteger lineNumber)
