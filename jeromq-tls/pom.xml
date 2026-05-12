@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>jeromq-tls</artifactId>
+    <packaging>jar</packaging>
 
     <name>JeroMQ :: TLS</name>
     <description>TLS wrapper</description>

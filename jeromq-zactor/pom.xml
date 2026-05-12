@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>jeromq-zactor</artifactId>
+    <packaging>jar</packaging>
 
     <name>JeroMQ :: ZActor</name>
     <description>ZActor implementation for jeromq</description>
