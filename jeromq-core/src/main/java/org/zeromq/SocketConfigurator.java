@@ -5,51 +5,53 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
+import zmq.io.mechanism.MechanismSettings;
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+import zmq.io.mechanism.plain.PlainMechanismSettings;
+
 import org.zeromq.ZMQ.Socket;
 
 public class SocketConfigurator {
 
-    public static final SocketType DEFAULT_TYPE = SocketType.PUB;
-    public static final Method DEFAULT_METHOD = Method.CONNECT;
-
     public final String endpoint;
     public final SocketType type;
     public final Method method;
-    public final int sendHwm;
-    public final int recvHwm;
-    public final long maxMsgSize;
-    public final int linger;
+    public final Integer sendHwm;
+    public final Integer recvHwm;
+    public final Long maxMsgSize;
+    public final Integer linger;
     public final String peerPublicKey;
     public final String privateKeyFile;
     public final String publicKey;
-    public final boolean autoCreate;
-    public final int backlog;
-    public final long affinity;
-    public final byte[] identity;
-    public final boolean ipv6;
-    public final int receiveBufferSize;
-    public final int sendBufferSize;
-    public final int receiveTimeOut;
-    public final int reconnectIVL;
-    public final int reconnectIVLMax;
-    public final int sendTimeOut;
-    public final int tcpKeepAlive;
-    public final int tcpKeepAliveCount;
-    public final int tcpKeepAliveIdle;
-    public final int tcpKeepAliveInterval;
-    public final boolean xpubVerbose;
-    public final int tos;
-    public final int heartbeatIvl;
-    public final int heartbeatTimeout;
-    public final int heartbeatTtl;
-    public final byte[] heartbeatContext;
-    public final int handshakeIvl;
-    public final int socksProxyPort;
+    public final Boolean autoCreate;
+    public final Integer backlog;
+    public final Long affinity;
+    public final ByteBuffer identity;
+    public final Boolean ipv6;
+    public final Integer receiveBufferSize;
+    public final Integer sendBufferSize;
+    public final Integer receiveTimeOut;
+    public final Integer reconnectIVL;
+    public final Integer reconnectIVLMax;
+    public final Integer sendTimeOut;
+    public final Integer tcpKeepAlive;
+    public final Integer tcpKeepAliveCount;
+    public final Integer tcpKeepAliveIdle;
+    public final Integer tcpKeepAliveInterval;
+    public final Boolean xpubVerbose;
+    public final Integer tos;
+    public final Integer heartbeatIvl;
+    public final Integer heartbeatTimeout;
+    public final Integer heartbeatTtl;
+    public final ByteBuffer heartbeatContext;
+    public final Integer handshakeIvl;
+    public final Integer socksProxyPort;
     public final String socksProxyHost;
-    public final boolean xpubNoDrop;
-    public final boolean xpubManual;
-    public final boolean xpubVerboser;
+    public final Boolean xpubNoDrop;
+    public final Boolean xpubManual;
+    public final Boolean xpubVerboser;
 
+    public final MechanismSettings<?> mechanism;
 
     private SocketConfigurator(Builder builder) {
         this.endpoint = builder.endpoint;
@@ -65,7 +67,7 @@ public class SocketConfigurator {
         this.autoCreate = builder.autoCreate;
         this.backlog = builder.backlog;
         this.affinity = builder.affinity;
-        this.identity = builder.identity;
+        this.identity = builder.identity == null ? null : ByteBuffer.wrap(builder.identity).asReadOnlyBuffer();
         this.ipv6 = builder.ipv6;
         this.receiveBufferSize = builder.receiveBufferSize;
         this.sendBufferSize = builder.sendBufferSize;
@@ -82,18 +84,19 @@ public class SocketConfigurator {
         this.heartbeatIvl = builder.heartbeatIvl;
         this.heartbeatTimeout = builder.heartbeatTimeout;
         this.heartbeatTtl = builder.heartbeatTtl;
-        this.heartbeatContext = builder.heartbeatContext;
+        this.heartbeatContext = builder.heartbeatContext == null ? null : ByteBuffer.wrap(builder.heartbeatContext).asReadOnlyBuffer();
         this.handshakeIvl = builder.handshakeIvl;
         this.socksProxyPort = builder.socksProxyPort;
         this.socksProxyHost = builder.socksProxyHost;
         this.xpubNoDrop = builder.xpubNoDrop;
         this.xpubManual = builder.xpubManual;
         this.xpubVerboser = builder.xpubVerboser;
+
+        this.mechanism = builder.mechanism;
     }
 
-    public Socket getSocket(ZContext ctx) {
-        Socket socket = ctx.createSocket(type);
-        Optional.of(maxMsgSize).filter(i -> i >= 0).ifPresent(socket::setMaxMsgSize);
+    public Socket getSocket(Socket socket) {
+        Optional.of(maxMsgSize).stream().mapToLong(i -> i).filter(i -> i >= 0).forEach(socket::setMaxMsgSize);
         Optional.of(linger).filter(i -> i > 0).ifPresent(socket::setLinger);
         Optional.of(backlog).filter(i -> i >= 0).ifPresent(socket::setBacklog);
         Optional.of(affinity).filter(i -> i >= 0).ifPresent(socket::setAffinity);
@@ -108,10 +111,12 @@ public class SocketConfigurator {
         Optional.of(sendTimeOut).filter(i -> i >= 0).ifPresent(socket::setSendTimeOut);
         Optional.of(receiveTimeOut).filter(i -> i >= 0).ifPresent(socket::setReceiveTimeOut);
 
-        if (identity != null && identity.length > 0) {
-            socket.setIdentity(identity);
-        } else {
-            String url = endpoint + ":" + type.toString() + ":" + method.getSymbol();
+        if (identity != null && identity.hasRemaining()) {
+            byte[] identityBytes = new byte[identity.remaining()];
+            identity.duplicate().get(identityBytes);
+            socket.setIdentity(identityBytes);
+        } else if (endpoint != null && type != null && method != null) {
+            String url = endpoint + ":" + type + ":" + method.getSymbol();
             socket.setIdentity(url.getBytes());
         }
 
@@ -121,7 +126,11 @@ public class SocketConfigurator {
         Optional.of(heartbeatIvl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatIvl);
         Optional.of(heartbeatTimeout).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTimeout);
         Optional.of(heartbeatTtl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTtl);
-        Optional.ofNullable(heartbeatContext).ifPresent(socket::setHeartbeatContext);
+        if (heartbeatContext != null) {
+            byte[] hbBytes = new byte[heartbeatContext.remaining()];
+            heartbeatContext.duplicate().get(hbBytes);
+            socket.setHeartbeatContext(hbBytes);
+        }
         Optional.of(handshakeIvl).filter(i -> i >= 0).ifPresent(socket::setHandshakeIvl);
         if (socksProxyHost != null && socksProxyPort > 0) {
             socket.setSocksProxy(socksProxyHost + ":" + socksProxyPort);
@@ -131,48 +140,56 @@ public class SocketConfigurator {
         socket.setXpubManual(xpubManual);
         socket.setXpubVerboser(xpubVerboser);
         socket.setIPv6(ipv6);
-        method.act(socket, endpoint);
+        Optional.ofNullable(mechanism).ifPresent(socket::setMechanism);
         return socket;
     }
 
     public static class Builder {
         private String endpoint;
-        private SocketType type = DEFAULT_TYPE;
-        private Method method = DEFAULT_METHOD;
-        private int sendHwm = zmq.ZMQ.DEFAULT_SEND_HWM;
-        private int recvHwm = zmq.ZMQ.DEFAULT_RECV_HWM;
-        private long maxMsgSize = zmq.ZMQ.DEFAULT_MAX_MSG_SIZE;
-        private int linger = zmq.ZMQ.DEFAULT_LINGER;
+        private SocketType type;
+        private Method method;
+        private Integer sendHwm;
+        private Integer recvHwm;
+        private Long maxMsgSize;
+        private Integer linger;
         private String peerPublicKey;
         private String privateKeyFile;
         private String publicKey;
-        private boolean autoCreate = false;
-        private int backlog = zmq.ZMQ.DEFAULT_BACKLOG;
-        private long affinity = zmq.ZMQ.DEFAULT_AFFINITY;
-        private byte[] identity = zmq.ZMQ.DEFAULT_IDENTITY;
-        private boolean ipv6 = zmq.ZMQ.DEFAULT_IPV6;
-        private int receiveBufferSize = zmq.ZMQ.DEFAULT_RCVBUF;
-        private int sendBufferSize = zmq.ZMQ.DEFAULT_SNDBUF;
-        private int receiveTimeOut = zmq.ZMQ.DEFAULT_RECV_TIMEOUT;
-        private int reconnectIVL = zmq.ZMQ.DEFAULT_RECONNECT_IVL;
-        private int reconnectIVLMax = zmq.ZMQ.DEFAULT_RECONNECT_IVL_MAX;
-        private int sendTimeOut = zmq.ZMQ.DEFAULT_SEND_TIMEOUT;
-        private int tcpKeepAlive = zmq.ZMQ.DEFAULT_TCP_KEEP_ALIVE;
-        private int tcpKeepAliveCount = zmq.ZMQ.DEFAULT_TCP_KEEP_ALIVE_CNT;
-        private int tcpKeepAliveIdle = zmq.ZMQ.DEFAULT_TCP_KEEP_ALIVE_IDLE;
-        private int tcpKeepAliveInterval = zmq.ZMQ.DEFAULT_TCP_KEEP_ALIVE;
-        private boolean xpubVerbose = false;
-        private int tos = zmq.ZMQ.DEFAULT_TOS;
-        private int heartbeatIvl = 0;
-        private int heartbeatTimeout = 0;
-        private int heartbeatTtl = 0;
-        private byte[] heartbeatContext = null;
-        private int handshakeIvl = 0;
-        private int socksProxyPort = 0;
-        private String socksProxyHost = null;
-        private boolean xpubNoDrop = false;
-        private boolean xpubManual = false;
-        private boolean xpubVerboser = false;
+        private Boolean autoCreate;
+        private Integer backlog;
+        private Long affinity;
+        private byte[] identity;
+        private Boolean ipv6;
+        private Integer receiveBufferSize;
+        private Integer sendBufferSize;
+        private Integer receiveTimeOut;
+        private Integer reconnectIVL;
+        private Integer reconnectIVLMax;
+        private Integer sendTimeOut;
+        private Integer tcpKeepAlive;
+        private Integer tcpKeepAliveCount;
+        private Integer tcpKeepAliveIdle;
+        private Integer tcpKeepAliveInterval;
+        private Boolean xpubVerbose;
+        private Integer tos;
+        private Integer heartbeatIvl;
+        private Integer heartbeatTimeout;
+        private Integer heartbeatTtl;
+        private byte[] heartbeatContext;
+        private Integer handshakeIvl;
+        private Integer socksProxyPort;
+        private String socksProxyHost;
+        private Boolean xpubNoDrop;
+        private Boolean xpubManual;
+        private Boolean xpubVerboser;
+
+        private String plainUsername;
+        private String plainPassword;
+        private byte[] curvePublicKey;
+        private byte[] curveSecretKey;
+        private byte[] curveServerKey;
+
+        private MechanismSettings<?> mechanism;
 
         public Builder endpoint(String endpoint) {
             this.endpoint = endpoint;
@@ -359,7 +376,54 @@ public class SocketConfigurator {
             return this;
         }
 
+        public Builder plainUsername(String plainUsername) {
+            this.plainUsername = plainUsername;
+            return this;
+        }
+
+        public Builder plainPassword(String plainPassword) {
+            this.plainPassword = plainPassword;
+            return this;
+        }
+
+        public Builder curvePublicKey(byte[] curvePublicKey) {
+            this.curvePublicKey = curvePublicKey != null ? Arrays.copyOf(curvePublicKey, curvePublicKey.length) : null;
+            return this;
+        }
+
+        public Builder curveSecretKey(byte[] curveSecretKey) {
+            this.curveSecretKey = curveSecretKey != null ? Arrays.copyOf(curveSecretKey, curveSecretKey.length) : null;
+            return this;
+        }
+
+        public Builder curveServerKey(byte[] curveServerKey) {
+            this.curveServerKey = curveServerKey != null ? Arrays.copyOf(curveServerKey, curveServerKey.length) : null;
+            return this;
+        }
+
+        public Builder mechanism(MechanismSettings<?> mechanism) {
+            this.mechanism = mechanism;
+            return this;
+        }
+
         public SocketConfigurator build() {
+            if (mechanism == null) {
+                if (plainUsername != null || plainPassword != null) {
+                    mechanism = new PlainMechanismSettings(false, plainUsername, plainPassword);
+                } else if (curveSecretKey != null) {
+                    CurveMechanismSettings.Builder curveBuilder = CurveMechanismSettings.getBuilder();
+                    curveBuilder.setSecretKey(curveSecretKey);
+                    if (curvePublicKey != null) {
+                        curveBuilder.setPublicKey(curvePublicKey);
+                    }
+                    if (curveServerKey != null) {
+                        curveBuilder.setServerKey(curveServerKey);
+                    }
+                    // Note: curveServer in SocketConfigurator was a boolean.
+                    // In CurveMechanismSettings, server role is inferred if serverKey is null.
+                    mechanism = curveBuilder.build();
+                }
+            }
             return new SocketConfigurator(this);
         }
     }
@@ -513,6 +577,45 @@ public class SocketConfigurator {
                     break;
                 case "xpubVerboser":
                     builder.xpubVerboser((Boolean) value);
+                    break;
+                case "plainUsername":
+                    builder.plainUsername((String) value);
+                    break;
+                case "plainPassword":
+                    builder.plainPassword((String) value);
+                    break;
+                case "curvePublicKey":
+                    if (value instanceof byte[]) {
+                        builder.curvePublicKey((byte[]) value);
+                    } else if (value instanceof ByteBuffer) {
+                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
+                        byte[] bytes = new byte[bb.remaining()];
+                        bb.get(bytes);
+                        builder.curvePublicKey(bytes);
+                    }
+                    break;
+                case "curveSecretKey":
+                    if (value instanceof byte[]) {
+                        builder.curveSecretKey((byte[]) value);
+                    } else if (value instanceof ByteBuffer) {
+                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
+                        byte[] bytes = new byte[bb.remaining()];
+                        bb.get(bytes);
+                        builder.curveSecretKey(bytes);
+                    }
+                    break;
+                case "curveServerKey":
+                    if (value instanceof byte[]) {
+                        builder.curveServerKey((byte[]) value);
+                    } else if (value instanceof ByteBuffer) {
+                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
+                        byte[] bytes = new byte[bb.remaining()];
+                        bb.get(bytes);
+                        builder.curveServerKey(bytes);
+                    }
+                    break;
+                case "mechanism":
+                    builder.mechanism((MechanismSettings<?>) value);
                     break;
                 default:
                     break;

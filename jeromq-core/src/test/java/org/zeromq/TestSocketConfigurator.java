@@ -16,14 +16,12 @@ class TestSocketConfigurator {
     void testBuild() {
         SocketConfigurator config = SocketConfigurator.build();
         assertNotNull(config);
-        assertEquals(SocketConfigurator.DEFAULT_TYPE, config.type);
-        assertEquals(SocketConfigurator.DEFAULT_METHOD, config.method);
         assertNull(config.endpoint);
-        assertEquals(zmq.ZMQ.DEFAULT_SEND_HWM, config.sendHwm);
-        assertEquals(zmq.ZMQ.DEFAULT_RECV_HWM, config.recvHwm);
-        assertEquals(zmq.ZMQ.DEFAULT_MAX_MSG_SIZE, config.maxMsgSize);
-        assertEquals(zmq.ZMQ.DEFAULT_LINGER, config.linger);
-        assertEquals(zmq.ZMQ.DEFAULT_BACKLOG, config.backlog);
+        assertNull(config.sendHwm);
+        assertNull(config.recvHwm);
+        assertNull(config.maxMsgSize);
+        assertNull(config.linger);
+        assertNull(config.backlog);
     }
 
     @Test
@@ -133,7 +131,7 @@ class TestSocketConfigurator {
         assertEquals(50, config.backlog);
         assertEquals(1L, config.affinity);
         assertNotNull(config.identity);
-        assertEquals((byte) 1, config.identity[0]);
+        assertEquals((byte) 1, config.identity.get(0));
         assertTrue(config.ipv6);
         assertEquals(4096, config.receiveBufferSize);
         assertEquals(8192, config.sendBufferSize);
@@ -151,7 +149,9 @@ class TestSocketConfigurator {
         assertEquals(2000, config.heartbeatTimeout);
         assertEquals(3000, config.heartbeatTtl);
         assertNotNull(config.heartbeatContext);
-        assertEquals("ping", new String(config.heartbeatContext));
+        byte[] hbBytes = new byte[config.heartbeatContext.remaining()];
+        config.heartbeatContext.duplicate().get(hbBytes);
+        assertEquals("ping", new String(hbBytes));
         assertEquals(500, config.handshakeIvl);
         assertEquals(1080, config.socksProxyPort);
         assertEquals("proxy-host", config.socksProxyHost);
@@ -167,17 +167,42 @@ class TestSocketConfigurator {
                 .endpoint("inproc://test")
                 .type(SocketType.XPUB)
                 .method(Method.BIND)
+                .maxMsgSize(-1L)
                 .linger(0)
+                .backlog(0)
+                .affinity(0L)
+                .tcpKeepAlive(0)
+                .tcpKeepAliveCount(0)
+                .tcpKeepAliveIdle(0)
+                .recvHwm(0)
+                .sendHwm(0)
+                .tos(0)
+                .sendBufferSize(0)
+                .receiveBufferSize(0)
+                .sendTimeOut(0)
+                .receiveTimeOut(0)
+                .reconnectIVL(0)
+                .reconnectIVLMax(0)
+                .tcpKeepAliveInterval(0)
+                .heartbeatIvl(0)
+                .heartbeatTimeout(0)
+                .heartbeatTtl(0)
+                .handshakeIvl(0)
+                .xpubVerbose(false)
+                .xpubNoDrop(false)
+                .xpubManual(false)
+                .xpubVerboser(false)
+                .ipv6(false)
                 .identity(customIdentity)
                 .build();
 
         try (ZContext ctx = new ZContext()) {
-            ZMQ.Socket socket = config.getSocket(ctx);
+            ZMQ.Socket socket = ctx.createSocket(config.type);
+            config.getSocket(socket);
             assertNotNull(socket);
             assertEquals(0, socket.getLinger());
             assertEquals(SocketType.XPUB, socket.getSocketType());
             assertArrayEquals(customIdentity, socket.getIdentity());
-            socket.close();
         }
     }
 
@@ -188,9 +213,36 @@ class TestSocketConfigurator {
                     .endpoint("inproc://test")
                     .type(SocketType.PUB)
                     .method(Method.BIND)
+                    .maxMsgSize(-1L)
+                    .linger(0)
+                    .backlog(0)
+                    .affinity(0L)
+                    .tcpKeepAlive(0)
+                    .tcpKeepAliveCount(0)
+                    .tcpKeepAliveIdle(0)
+                    .recvHwm(0)
+                    .sendHwm(0)
+                    .tos(0)
+                    .sendBufferSize(0)
+                    .receiveBufferSize(0)
+                    .sendTimeOut(0)
+                    .receiveTimeOut(0)
+                    .reconnectIVL(0)
+                    .reconnectIVLMax(0)
+                    .tcpKeepAliveInterval(0)
+                    .heartbeatIvl(0)
+                    .heartbeatTimeout(0)
+                    .heartbeatTtl(0)
+                    .handshakeIvl(0)
+                    .xpubVerbose(false)
+                    .xpubNoDrop(false)
+                    .xpubManual(false)
+                    .xpubVerboser(false)
+                    .ipv6(false)
                     .build();
 
-            ZMQ.Socket socket = config.getSocket(ctx);
+            ZMQ.Socket socket = ctx.createSocket(config.type);
+            config.getSocket(socket);
             // Par défaut, Configurator génère une identité basée sur l'URL
             String url = "inproc://test:PUB:O";
             assertArrayEquals(url.getBytes(), socket.getIdentity());
@@ -206,10 +258,37 @@ class TestSocketConfigurator {
                     .endpoint("inproc://test")
                     .type(SocketType.PUB)
                     .method(Method.BIND)
+                    .maxMsgSize(-1L)
+                    .linger(0)
+                    .backlog(0)
+                    .affinity(0L)
+                    .tcpKeepAlive(0)
+                    .tcpKeepAliveCount(0)
+                    .tcpKeepAliveIdle(0)
+                    .recvHwm(0)
+                    .sendHwm(0)
+                    .tos(0)
+                    .sendBufferSize(0)
+                    .receiveBufferSize(0)
+                    .sendTimeOut(0)
+                    .receiveTimeOut(0)
+                    .reconnectIVL(0)
+                    .reconnectIVLMax(0)
+                    .tcpKeepAliveInterval(0)
+                    .heartbeatIvl(0)
+                    .heartbeatTimeout(0)
+                    .heartbeatTtl(0)
+                    .handshakeIvl(0)
+                    .xpubVerbose(false)
+                    .xpubNoDrop(false)
+                    .xpubManual(false)
+                    .xpubVerboser(false)
+                    .ipv6(false)
                     .identity(customId)
                     .build();
 
-            ZMQ.Socket socket = config.getSocket(ctx);
+            ZMQ.Socket socket = ctx.createSocket(config.type);
+            config.getSocket(socket);
             // L'identité personnalisée devrait être respectée
             assertArrayEquals(customId, socket.getIdentity());
             socket.close();
@@ -227,8 +306,12 @@ class TestSocketConfigurator {
 
         SocketConfigurator config = SocketConfigurator.from(settings);
 
-        assertArrayEquals(identityBytes, config.identity);
-        assertArrayEquals(contextBytes, config.heartbeatContext);
+        byte[] actualIdentity = new byte[config.identity.remaining()];
+        config.identity.duplicate().get(actualIdentity);
+        assertArrayEquals(identityBytes, actualIdentity);
+        byte[] actualContext = new byte[config.heartbeatContext.remaining()];
+        config.heartbeatContext.duplicate().get(actualContext);
+        assertArrayEquals(contextBytes, actualContext);
     }
 
     @Test
@@ -241,7 +324,9 @@ class TestSocketConfigurator {
 
         SocketConfigurator config = SocketConfigurator.from(settings);
 
-        assertArrayEquals(identityBytes, config.identity);
+        byte[] actualIdentity = new byte[config.identity.remaining()];
+        config.identity.duplicate().get(actualIdentity);
+        assertArrayEquals(identityBytes, actualIdentity);
     }
 
     @Test
@@ -260,15 +345,23 @@ class TestSocketConfigurator {
         SocketConfigurator config = builder.build();
 
         // Check that Configurator has the original values (defensive copy in Builder)
-        assertArrayEquals(new byte[]{1, 2, 3}, config.identity);
-        assertArrayEquals(new byte[]{4, 5, 6}, config.heartbeatContext);
+        byte[] actualIdentity = new byte[config.identity.remaining()];
+        config.identity.duplicate().get(actualIdentity);
+        assertArrayEquals(new byte[]{1, 2, 3}, actualIdentity);
+        byte[] actualContext = new byte[config.heartbeatContext.remaining()];
+        config.heartbeatContext.duplicate().get(actualContext);
+        assertArrayEquals(new byte[]{4, 5, 6}, actualContext);
 
         // Modify original arrays again after build
         identity[1] = 8;
         heartbeatContext[1] = 8;
 
         // Check that Configurator is still isolated
-        assertArrayEquals(new byte[]{1, 2, 3}, config.identity);
-        assertArrayEquals(new byte[]{4, 5, 6}, config.heartbeatContext);
+        byte[] actualIdentity2 = new byte[config.identity.remaining()];
+        config.identity.duplicate().get(actualIdentity2);
+        assertArrayEquals(new byte[]{1, 2, 3}, actualIdentity2);
+        byte[] actualContext2 = new byte[config.heartbeatContext.remaining()];
+        config.heartbeatContext.duplicate().get(actualContext2);
+        assertArrayEquals(new byte[]{4, 5, 6}, actualContext2);
     }
 }
