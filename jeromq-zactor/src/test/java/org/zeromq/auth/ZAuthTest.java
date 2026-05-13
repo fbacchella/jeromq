@@ -274,7 +274,7 @@ public class ZAuthTest
             client.setMechanism(CurveMechanismSettings.getBuilder()
                                                        .setPublicKey(clientCert.getPublicKey())
                                                        .setSecretKey(clientCert.getSecretKey())
-                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .setCurvePeerPublicKey(serverCert.getPublicKey())
                                                        .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
@@ -342,7 +342,7 @@ public class ZAuthTest
             client.setMechanism(CurveMechanismSettings.getBuilder()
                                                        .setPublicKey(clientCert.getPublicKey())
                                                        .setSecretKey(clientCert.getSecretKey())
-                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .setCurvePeerPublicKey(serverCert.getPublicKey())
                                                        .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));
@@ -562,7 +562,7 @@ public class ZAuthTest
             client.setMechanism(CurveMechanismSettings.getBuilder()
                                                        .setPublicKey(clientCert.getPublicKey())
                                                        .setSecretKey(clientCert.getSecretKey())
-                                                       .setServerKey(serverCert.getPublicKey())
+                                                       .setCurvePeerPublicKey(serverCert.getPublicKey())
                                                        .build());
             rc = client.connect(server.getLastEndpoint());
             assertThat(rc, is(true));

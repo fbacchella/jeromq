@@ -388,7 +388,7 @@ public class TestZMQ
             boolean rc = socket.setMechanism(CurveMechanismSettings.getBuilder()
                                                                    .setPublicKey(publicKey)
                                                                    .setSecretKey(secretKey)
-                                                                   .setServerKey(serverKey)
+                                                                   .setCurvePeerPublicKey(serverKey)
                                                                    .build());
             assertThat(rc, is(true));
 

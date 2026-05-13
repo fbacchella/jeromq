@@ -406,12 +406,12 @@ public class HeartbeatsTest
 
             builder.setSecretKey("JTKVSB%%)wK0E.X)V>+}o?pNmC{O&4W4b!Ni{Lh6");
             builder.setPublicKey("rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7");
-            builder.setServerKey(null);
+            builder.setCurvePeerPublicKey(null);
         }
         else {
             builder.setSecretKey("D:)Q[IlAW!ahhC2ac:9*A}h:p?([4%wOTJ%JR%cs");
             builder.setPublicKey("Yne@$w-vo<fVvi]a<NY6T1ed:M$fCG*[IaLV{hID");
-            builder.setServerKey("rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7");
+            builder.setCurvePeerPublicKey("rq:rM>}U?@Lns47E1%kR.o@n%FcmmsL/@{H8]yf7");
         }
         boolean rc = ZMQ.setSocketOption(socket, ZMQ.ZMQ_MECHANISM, builder.build());
         assertThat(rc, is(true));

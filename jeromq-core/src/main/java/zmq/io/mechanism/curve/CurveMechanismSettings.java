@@ -1,5 +1,7 @@
 package zmq.io.mechanism.curve;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Base64;
 
 import com.neilalexander.jnacl.crypto.curve25519xsalsa20poly1305;
@@ -34,7 +36,7 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
             secretKey = curveKey(optval);
             return this;
         }
-        public Builder setServerKey(Object optval)
+        public Builder setCurvePeerPublicKey(Object optval)
         {
             if (optval != null) {
                 serverKey = curveKey(optval);
@@ -51,29 +53,52 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
             curve25519xsalsa20poly1305.crypto_box_keypair(publicKey, secretKey);
             return this;
         }
-        private byte[] curveKey(Object optval)
-        {
-            byte[] key = null;
-            // if the optval is already the key don't do any parsing
-            if (optval instanceof byte[] && ((byte[]) optval).length == CURVE_KEYSIZE) {
-                key = (byte[]) optval;
-            }
-            else if (optval instanceof String) {
-                String val = (String) optval;
-                int length = val.length();
-                if (length == CURVE_KEYSIZE_Z85) {
-                    key = Z85.decode(val);
-                }
-                else if (length == CURVE_KEYSIZE_BASE64) {
-                    key = Base64.getDecoder().decode(val);
-                }
-            }
-            return key;
-        }
         public CurveMechanismSettings build()
         {
             return new CurveMechanismSettings(this);
         }
+    }
+
+    public static byte[] curveKey(Object optval)
+    {
+        byte[] key;
+        // if the optval is already the key don't do any parsing
+        if (optval instanceof byte[]) {
+            key = (byte[]) optval;
+            if (key.length == CURVE_KEYSIZE) {
+                key = Arrays.copyOf(key, key.length);
+            }
+            else {
+                throw new IllegalArgumentException("Not an encoded Curve key, byte array too small");
+            }
+        }
+        else if (optval instanceof ByteBuffer) {
+            ByteBuffer buf = (ByteBuffer) optval;
+            if (buf.remaining() == CURVE_KEYSIZE) {
+                key = new byte[CURVE_KEYSIZE];
+                buf.duplicate().get(key);
+            }
+            else {
+                throw new IllegalArgumentException("Not an encoded Curve key, buffer too small");
+            }
+        }
+        else if (optval instanceof String) {
+            String val = (String) optval;
+            int length = val.length();
+            if (length == CURVE_KEYSIZE_Z85) {
+                key = Z85.decode(val);
+            }
+            else if (length == CURVE_KEYSIZE_BASE64) {
+                key = Base64.getDecoder().decode(val);
+            }
+            else {
+                throw new IllegalArgumentException("Not an encoded Curve key");
+            }
+        }
+        else {
+            throw new IllegalArgumentException("Unexpected type for a Curve key holder");
+        }
+        return key;
     }
 
     public static Builder getBuilder()
@@ -84,16 +109,16 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
     // No default, as an array can't really be a static final
     private final byte[] publicKey;
     private final byte[] secretKey;
-    private final byte[] serverKey;
+    private final byte[] peerPublicKey;
 
-    public CurveMechanismSettings(Builder builder)
+    private CurveMechanismSettings(Builder builder)
     {
         this.publicKey = builder.publicKey;
         this.secretKey = builder.secretKey;
-        this.serverKey = builder.serverKey;
+        this.peerPublicKey = builder.serverKey;
         assert (publicKey != null && publicKey.length == Curve.Size.PUBLICKEY.bytes());
         assert (secretKey != null && secretKey.length == Curve.Size.SECRETKEY.bytes());
-        // assert (serverKey == null || serverKey.length == Curve.Size.PUBLICKEY.bytes());
+        assert (peerPublicKey == null || peerPublicKey.length == Curve.Size.PUBLICKEY.bytes());
     }
 
     @Override
@@ -115,7 +140,7 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
 
     public byte[] serverKey()
     {
-        return serverKey;
+        return peerPublicKey;
     }
 
     public byte[] secretKey()
@@ -125,13 +150,13 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
 
     public boolean isServer()
     {
-        return serverKey == null;
+        return peerPublicKey == null;
     }
 
     @Override
     public Mechanism create(SessionBase session, Address<?> peerAddress, Options options)
     {
-        if (serverKey == null) {
+        if (peerPublicKey == null) {
             return new CurveServerMechanism(session, peerAddress, this, options);
         }
         else {

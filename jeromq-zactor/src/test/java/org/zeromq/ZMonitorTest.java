@@ -112,7 +112,7 @@ public class ZMonitorTest
         final ZContext ctx = new ZContext();
         final Socket client = ctx.createSocket(SocketType.PUSH);
         client.setMechanism(CurveMechanismSettings.getBuilder()
-                                                  .setServerKey(serverPublicKey)
+                                                  .setCurvePeerPublicKey(serverPublicKey)
                                                   .setPublicKey(clientPublicKey)
                                                   .setSecretKey(clientSecretKey)
                                                   .build());
@@ -192,7 +192,7 @@ public class ZMonitorTest
         final ZContext ctx = new ZContext();
         final Socket client = ctx.createSocket(SocketType.PUSH);
         client.setMechanism(CurveMechanismSettings.getBuilder()
-                                                  .setServerKey(serverPublicKey)
+                                                  .setCurvePeerPublicKey(serverPublicKey)
                                                   .setPublicKey(clientPublicKey)
                                                   .setSecretKey(clientSecretKey)
                                                   .build());

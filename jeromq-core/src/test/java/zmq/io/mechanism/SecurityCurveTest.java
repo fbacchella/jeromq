@@ -56,7 +56,7 @@ public class SecurityCurveTest
             MechanismSettings<?> clientSettings = CurveMechanismSettings.getBuilder()
                                                        .setSecretKey(testCtx.clientSecret)
                                                        .setPublicKey(testCtx.clientPublic)
-                                                       .setServerKey(testCtx.serverPublic)
+                                                       .setCurvePeerPublicKey(testCtx.serverPublic)
                                                        .build();
             // Preconfigure client with valid identity, might be changed for individual tests
             ZMQ.setSocketOption(testCtx.client, ZMQ.ZMQ_MECHANISM, clientSettings);
@@ -129,7 +129,7 @@ public class SecurityCurveTest
             ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
                                                                                     .setPublicKey(ctx.clientPublic)
                                                                                     .setSecretKey("0000000000000000000000000000000000000000")
-                                                                                    .setServerKey(ctx.serverPublic)
+                                                                                    .setCurvePeerPublicKey(ctx.serverPublic)
                                                                                     .build());
             String host = (String) ZMQ.getSocketOptionExt(ctx.server, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.client, host);
@@ -180,7 +180,7 @@ public class SecurityCurveTest
             ZMQ.setSocketOption(ctx.client, ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
                                                                                     .setPublicKey(bogusPublic)
                                                                                     .setSecretKey(bogusSecret)
-                                                                                    .setServerKey(ctx.serverPublic)
+                                                                                    .setCurvePeerPublicKey(ctx.serverPublic)
                                                                                     .build());
             String host = (String) ZMQ.getSocketOptionExt(ctx.server, ZMQ.ZMQ_LAST_ENDPOINT);
             rc = ZMQ.connect(ctx.client, host);

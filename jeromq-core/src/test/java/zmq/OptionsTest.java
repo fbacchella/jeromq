@@ -176,7 +176,7 @@ public class OptionsTest
         options.setSocketOpt(ZMQ.ZMQ_MECHANISM, CurveMechanismSettings.getBuilder()
                                                                       .setPublicKey(key)
                                                                       .setSecretKey(secret)
-                                                                      .setServerKey(server)
+                                                                      .setCurvePeerPublicKey(server)
                                                                       .build());
         CurveMechanismSettings settings = options.getSocketOpt(ZMQ.ZMQ_MECHANISM);
         assertThat(settings.serverKey(), is(server));

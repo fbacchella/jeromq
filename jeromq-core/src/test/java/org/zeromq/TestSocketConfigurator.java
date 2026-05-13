@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.zeromq.Curve.KeyPair;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,6 +30,7 @@ class TestSocketConfigurator
     @Test
     void testBuilder()
     {
+        KeyPair kp = Curve.generateKeyPair();
         SocketConfigurator config = SocketConfigurator.builder()
                 .endpoint("tcp://localhost:5555")
                 .type(SocketType.SUB)
@@ -36,10 +39,9 @@ class TestSocketConfigurator
                 .recvHwm(200)
                 .maxMsgSize(1024L)
                 .linger(10)
-                .peerPublicKey("peer-key")
-                .privateKeyFile("private-key-file")
-                .publicKey("public-key")
-                .autoCreate(true)
+                .curvePeerPublicKey(kp.publicKey)
+                .curveSecretKey(kp.secretKey)
+                .curvePublicKey(kp.publicKey)
                 .backlog(50)
                 .affinity(1L)
                 .identity(new byte[]{1, 2, 3})
@@ -74,6 +76,7 @@ class TestSocketConfigurator
     @Test
     void testFromMap()
     {
+        KeyPair kp = Curve.generateKeyPair();
         java.util.Map<String, Object> settings = new java.util.HashMap<>();
         settings.put("endpoint", "tcp://localhost:5555");
         settings.put("type", "SUB");
@@ -82,10 +85,9 @@ class TestSocketConfigurator
         settings.put("recvHwm", 200);
         settings.put("maxMsgSize", 1024L);
         settings.put("linger", 10);
-        settings.put("peerPublicKey", "peer-key");
-        settings.put("privateKeyFile", "private-key-file");
-        settings.put("publicKey", "public-key");
-        settings.put("autoCreate", true);
+        settings.put("curvePeerPublicKey", kp.publicKey);
+        settings.put("curveSecretKey", kp.secretKey);
+        settings.put("curvePublicKey", kp.publicKey);
         settings.put("backlog", 50);
         settings.put("affinity", 1L);
         settings.put("identity", new byte[]{1, 2, 3});
@@ -128,10 +130,6 @@ class TestSocketConfigurator
         assertEquals(200, config.recvHwm);
         assertEquals(1024L, config.maxMsgSize);
         assertEquals(10, config.linger);
-        assertEquals("peer-key", config.peerPublicKey);
-        assertEquals("private-key-file", config.privateKeyFile);
-        assertEquals("public-key", config.publicKey);
-        assertTrue(config.autoCreate);
         assertEquals(50, config.backlog);
         assertEquals(1L, config.affinity);
         assertNotNull(config.identity);
@@ -165,7 +163,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testGetSocket()
+    void testGetSocket()
     {
         byte[] customIdentity = "custom-id".getBytes();
         SocketConfigurator config = SocketConfigurator.builder()
@@ -212,7 +210,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testIdentityOverwritten()
+    void testIdentityOverwritten()
     {
         try (ZContext ctx = new ZContext()) {
             SocketConfigurator config = SocketConfigurator.builder()
@@ -257,7 +255,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testCustomIdentity()
+    void testCustomIdentity()
     {
         byte[] customId = "my-custom-id".getBytes();
         try (ZContext ctx = new ZContext()) {
@@ -303,7 +301,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testFromMapWithByteBuffer()
+    void testFromMapWithByteBuffer()
     {
         Map<String, Object> settings = new HashMap<>();
         byte[] identityBytes = new byte[]{1, 2, 3};
@@ -323,7 +321,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testFromMapWithReadOnlyByteBuffer()
+    void testFromMapWithReadOnlyByteBuffer()
     {
         Map<String, Object> settings = new HashMap<>();
         byte[] identityBytes = new byte[]{4, 5, 6};
@@ -339,7 +337,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    public void testDefensiveCopies()
+    void testDefensiveCopies()
     {
         byte[] identity = new byte[]{1, 2, 3};
         byte[] heartbeatContext = new byte[]{4, 5, 6};

@@ -20,10 +20,6 @@ public class SocketConfigurator
     public final Integer recvHwm;
     public final Long maxMsgSize;
     public final Integer linger;
-    public final String peerPublicKey;
-    public final String privateKeyFile;
-    public final String publicKey;
-    public final Boolean autoCreate;
     public final Integer backlog;
     public final Long affinity;
     public final ByteBuffer identity;
@@ -62,10 +58,6 @@ public class SocketConfigurator
         this.recvHwm = builder.recvHwm;
         this.maxMsgSize = builder.maxMsgSize;
         this.linger = builder.linger;
-        this.peerPublicKey = builder.peerPublicKey;
-        this.privateKeyFile = builder.privateKeyFile;
-        this.publicKey = builder.publicKey;
-        this.autoCreate = builder.autoCreate;
         this.backlog = builder.backlog;
         this.affinity = builder.affinity;
         this.identity = builder.identity == null ? null : ByteBuffer.wrap(builder.identity).asReadOnlyBuffer();
@@ -156,10 +148,6 @@ public class SocketConfigurator
         private Integer recvHwm;
         private Long maxMsgSize;
         private Integer linger;
-        private String peerPublicKey;
-        private String privateKeyFile;
-        private String publicKey;
-        private Boolean autoCreate;
         private Integer backlog;
         private Long affinity;
         private byte[] identity;
@@ -191,7 +179,7 @@ public class SocketConfigurator
         private String plainPassword;
         private byte[] curvePublicKey;
         private byte[] curveSecretKey;
-        private byte[] curveServerKey;
+        private byte[] curvePeerPublicKey;
 
         private MechanismSettings<?> mechanism;
 
@@ -234,30 +222,6 @@ public class SocketConfigurator
         public Builder linger(int linger)
         {
             this.linger = linger;
-            return this;
-        }
-
-        public Builder peerPublicKey(String peerPublicKey)
-        {
-            this.peerPublicKey = peerPublicKey;
-            return this;
-        }
-
-        public Builder privateKeyFile(String privateKeyFile)
-        {
-            this.privateKeyFile = privateKeyFile;
-            return this;
-        }
-
-        public Builder publicKey(String publicKey)
-        {
-            this.publicKey = publicKey;
-            return this;
-        }
-
-        public Builder autoCreate(boolean autoCreate)
-        {
-            this.autoCreate = autoCreate;
             return this;
         }
 
@@ -429,21 +393,21 @@ public class SocketConfigurator
             return this;
         }
 
-        public Builder curvePublicKey(byte[] curvePublicKey)
+        public Builder curvePublicKey(Object curvePublicKey)
         {
-            this.curvePublicKey = curvePublicKey != null ? Arrays.copyOf(curvePublicKey, curvePublicKey.length) : null;
+            this.curvePublicKey = CurveMechanismSettings.curveKey(curvePublicKey);
             return this;
         }
 
-        public Builder curveSecretKey(byte[] curveSecretKey)
+        public Builder curveSecretKey(Object curveSecretKey)
         {
-            this.curveSecretKey = curveSecretKey != null ? Arrays.copyOf(curveSecretKey, curveSecretKey.length) : null;
+            this.curveSecretKey = CurveMechanismSettings.curveKey(curveSecretKey);
             return this;
         }
 
-        public Builder curveServerKey(byte[] curveServerKey)
+        public Builder curvePeerPublicKey(Object curvePeerPublicKey)
         {
-            this.curveServerKey = curveServerKey != null ? Arrays.copyOf(curveServerKey, curveServerKey.length) : null;
+            this.curvePeerPublicKey = CurveMechanismSettings.curveKey(curvePeerPublicKey);
             return this;
         }
 
@@ -456,7 +420,7 @@ public class SocketConfigurator
         public SocketConfigurator build()
         {
             if (mechanism == null) {
-                if (plainUsername != null || plainPassword != null) {
+                if (plainUsername != null && plainPassword != null) {
                     mechanism = new PlainMechanismSettings(false, plainUsername, plainPassword);
                 }
                 else if (curveSecretKey != null) {
@@ -465,8 +429,8 @@ public class SocketConfigurator
                     if (curvePublicKey != null) {
                         curveBuilder.setPublicKey(curvePublicKey);
                     }
-                    if (curveServerKey != null) {
-                        curveBuilder.setServerKey(curveServerKey);
+                    if (curvePeerPublicKey != null) {
+                        curveBuilder.setCurvePeerPublicKey(curvePeerPublicKey);
                     }
                     // Note: curveServer in SocketConfigurator was a boolean.
                     // In CurveMechanismSettings, server role is inferred if serverKey is null.
@@ -527,18 +491,6 @@ public class SocketConfigurator
                     break;
                 case "linger":
                     builder.linger(((Number) value).intValue());
-                    break;
-                case "peerPublicKey":
-                    builder.peerPublicKey((String) value);
-                    break;
-                case "privateKeyFile":
-                    builder.privateKeyFile((String) value);
-                    break;
-                case "publicKey":
-                    builder.publicKey((String) value);
-                    break;
-                case "autoCreate":
-                    builder.autoCreate((Boolean) value);
                     break;
                 case "backlog":
                     builder.backlog(((Number) value).intValue());
@@ -640,43 +592,20 @@ public class SocketConfigurator
                 case "plainPassword":
                     builder.plainPassword((String) value);
                     break;
+                case "curvePeerPublicKey":
+                    builder.curvePeerPublicKey(value);
+                    break;
                 case "curvePublicKey":
-                    if (value instanceof byte[]) {
-                        builder.curvePublicKey((byte[]) value);
-                    }
-                    else if (value instanceof ByteBuffer) {
-                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
-                        byte[] bytes = new byte[bb.remaining()];
-                        bb.get(bytes);
-                        builder.curvePublicKey(bytes);
-                    }
+                    builder.curvePublicKey(value);
                     break;
                 case "curveSecretKey":
-                    if (value instanceof byte[]) {
-                        builder.curveSecretKey((byte[]) value);
-                    }
-                    else if (value instanceof ByteBuffer) {
-                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
-                        byte[] bytes = new byte[bb.remaining()];
-                        bb.get(bytes);
-                        builder.curveSecretKey(bytes);
-                    }
-                    break;
-                case "curveServerKey":
-                    if (value instanceof byte[]) {
-                        builder.curveServerKey((byte[]) value);
-                    }
-                    else if (value instanceof ByteBuffer) {
-                        ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
-                        byte[] bytes = new byte[bb.remaining()];
-                        bb.get(bytes);
-                        builder.curveServerKey(bytes);
-                    }
+                    builder.curveSecretKey(value);
                     break;
                 case "mechanism":
                     builder.mechanism((MechanismSettings<?>) value);
                     break;
                 default:
+                    assert false : "Unknown key " + key;
                     break;
             }
         }
