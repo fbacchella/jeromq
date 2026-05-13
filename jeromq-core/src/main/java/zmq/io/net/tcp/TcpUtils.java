@@ -6,7 +6,6 @@ import java.net.SocketOption;
 import java.net.StandardSocketOptions;
 import java.nio.channels.Channel;
 import java.nio.channels.NetworkChannel;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 
 import jdk.net.ExtendedSocketOptions;
@@ -30,7 +29,8 @@ public class TcpUtils
     }
 
     public static void tuneTcpKeepalives(NetworkChannel channel, int tcpKeepAlive, int tcpKeepAliveCnt,
-            int tcpKeepAliveIdle, int tcpKeepAliveIntvl) throws IOException {
+            int tcpKeepAliveIdle, int tcpKeepAliveIntvl) throws IOException
+    {
         if (tcpKeepAlive != -1) {
             if (channel instanceof SocketChannel) {
                 //  ServerSocketChannel don't accept SO_KEEPALIVE

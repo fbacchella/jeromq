@@ -19,27 +19,30 @@ import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.SocketWrapper;
 
 public class TlsSocketFactory extends SocketFactory<InetSocketAddress> implements
-        ChannelFactoryWrapper<InetSocketAddress> {
-
+        ChannelFactoryWrapper<InetSocketAddress>
+{
     private static final SSLContext DEFAULT_SSL_CONTEXT;
     private static final SSLParameters DEFAULT_SSL_PARAMS;
     static {
         try {
             DEFAULT_SSL_CONTEXT = SSLContext.getDefault();
             DEFAULT_SSL_PARAMS = DEFAULT_SSL_CONTEXT.getDefaultSSLParameters();
-        } catch (NoSuchAlgorithmException e) {
+        }
+        catch (NoSuchAlgorithmException e) {
             throw new ProviderException("Miss configured TLS", e);
         }
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private SSLContext ctx = DEFAULT_SSL_CONTEXT;
         private SSLParameters parameters = DEFAULT_SSL_PARAMS;
         private SniSslContextFactory sniSslContextFactory;
         private PrincipalConverter principalConverter = s -> {
             try {
                 return Optional.ofNullable(s.getPeerPrincipal().getName());
-            } catch (SSLPeerUnverifiedException e) {
+            }
+            catch (SSLPeerUnverifiedException e) {
                 return Optional.empty();
             }
         };
@@ -119,7 +122,6 @@ public class TlsSocketFactory extends SocketFactory<InetSocketAddress> implement
                                .build();
     }
 
-
     private <T> T resolve(T v1, T v2)
     {
         return Optional.ofNullable(v1).orElse(v2);
@@ -131,5 +133,4 @@ public class TlsSocketFactory extends SocketFactory<InetSocketAddress> implement
         this.factory = factory;
         return this;
     }
-
 }

@@ -72,7 +72,8 @@ public class NormNetworkProtocolProvider implements NetworkProtocolProvider<Inet
     }
 
     @Override
-    public SocketFactory<InetSocketAddress> channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory()
+    {
         return null;
     }
 }

@@ -3,7 +3,6 @@ package org.zeromq;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.zeromq.ZMQ.Context;
@@ -18,7 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class TestProxy {
+class TestProxy
+{
     private static final Logger logger = LogManager.getLogger(TestProxy.class);
 
     static class Client implements Runnable

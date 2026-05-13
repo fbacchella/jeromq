@@ -42,7 +42,6 @@ import zmq.socket.reqrep.Req;
 import zmq.socket.reqrep.Router;
 import zmq.util.Errno;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -186,8 +185,6 @@ public class TestZMQ
         pull.close();
         context.term();
     }
-
-
 
     @Test
     public void testContextBlocky()
@@ -1251,7 +1248,8 @@ public class TestZMQ
         }
     }
 
-    private boolean filterdedConsumer(Class<? extends SocketBase> clazz, Socket socket, Supplier<Boolean> run) {
+    private boolean filterdedConsumer(Class<? extends SocketBase> clazz, Socket socket, Supplier<Boolean> run)
+    {
         if (clazz.isAssignableFrom(socket.base().getClass())) {
             return run.get();
         }
@@ -1260,13 +1258,15 @@ public class TestZMQ
         }
     }
 
-    private boolean unsupportedConsumer(Runnable run) {
+    private boolean unsupportedConsumer(Runnable run)
+    {
         Assert.assertThrows(UnsupportedOperationException.class, run::run);
         return true;
     }
 
     @Test
-    public void testAllValues() throws NoSuchAlgorithmException {
+    public void testAllValues() throws NoSuchAlgorithmException
+    {
         Function<Socket, Boolean> unhandled = s -> false;
         Function<Socket, Object> nothing = s -> false;
 
@@ -1480,10 +1480,10 @@ public class TestZMQ
                     Assert.assertNotNull("" + k, g.apply(aSocket));
                 }
             };
-            for (int i = 4; i < 83 ; i++) {
+            for (int i = 4; i < 83; i++) {
                 tester.accept(i);
             }
-            for (int i = 1001; i < 1009 ; i++) {
+            for (int i = 1001; i < 1009; i++) {
                 tester.accept(i);
             }
         }

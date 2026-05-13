@@ -38,11 +38,13 @@ public enum Events {
 
     private final int code;
 
-    Events(int code) {
+    Events(int code)
+    {
         this.code = code;
     }
 
-    public int getCode() {
+    public int getCode()
+    {
         return code;
     }
 
@@ -52,7 +54,8 @@ public enum Events {
      * @param event the numerical event code
      * @return the found {@link Events}
      */
-    public static Events findByCode(int event) {
+    public static Events findByCode(int event)
+    {
         return MAP.getOrDefault(event, ALL);
     }
 }

@@ -100,7 +100,8 @@ public class PlainServerMechanism extends Mechanism
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return Mechanisms.PLAIN.name();
     }
 

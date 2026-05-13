@@ -33,7 +33,6 @@ public class Curve
         }
     }
 
-
     enum Size
     {
         NONCE {

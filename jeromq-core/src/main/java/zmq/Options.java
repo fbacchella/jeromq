@@ -19,7 +19,6 @@ import zmq.io.mechanism.curve.CurveMechanismSettings;
 import zmq.io.mechanism.gssapi.GssapiMechanismSettings;
 import zmq.io.mechanism.plain.PlainMechanismSettings;
 import zmq.io.net.NetProtocol;
-import zmq.io.net.SelectorProviderChooser;
 import zmq.io.net.SocketFactory;
 import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.ipc.IpcAddress;
@@ -40,7 +39,7 @@ public class Options
     public long affinity = ZMQ.DEFAULT_AFFINITY;
 
     //  Socket identity
-    public short  identitySize = (short) ZMQ.DEFAULT_IDENTITY.length;
+    public short identitySize = (short) ZMQ.DEFAULT_IDENTITY.length;
     public byte[] identity = ZMQ.DEFAULT_IDENTITY;
 
     //  Maximum tranfer rate [kb/s]. Default 100kb/s.
@@ -308,7 +307,7 @@ public class Options
             return true;
 
         case ZMQ.ZMQ_TCP_KEEPALIVE_CNT:
-            this.tcpKeepAliveCnt = ((Number) optval).intValue();
+            tcpKeepAliveCnt = ((Number) optval).intValue();
             return true;
         case ZMQ.ZMQ_TCP_KEEPALIVE_IDLE:
             tcpKeepAliveIdle = (int) parseDuration(optval).toMillis();
@@ -513,7 +512,7 @@ public class Options
 
         case ZMQ.ZMQ_CHANNEL_WRAPPER_FACTORY:
             if (optval instanceof ChannelFactoryWrapper) {
-                channelWrapperFactory = ((ChannelFactoryWrapper) optval);
+                channelWrapperFactory = (ChannelFactoryWrapper) optval;
                 return true;
             }
             else {
@@ -540,7 +539,7 @@ public class Options
 
         case ZMQ.ZMQ_TLS_PRINCIPAL_CONVERT:
             if (optval instanceof PrincipalConverter) {
-                this.principalConverter = (PrincipalConverter) optval;
+                principalConverter = (PrincipalConverter) optval;
                 return true;
             }
             else {
@@ -572,7 +571,8 @@ public class Options
         }
         catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new IllegalArgumentException(e);
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException e) {
             throw new IllegalArgumentException(e.getCause());
         }
     }
@@ -580,7 +580,7 @@ public class Options
     private <T> Class<? extends T> checkCustomCodec(Object optval, Class<T> type)
     {
         Class<?> clazz = (Class<?>) optval;
-        if (! type.isAssignableFrom(clazz)) {
+        if (!type.isAssignableFrom(clazz)) {
             throw new ZError.InstantiationException("Custom " + clazz.getCanonicalName() + " is not assignable from " + type.getCanonicalName());
         }
         Class<? extends T> custom = clazz.asSubclass(type);
@@ -688,12 +688,12 @@ public class Options
 
         case ZMQ.ZMQ_PLAIN_USERNAME:
             return mechanism instanceof PlainMechanismSettings ?
-                           (T) ((PlainMechanismSettings)mechanism).username()
+                           (T) ((PlainMechanismSettings) mechanism).username()
                            : null;
 
         case ZMQ.ZMQ_PLAIN_PASSWORD:
             return mechanism instanceof PlainMechanismSettings ?
-                           (T) ((PlainMechanismSettings)mechanism).password()
+                           (T) ((PlainMechanismSettings) mechanism).password()
                            : null;
 
         case ZMQ.ZMQ_ZAP_DOMAIN:
@@ -703,21 +703,21 @@ public class Options
             return (T) lastEndpoint;
 
         case ZMQ.ZMQ_CURVE_SERVER:
-            return (T) Boolean.valueOf((mechanism instanceof CurveMechanismSettings) && ((CurveMechanismSettings)mechanism).isServer());
+            return (T) Boolean.valueOf((mechanism instanceof CurveMechanismSettings) && ((CurveMechanismSettings) mechanism).isServer());
 
         case ZMQ.ZMQ_CURVE_PUBLICKEY:
             return mechanism instanceof CurveMechanismSettings ?
-                           (T) ((CurveMechanismSettings)mechanism).publicKey()
+                           (T) ((CurveMechanismSettings) mechanism).publicKey()
                            : null;
 
         case ZMQ.ZMQ_CURVE_SERVERKEY:
             return mechanism instanceof CurveMechanismSettings ?
-                           (T) ((CurveMechanismSettings)mechanism).serverKey()
+                           (T) ((CurveMechanismSettings) mechanism).serverKey()
                            : null;
 
         case ZMQ.ZMQ_CURVE_SECRETKEY:
             return mechanism instanceof CurveMechanismSettings ?
-                           (T) ((CurveMechanismSettings)mechanism).secretKey()
+                           (T) ((CurveMechanismSettings) mechanism).secretKey()
                            : null;
 
         case ZMQ.ZMQ_CONFLATE:
@@ -728,17 +728,17 @@ public class Options
 
         case ZMQ.ZMQ_GSSAPI_PRINCIPAL:
             return mechanism instanceof GssapiMechanismSettings ?
-                           (T) ((GssapiMechanismSettings)mechanism).gssPrincipal()
+                           (T) ((GssapiMechanismSettings) mechanism).gssPrincipal()
                            : null;
 
         case ZMQ.ZMQ_GSSAPI_SERVICE_PRINCIPAL:
             return mechanism instanceof GssapiMechanismSettings ?
-                           (T) ((GssapiMechanismSettings)mechanism).gssServicePrincipal()
+                           (T) ((GssapiMechanismSettings) mechanism).gssServicePrincipal()
                            : null;
 
         case ZMQ.ZMQ_GSSAPI_PLAINTEXT:
             return mechanism instanceof GssapiMechanismSettings ?
-                           (T) ((GssapiMechanismSettings)mechanism).gssPlaintext()
+                           (T) ((GssapiMechanismSettings) mechanism).gssPlaintext()
                            : null;
 
         case ZMQ.ZMQ_HANDSHAKE_IVL:
@@ -758,7 +758,7 @@ public class Options
             return (T) heartbeatContext;
 
         case ZMQ.ZMQ_MSG_ALLOCATOR:
-            return(T)  allocator;
+            return (T) allocator;
 
         case ZMQ.ZMQ_MSG_ALLOCATION_HEAP_THRESHOLD:
             if (allocator instanceof MsgAllocatorThreshold) {
@@ -792,7 +792,8 @@ public class Options
         }
     }
 
-    public static Duration parseDuration(Object duration) {
+    public static Duration parseDuration(Object duration)
+    {
         if (duration instanceof Duration) {
             return (Duration) duration;
         }
@@ -804,7 +805,7 @@ public class Options
                             .longValue()
             );
         }
-        else if (duration instanceof Number){
+        else if (duration instanceof Number) {
             long durationLong = ((Number) duration).longValue();
             return Duration.ofMillis(durationLong);
         }

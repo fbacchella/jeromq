@@ -26,7 +26,6 @@ import org.zeromq.ZProxy.Plug;
 //  This shows how to capture data using a pub-sub proxy
 public class EspressoTest
 {
-
     //  The subscriber thread requests messages starting with
     //  A and B, then reads and counts incoming messages.
     private static class Subscriber extends ZActor.SimpleActor
@@ -64,7 +63,8 @@ public class EspressoTest
         }
 
         @Override
-        public String premiere(Socket pipe) {
+        public String premiere(Socket pipe)
+        {
             wait.countDown();
             return "Subscriber";
         }
@@ -111,7 +111,8 @@ public class EspressoTest
         }
 
         @Override
-        public String premiere(Socket pipe) {
+        public String premiere(Socket pipe)
+        {
             wait.countDown();
             return "Publisher";
         }
@@ -133,7 +134,8 @@ public class EspressoTest
     {
         private final CountDownLatch wait;
 
-        public Listener(CountDownLatch wait) {
+        public Listener(CountDownLatch wait)
+        {
             this.wait = wait;
         }
 
@@ -157,7 +159,8 @@ public class EspressoTest
         }
 
         @Override
-        public String premiere(Socket pipe) {
+        public String premiere(Socket pipe)
+        {
             wait.countDown();
             return "Listener";
         }

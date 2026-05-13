@@ -31,10 +31,6 @@ import zmq.io.net.SocketFactory.ChannelFactoryWrapper;
 import zmq.io.net.tls.PrincipalConverter;
 import zmq.msg.MsgAllocator;
 import zmq.util.Draft;
-import zmq.util.Z85;
-
-import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE;
-import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE_Z85;
 
 /**
  * <p>The ØMQ lightweight messaging kernel is a library which extends the standard socket interfaces
@@ -3142,7 +3138,7 @@ public class ZMQ
          * @see zmq.io.mechanism.curve.CurveMechanismSettings
          * @see zmq.io.mechanism.NullMechanism.NullMechanismSettings
          */
-        public <T extends MechanismSettings > T getMechanism()
+        public <T extends MechanismSettings> T getMechanism()
         {
             return base.getSocketOptx(zmq.ZMQ.ZMQ_MECHANISM);
         }
@@ -3156,7 +3152,7 @@ public class ZMQ
          * @see zmq.io.mechanism.curve.CurveMechanismSettings
          * @see zmq.io.mechanism.NullMechanism.NullMechanismSettings
          */
-        public <T extends MechanismSettings > boolean setMechanism(T mechanism)
+        public <T extends MechanismSettings> boolean setMechanism(T mechanism)
         {
             return base.setSocketOpt(zmq.ZMQ.ZMQ_MECHANISM, mechanism);
         }

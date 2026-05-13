@@ -17,8 +17,10 @@ import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE;
 import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE_BASE64;
 import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE_Z85;
 
-public class CurveMechanismSettings implements MechanismSettings<CurveMechanismSettings> {
-    public static class Builder {
+public class CurveMechanismSettings implements MechanismSettings<CurveMechanismSettings>
+{
+    public static class Builder
+    {
         private byte[] publicKey;
         private byte[] secretKey;
         private byte[] serverKey;
@@ -49,12 +51,14 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
             curve25519xsalsa20poly1305.crypto_box_keypair(publicKey, secretKey);
             return this;
         }
-        private byte[] curveKey(Object optval) {
+        private byte[] curveKey(Object optval)
+        {
             byte[] key = null;
             // if the optval is already the key don't do any parsing
             if (optval instanceof byte[] && ((byte[]) optval).length == CURVE_KEYSIZE) {
                 key = (byte[]) optval;
-            } else if (optval instanceof String) {
+            }
+            else if (optval instanceof String) {
                 String val = (String) optval;
                 int length = val.length();
                 if (length == CURVE_KEYSIZE_Z85) {
@@ -66,7 +70,8 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
             }
             return key;
         }
-        public CurveMechanismSettings build() {
+        public CurveMechanismSettings build()
+        {
             return new CurveMechanismSettings(this);
         }
     }
@@ -81,7 +86,8 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
     private final byte[] secretKey;
     private final byte[] serverKey;
 
-    public CurveMechanismSettings(Builder builder) {
+    public CurveMechanismSettings(Builder builder)
+    {
         this.publicKey = builder.publicKey;
         this.secretKey = builder.secretKey;
         this.serverKey = builder.serverKey;
@@ -91,24 +97,29 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
     }
 
     @Override
-    public Mechanisms getMechanism() {
+    public Mechanisms getMechanism()
+    {
         return Mechanisms.CURVE;
     }
 
     @Override
-    public CurveMechanismSettings resolve() {
+    public CurveMechanismSettings resolve()
+    {
         return this;
     }
 
-    public byte[] publicKey() {
+    public byte[] publicKey()
+    {
         return publicKey;
     }
 
-    public byte[] serverKey() {
+    public byte[] serverKey()
+    {
         return serverKey;
     }
 
-    public byte[] secretKey() {
+    public byte[] secretKey()
+    {
         return secretKey;
     }
 
@@ -129,8 +140,8 @@ public class CurveMechanismSettings implements MechanismSettings<CurveMechanismS
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return "CURVE";
     }
-
 }

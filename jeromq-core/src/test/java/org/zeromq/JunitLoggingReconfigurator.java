@@ -11,7 +11,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * Logging is configured too early in the junit lifecycle, so an arbitrary extension is defined.
  * When JUnit resolves the class, logging is reconfigured.
  */
-public class JunitLoggingReconfigurator implements BeforeAllCallback {
+public class JunitLoggingReconfigurator implements BeforeAllCallback
+{
     static
     {
         LoggerContext lctx = (LoggerContext) LogManager.getContext(false);

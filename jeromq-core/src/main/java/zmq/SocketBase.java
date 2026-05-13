@@ -333,7 +333,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
     }
 
     @SuppressWarnings("unchecked")
-    public <T>T getSocketOptx(int option)
+    public <T> T getSocketOptx(int option)
     {
         if (ctxTerminated.get()) {
             errno.set(ZError.ETERM);

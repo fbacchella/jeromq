@@ -10,7 +10,6 @@ import zmq.ZMQ;
 
 class V1ProtocolTest extends AbstractProtocolVersion
 {
-
     @Test
     void testFixIssue524() throws IOException, InterruptedException
     {

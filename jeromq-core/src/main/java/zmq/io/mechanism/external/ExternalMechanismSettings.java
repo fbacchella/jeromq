@@ -7,20 +7,24 @@ import zmq.io.mechanism.MechanismSettings;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 
-public class ExternalMechanismSettings implements MechanismSettings<ExternalMechanismSettings> {
+public class ExternalMechanismSettings implements MechanismSettings<ExternalMechanismSettings>
+{
     private final boolean asServer;
 
-    public ExternalMechanismSettings(boolean asServer) {
+    public ExternalMechanismSettings(boolean asServer)
+    {
         this.asServer = asServer;
     }
 
     @Override
-    public Mechanisms getMechanism() {
+    public Mechanisms getMechanism()
+    {
         return Mechanisms.EXTERNAL;
     }
 
     @Override
-    public ExternalMechanismSettings resolve() {
+    public ExternalMechanismSettings resolve()
+    {
         return this;
     }
     @Override
@@ -35,8 +39,8 @@ public class ExternalMechanismSettings implements MechanismSettings<ExternalMech
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return "NULL";
     }
-
 }

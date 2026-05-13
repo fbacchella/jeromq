@@ -20,13 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnabledForJreRange(min = JRE.JAVA_16)
-class IpsSocketTest {
-
+class IpsSocketTest
+{
     @TempDir
     Path tempDir;
 
     @Test
-    void testPairIpc() {
+    void testPairIpc()
+    {
         String addr = "ipc://" + tempDir.resolve("zmq-test.sock");
 
         assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
@@ -43,5 +44,4 @@ class IpsSocketTest {
             }
         });
     }
-
 }

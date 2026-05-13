@@ -240,7 +240,8 @@ public class StreamEngine implements IEngine, IPollEvents
         plugged = true;
         try {
             fd.plug();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new ZError.IOException(e);
         }
 

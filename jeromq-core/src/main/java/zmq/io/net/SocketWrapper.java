@@ -13,14 +13,14 @@ public interface SocketWrapper<S extends SocketAddress> extends ByteChannel
 {
     default void plug() throws IOException
     {
-
+        // Default to no action
     }
     int write(ByteBuffer inBuffer) throws IOException;
     int read(ByteBuffer outBuffer) throws IOException;
     void close() throws IOException;
     default void resolveMetadata(Metadata metadata)
     {
-
+        // Default call does nothing
     }
 
     boolean connect(S sa) throws IOException;

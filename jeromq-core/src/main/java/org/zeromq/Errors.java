@@ -85,9 +85,11 @@ public enum Errors {
     {
         if (code <= 0) {
             return NOERROR;
-        } else if (MAP.containsKey(code)) {
+        }
+        else if (MAP.containsKey(code)) {
             return MAP.get(code);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("Unknown " + Errors.class.getName() + " enum code: " + code);
         }
     }

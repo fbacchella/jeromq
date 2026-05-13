@@ -6,15 +6,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
 
 import tlschannel.ClientTlsChannel;
 import tlschannel.NeedsReadException;
@@ -30,7 +27,8 @@ import zmq.util.Errno;
 
 class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
 {
-    static class Builder {
+    static class Builder
+    {
         private final SocketWrapper<InetSocketAddress> rawSocket;
         private Errno errno;
         private SSLContext ctx;
@@ -97,7 +95,8 @@ class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
         assert builder.errno != null;
         if (builder.asServer) {
             tlsChannel = buildServer(builder.rawSocket, builder.ctx, builder.sniSslContextFactory, builder.parameters);
-        } else {
+        }
+        else {
             tlsChannel = buildClient(builder.rawSocket, builder.ctx, builder.parameters);
         }
         this.rawChannel = builder.rawSocket;
@@ -139,11 +138,13 @@ class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
     {
         try {
             return tlsChannel.write(inBuffer);
-        } catch (SSLException ex) {
+        }
+        catch (SSLException ex) {
             Logger.getLogger(getClass().getName()).warning("write " + ex.getMessage());
             errno.set(ZError.ENOTSUP, ex);
             return -1;
-        } catch (NeedsReadException | NeedsWriteException ex) {
+        }
+        catch (NeedsReadException | NeedsWriteException ex) {
             // Because of handshake, both read and write exceptions can be thrown
             return 0;
         }
@@ -154,11 +155,13 @@ class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
     {
         try {
             return tlsChannel.read(outBuffer);
-        } catch (SSLException ex) {
+        }
+        catch (SSLException ex) {
             Logger.getLogger(getClass().getName()).warning("write " + ex.getMessage());
             errno.set(ZError.ENOTSUP, ex);
             return -1;
-        } catch (NeedsReadException | NeedsWriteException ex) {
+        }
+        catch (NeedsReadException | NeedsWriteException ex) {
             // Because of handshake, both read and write exceptions can be thrown
             return 0;
         }
@@ -223,7 +226,7 @@ class TlsSocketWrapper implements SocketWrapper<InetSocketAddress>
     @Override
     public void tune()
     {
-
+        // Nothing to tune
     }
 
     @Override

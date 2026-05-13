@@ -20,7 +20,8 @@ class TestPushPullThreadedTcp
 {
     private static Logger logger = LogManager.getLogger(TestPushPullThreadedTcp.class);
 
-    private static class Worker implements Runnable {
+    private static class Worker implements Runnable
+    {
         private final int count;
         private final AtomicBoolean finished = new AtomicBoolean();
         private int idx;
@@ -76,25 +77,29 @@ class TestPushPullThreadedTcp
 
     @Test
     @Timeout(value = 15, unit = TimeUnit.SECONDS)
-    void testPushPull1() throws Exception {
+    void testPushPull1() throws Exception
+    {
         test(1);
     }
 
     @Test
     @Timeout(value = 15, unit = TimeUnit.SECONDS)
-    void testPushPull500() throws Exception {
+    void testPushPull500() throws Exception
+    {
         test(500);
     }
 
     @Test
     @Timeout(value = 15, unit = TimeUnit.SECONDS)
-    void testPushPullWithWatermark() throws Exception {
+    void testPushPullWithWatermark() throws Exception
+    {
         logger.info("Sending 20000 messages to trigger watermark limit");
         test(20000);
         logger.info("testPushPullWithWatermark completed successfully");
     }
 
-    private void test(int count) throws InterruptedException {
+    private void test(int count) throws InterruptedException
+    {
         logger.debug("Test started with {} messages", count);
 
         ExecutorService threadPool = Executors.newFixedThreadPool(2);

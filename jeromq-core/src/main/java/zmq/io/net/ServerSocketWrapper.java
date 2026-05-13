@@ -6,7 +6,8 @@ import java.nio.channels.SelectableChannel;
 
 import zmq.io.net.Address.IZAddress;
 
-public interface ServerSocketWrapper<S extends SocketAddress> extends AutoCloseable {
+public interface ServerSocketWrapper<S extends SocketAddress> extends AutoCloseable
+{
     SocketWrapper<S> accept(IZAddress<S> address) throws IOException;
 
     void close() throws IOException;

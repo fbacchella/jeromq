@@ -235,7 +235,8 @@ public class CurveServerMechanism extends Mechanism
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return Mechanisms.CURVE.name();
     }
 

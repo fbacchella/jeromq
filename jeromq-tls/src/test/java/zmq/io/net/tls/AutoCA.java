@@ -35,7 +35,13 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-public class AutoCA {
+public class AutoCA
+{
+    private AutoCA()
+    {
+        // Unreachable cosntructor
+    }
+
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException
     {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -65,7 +71,6 @@ public class AutoCA {
             PrivateKey caPrivateKey, String dn, Object... altNames
     ) throws CertIOException, OperatorCreationException, CertificateException
     {
-
         X500Name issuer = new X500Name(caCert.getSubjectX500Principal().getName());
         X500Name subject = new X500Name(dn);
         BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
@@ -82,9 +87,11 @@ public class AutoCA {
                     InetAddress ia = (InetAddress) altName;
                     names.add(new GeneralName(GeneralName.iPAddress, ia.getHostAddress()));
                     names.add(new GeneralName(GeneralName.dNSName, ia.getHostName()));
-                } else if (altName instanceof String) {
+                }
+                else if (altName instanceof String) {
                     names.add(new GeneralName(GeneralName.dNSName, (String) altName));
-                } else {
+                }
+                else {
                     names.add(GeneralName.getInstance(altName));
                 }
             }

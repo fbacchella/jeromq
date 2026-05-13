@@ -187,7 +187,8 @@ public class Ctx
          * @param <T>
          */
         @SuppressWarnings("unchecked")
-        private <T> ReferenceQueue<T> getQueue() {
+        private <T> ReferenceQueue<T> getQueue()
+        {
             return (ReferenceQueue<T>) queue;
         }
     }

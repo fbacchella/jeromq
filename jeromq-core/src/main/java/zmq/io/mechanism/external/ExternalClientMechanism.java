@@ -6,7 +6,6 @@ import zmq.ZError;
 import zmq.ZMQ;
 import zmq.io.SessionBase;
 import zmq.io.mechanism.Mechanism;
-import zmq.io.mechanism.Mechanisms;
 
 import static zmq.io.Metadata.SOCKET_TYPE;
 

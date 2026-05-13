@@ -164,7 +164,8 @@ public class ZAuth implements Closeable
                 }
                 try {
                     certStore = new ZCertStore(Path.of(location), fingerprinter);
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     return false;
                 }
             }
@@ -731,7 +732,8 @@ public class ZAuth implements Closeable
                 if (verbose) {
                     if (repliesEnabled) {
                         System.out.println("ZAuth: Enabled replies");
-                    } else {
+                    }
+                    else {
                         System.out.println("ZAuth: Disabled replies");
                     }
                 }
@@ -751,10 +753,12 @@ public class ZAuth implements Closeable
                 if (authenticator != null) {
                     if (authenticator.configure(msg, verbose)) {
                         rc = pipe.send(OK);
-                    } else {
+                    }
+                    else {
                         rc = pipe.send("ERROR");
                     }
-                } else {
+                }
+                else {
                     System.out.printf("ZAuth: Invalid command %s%n", command);
                     rc = true;
                 }

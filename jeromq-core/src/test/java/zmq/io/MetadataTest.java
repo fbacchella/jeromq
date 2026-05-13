@@ -67,7 +67,8 @@ class MetadataTest
                     Assertions.assertEquals(9, ret);
                     ret = ZMQ.send(handler, metadata, metadata.length, 0);
                     Assertions.assertEquals(metadata.length, ret);
-                } else {
+                }
+                else {
                     ret = ZMQ.send(handler, "400", ZMQ.ZMQ_SNDMORE);
                     Assertions.assertEquals(3, ret);
                     ret = ZMQ.send(handler, "BAD DOMAIN", ZMQ.ZMQ_SNDMORE);

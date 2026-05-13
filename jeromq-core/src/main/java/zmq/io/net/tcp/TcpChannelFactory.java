@@ -18,19 +18,22 @@ import zmq.io.net.ServerSocketWrapper;
 import zmq.io.net.SocketWrapper;
 import zmq.util.Utils;
 
-public class TcpChannelFactory extends SocketFactory<InetSocketAddress> {
+public class TcpChannelFactory extends SocketFactory<InetSocketAddress>
+{
     private static final boolean isWindows;
     static {
         String os = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
         isWindows = os.contains("win");
     }
     @Override
-    public ServerSocketWrapper makeServerSocket(Options options) throws IOException {
+    public ServerSocketWrapper makeServerSocket(Options options) throws IOException
+    {
         return new TcpServerSocket(options);
     }
 
     @Override
-    public SocketWrapper<InetSocketAddress> makeSocket(Options options) throws IOException {
+    public SocketWrapper<InetSocketAddress> makeSocket(Options options) throws IOException
+    {
         SocketChannel channel = SocketChannel.open();
         //  Set the socket buffer limits for the underlying socket.
         if (options.sndbuf != 0) {
@@ -47,16 +50,19 @@ public class TcpChannelFactory extends SocketFactory<InetSocketAddress> {
         return new TcpSocket(options, channel);
     }
 
-    private class TcpServerSocket implements ServerSocketWrapper<InetSocketAddress> {
+    private class TcpServerSocket implements ServerSocketWrapper<InetSocketAddress>
+    {
         private final ServerSocketChannel serverChannel;
         private final Options options;
-        public TcpServerSocket(Options options) throws IOException {
+        public TcpServerSocket(Options options) throws IOException
+        {
             this.serverChannel = ServerSocketChannel.open();
             this.options = options;
         }
 
         @Override
-        public SocketWrapper<InetSocketAddress> accept(IZAddress<InetSocketAddress> address) throws IOException {
+        public SocketWrapper<InetSocketAddress> accept(IZAddress<InetSocketAddress> address) throws IOException
+        {
             SocketChannel sock = serverChannel.accept();
             if (!options.tcpAcceptFilters.isEmpty()) {
                 boolean matched = false;
@@ -94,22 +100,26 @@ public class TcpChannelFactory extends SocketFactory<InetSocketAddress> {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() throws IOException
+        {
             serverChannel.close();
         }
 
         @Override
-        public SelectableChannel getSelectableChannel() {
+        public SelectableChannel getSelectableChannel()
+        {
             return serverChannel;
         }
 
         @Override
-        public void configureBlocking(boolean b) throws IOException {
+        public void configureBlocking(boolean b) throws IOException
+        {
             serverChannel.configureBlocking(b);
         }
 
         @Override
-        public void bind(InetSocketAddress socketAddress) throws IOException {
+        public void bind(InetSocketAddress socketAddress) throws IOException
+        {
             //  Set the socket buffer limits for the underlying socket.
             if (options.sndbuf != 0) {
                 serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, options.sndbuf);
@@ -124,7 +134,8 @@ public class TcpChannelFactory extends SocketFactory<InetSocketAddress> {
         }
 
         @Override
-        public InetSocketAddress getAddress() throws IOException {
+        public InetSocketAddress getAddress() throws IOException
+        {
             return (InetSocketAddress) serverChannel.getLocalAddress();
         }
     }
@@ -159,65 +170,76 @@ public class TcpChannelFactory extends SocketFactory<InetSocketAddress> {
         }
 
         @Override
-        public boolean connect(InetSocketAddress sa) throws IOException {
+        public boolean connect(InetSocketAddress sa) throws IOException
+        {
             return channel.connect(sa);
         }
 
         @Override
-        public boolean finishConnect() throws IOException {
+        public boolean finishConnect() throws IOException
+        {
             return channel.finishConnect();
         }
 
         @Override
-        public SocketChannel getNativeSocket() {
+        public SocketChannel getNativeSocket()
+        {
             return channel;
         }
 
         @Override
-        public boolean isOpen() {
+        public boolean isOpen()
+        {
             return channel.isOpen();
         }
 
         @Override
-        public boolean isBlocking() {
+        public boolean isBlocking()
+        {
             return channel.isBlocking();
         }
 
         @Override
-        public void unblocking() throws IOException {
+        public void unblocking() throws IOException
+        {
             channel.configureBlocking(false);
         }
 
         @Override
-        public Address<InetSocketAddress> getPeerSocketAddress() {
+        public Address<InetSocketAddress> getPeerSocketAddress()
+        {
             return Utils.getPeerSocketAddress(channel);
         }
 
         @Override
-        public Address<InetSocketAddress> getLocalSocketAddress() {
+        public Address<InetSocketAddress> getLocalSocketAddress()
+        {
             return Utils.getLocalSockedAddress(channel);
         }
 
         @Override
-        public SelectableChannel getSelectableChannel() {
+        public SelectableChannel getSelectableChannel()
+        {
             return channel;
         }
 
         @Override
-        public void configureBlocking(boolean b) throws IOException {
+        public void configureBlocking(boolean b) throws IOException
+        {
             channel.configureBlocking(b);
         }
 
         @Override
-        public void tune() {
+        public void tune()
+        {
             try {
                 channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                 TcpUtils.tuneTcpKeepalives(channel, options.tcpKeepAlive, options.tcpKeepAliveCnt,
                         options.tcpKeepAliveIdle, options.tcpKeepAliveIntvl);
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 throw new ZError.IOException(e);
             }
         }
     }
-
 }

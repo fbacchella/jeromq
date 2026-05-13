@@ -10,6 +10,5 @@ public enum Mechanisms
     CURVE,
     GSSAPI;
 
-    public static NullMechanismSettings NULLINSTANCE = new NullMechanismSettings();
-
+    public static final NullMechanismSettings NULLINSTANCE = new NullMechanismSettings();
 }

@@ -6,7 +6,8 @@ import java.util.Optional;
 public class Errno
 {
     @FunctionalInterface
-    private interface ErrorContext {
+    private interface ErrorContext
+    {
         int getErrno();
         default Optional<Throwable> getThrowable()
         {
@@ -14,22 +15,26 @@ public class Errno
         }
     }
 
-    private static class WithException implements ErrorContext {
+    private static class WithException implements ErrorContext
+    {
         private final int errno;
         private final Throwable exception;
 
-        private WithException(int errno, Throwable exception) {
+        private WithException(int errno, Throwable exception)
+        {
             this.errno = errno;
             this.exception = exception;
         }
 
         @Override
-        public int getErrno() {
+        public int getErrno()
+        {
             return errno;
         }
 
         @Override
-        public Optional<Throwable> getThrowable() {
+        public Optional<Throwable> getThrowable()
+        {
             return Optional.of(exception);
         }
     }

@@ -11,8 +11,8 @@ import zmq.io.mechanism.plain.PlainMechanismSettings;
 
 import org.zeromq.ZMQ.Socket;
 
-public class SocketConfigurator {
-
+public class SocketConfigurator
+{
     public final String endpoint;
     public final SocketType type;
     public final Method method;
@@ -53,7 +53,8 @@ public class SocketConfigurator {
 
     public final MechanismSettings<?> mechanism;
 
-    private SocketConfigurator(Builder builder) {
+    private SocketConfigurator(Builder builder)
+    {
         this.endpoint = builder.endpoint;
         this.type = builder.type;
         this.method = builder.method;
@@ -95,7 +96,8 @@ public class SocketConfigurator {
         this.mechanism = builder.mechanism;
     }
 
-    public Socket getSocket(Socket socket) {
+    public Socket getSocket(Socket socket)
+    {
         Optional.of(maxMsgSize).stream().mapToLong(i -> i).filter(i -> i >= 0).forEach(socket::setMaxMsgSize);
         Optional.of(linger).filter(i -> i > 0).ifPresent(socket::setLinger);
         Optional.of(backlog).filter(i -> i >= 0).ifPresent(socket::setBacklog);
@@ -115,7 +117,8 @@ public class SocketConfigurator {
             byte[] identityBytes = new byte[identity.remaining()];
             identity.duplicate().get(identityBytes);
             socket.setIdentity(identityBytes);
-        } else if (endpoint != null && type != null && method != null) {
+        }
+        else if (endpoint != null && type != null && method != null) {
             String url = endpoint + ":" + type + ":" + method.getSymbol();
             socket.setIdentity(url.getBytes());
         }
@@ -144,7 +147,8 @@ public class SocketConfigurator {
         return socket;
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private String endpoint;
         private SocketType type;
         private Method method;
@@ -191,226 +195,271 @@ public class SocketConfigurator {
 
         private MechanismSettings<?> mechanism;
 
-        public Builder endpoint(String endpoint) {
+        public Builder endpoint(String endpoint)
+        {
             this.endpoint = endpoint;
             return this;
         }
 
-        public Builder type(SocketType type) {
+        public Builder type(SocketType type)
+        {
             this.type = type;
             return this;
         }
 
-        public Builder method(Method method) {
+        public Builder method(Method method)
+        {
             this.method = method;
             return this;
         }
 
-        public Builder sendHwm(int sendHwm) {
+        public Builder sendHwm(int sendHwm)
+        {
             this.sendHwm = sendHwm;
             return this;
         }
 
-        public Builder recvHwm(int recvHwm) {
+        public Builder recvHwm(int recvHwm)
+        {
             this.recvHwm = recvHwm;
             return this;
         }
 
-        public Builder maxMsgSize(long maxMsgSize) {
+        public Builder maxMsgSize(long maxMsgSize)
+        {
             this.maxMsgSize = maxMsgSize;
             return this;
         }
 
-        public Builder linger(int linger) {
+        public Builder linger(int linger)
+        {
             this.linger = linger;
             return this;
         }
 
-        public Builder peerPublicKey(String peerPublicKey) {
+        public Builder peerPublicKey(String peerPublicKey)
+        {
             this.peerPublicKey = peerPublicKey;
             return this;
         }
 
-        public Builder privateKeyFile(String privateKeyFile) {
+        public Builder privateKeyFile(String privateKeyFile)
+        {
             this.privateKeyFile = privateKeyFile;
             return this;
         }
 
-        public Builder publicKey(String publicKey) {
+        public Builder publicKey(String publicKey)
+        {
             this.publicKey = publicKey;
             return this;
         }
 
-        public Builder autoCreate(boolean autoCreate) {
+        public Builder autoCreate(boolean autoCreate)
+        {
             this.autoCreate = autoCreate;
             return this;
         }
 
-        public Builder backlog(int backlog) {
+        public Builder backlog(int backlog)
+        {
             this.backlog = backlog;
             return this;
         }
 
-        public Builder affinity(long affinity) {
+        public Builder affinity(long affinity)
+        {
             this.affinity = affinity;
             return this;
         }
 
-        public Builder identity(byte[] identity) {
+        public Builder identity(byte[] identity)
+        {
             this.identity = identity == null ? null : Arrays.copyOf(identity, identity.length);
             return this;
         }
 
-        public Builder ipv6(boolean ipv6) {
+        public Builder ipv6(boolean ipv6)
+        {
             this.ipv6 = ipv6;
             return this;
         }
 
-        public Builder receiveBufferSize(int receiveBufferSize) {
+        public Builder receiveBufferSize(int receiveBufferSize)
+        {
             this.receiveBufferSize = receiveBufferSize;
             return this;
         }
 
-        public Builder sendBufferSize(int sendBufferSize) {
+        public Builder sendBufferSize(int sendBufferSize)
+        {
             this.sendBufferSize = sendBufferSize;
             return this;
         }
 
-        public Builder receiveTimeOut(int receiveTimeOut) {
+        public Builder receiveTimeOut(int receiveTimeOut)
+        {
             this.receiveTimeOut = receiveTimeOut;
             return this;
         }
 
-        public Builder reconnectIVL(int reconnectIVL) {
+        public Builder reconnectIVL(int reconnectIVL)
+        {
             this.reconnectIVL = reconnectIVL;
             return this;
         }
 
-        public Builder reconnectIVLMax(int reconnectIVLMax) {
+        public Builder reconnectIVLMax(int reconnectIVLMax)
+        {
             this.reconnectIVLMax = reconnectIVLMax;
             return this;
         }
 
-        public Builder sendTimeOut(int sendTimeOut) {
+        public Builder sendTimeOut(int sendTimeOut)
+        {
             this.sendTimeOut = sendTimeOut;
             return this;
         }
 
-        public Builder tcpKeepAlive(int tcpKeepAlive) {
+        public Builder tcpKeepAlive(int tcpKeepAlive)
+        {
             this.tcpKeepAlive = tcpKeepAlive;
             return this;
         }
 
-        public Builder tcpKeepAliveCount(int tcpKeepAliveCount) {
+        public Builder tcpKeepAliveCount(int tcpKeepAliveCount)
+        {
             this.tcpKeepAliveCount = tcpKeepAliveCount;
             return this;
         }
 
-        public Builder tcpKeepAliveIdle(int tcpKeepAliveIdle) {
+        public Builder tcpKeepAliveIdle(int tcpKeepAliveIdle)
+        {
             this.tcpKeepAliveIdle = tcpKeepAliveIdle;
             return this;
         }
 
-        public Builder tcpKeepAliveInterval(int tcpKeepAliveInterval) {
+        public Builder tcpKeepAliveInterval(int tcpKeepAliveInterval)
+        {
             this.tcpKeepAliveInterval = tcpKeepAliveInterval;
             return this;
         }
 
-        public Builder xpubVerbose(boolean xpubVerbose) {
+        public Builder xpubVerbose(boolean xpubVerbose)
+        {
             this.xpubVerbose = xpubVerbose;
             return this;
         }
 
-        public Builder tos(int tos) {
+        public Builder tos(int tos)
+        {
             this.tos = tos;
             return this;
         }
 
-        public Builder heartbeatIvl(int heartbeatIvl) {
+        public Builder heartbeatIvl(int heartbeatIvl)
+        {
             this.heartbeatIvl = heartbeatIvl;
             return this;
         }
 
-        public Builder heartbeatTimeout(int heartbeatTimeout) {
+        public Builder heartbeatTimeout(int heartbeatTimeout)
+        {
             this.heartbeatTimeout = heartbeatTimeout;
             return this;
         }
 
-        public Builder heartbeatTtl(int heartbeatTtl) {
+        public Builder heartbeatTtl(int heartbeatTtl)
+        {
             this.heartbeatTtl = heartbeatTtl;
             return this;
         }
 
-        public Builder heartbeatContext(byte[] heartbeatContext) {
+        public Builder heartbeatContext(byte[] heartbeatContext)
+        {
             this.heartbeatContext = heartbeatContext == null ? null : Arrays.copyOf(heartbeatContext, heartbeatContext.length);
             return this;
         }
 
-        public Builder handshakeIvl(int handshakeIvl) {
+        public Builder handshakeIvl(int handshakeIvl)
+        {
             this.handshakeIvl = handshakeIvl;
             return this;
         }
 
-        public Builder socksProxyPort(int socksProxyPort) {
+        public Builder socksProxyPort(int socksProxyPort)
+        {
             this.socksProxyPort = socksProxyPort;
             return this;
         }
 
-        public Builder socksProxyHost(String socksProxyHost) {
+        public Builder socksProxyHost(String socksProxyHost)
+        {
             this.socksProxyHost = socksProxyHost;
             return this;
         }
 
-        public Builder xpubNoDrop(boolean xpubNoDrop) {
+        public Builder xpubNoDrop(boolean xpubNoDrop)
+        {
             this.xpubNoDrop = xpubNoDrop;
             return this;
         }
 
-        public Builder xpubManual(boolean xpubManual) {
+        public Builder xpubManual(boolean xpubManual)
+        {
             this.xpubManual = xpubManual;
             return this;
         }
 
-        public Builder xpubVerboser(boolean xpubVerboser) {
+        public Builder xpubVerboser(boolean xpubVerboser)
+        {
             this.xpubVerboser = xpubVerboser;
             return this;
         }
 
-        public Builder plainUsername(String plainUsername) {
+        public Builder plainUsername(String plainUsername)
+        {
             this.plainUsername = plainUsername;
             return this;
         }
 
-        public Builder plainPassword(String plainPassword) {
+        public Builder plainPassword(String plainPassword)
+        {
             this.plainPassword = plainPassword;
             return this;
         }
 
-        public Builder curvePublicKey(byte[] curvePublicKey) {
+        public Builder curvePublicKey(byte[] curvePublicKey)
+        {
             this.curvePublicKey = curvePublicKey != null ? Arrays.copyOf(curvePublicKey, curvePublicKey.length) : null;
             return this;
         }
 
-        public Builder curveSecretKey(byte[] curveSecretKey) {
+        public Builder curveSecretKey(byte[] curveSecretKey)
+        {
             this.curveSecretKey = curveSecretKey != null ? Arrays.copyOf(curveSecretKey, curveSecretKey.length) : null;
             return this;
         }
 
-        public Builder curveServerKey(byte[] curveServerKey) {
+        public Builder curveServerKey(byte[] curveServerKey)
+        {
             this.curveServerKey = curveServerKey != null ? Arrays.copyOf(curveServerKey, curveServerKey.length) : null;
             return this;
         }
 
-        public Builder mechanism(MechanismSettings<?> mechanism) {
+        public Builder mechanism(MechanismSettings<?> mechanism)
+        {
             this.mechanism = mechanism;
             return this;
         }
 
-        public SocketConfigurator build() {
+        public SocketConfigurator build()
+        {
             if (mechanism == null) {
                 if (plainUsername != null || plainPassword != null) {
                     mechanism = new PlainMechanismSettings(false, plainUsername, plainPassword);
-                } else if (curveSecretKey != null) {
+                }
+                else if (curveSecretKey != null) {
                     CurveMechanismSettings.Builder curveBuilder = CurveMechanismSettings.getBuilder();
                     curveBuilder.setSecretKey(curveSecretKey);
                     if (curvePublicKey != null) {
@@ -428,15 +477,18 @@ public class SocketConfigurator {
         }
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static SocketConfigurator build() {
+    public static SocketConfigurator build()
+    {
         return builder().build();
     }
 
-    public static SocketConfigurator from(Map<String, ?> settings) {
+    public static SocketConfigurator from(Map<String, ?> settings)
+    {
         Builder builder = builder();
         for (Map.Entry<String, ?> entry : settings.entrySet()) {
             String key = entry.getKey();
@@ -451,14 +503,16 @@ public class SocketConfigurator {
                 case "type":
                     if (value instanceof SocketType) {
                         builder.type((SocketType) value);
-                    } else {
+                    }
+                    else {
                         builder.type(SocketType.valueOf((String) value));
                     }
                     break;
                 case "method":
                     if (value instanceof Method) {
                         builder.method((Method) value);
-                    } else {
+                    }
+                    else {
                         builder.method(Method.valueOf((String) value));
                     }
                     break;
@@ -495,7 +549,8 @@ public class SocketConfigurator {
                 case "identity":
                     if (value instanceof byte[]) {
                         builder.identity((byte[]) value);
-                    } else if (value instanceof ByteBuffer) {
+                    }
+                    else if (value instanceof ByteBuffer) {
                         ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
                         byte[] bytes = new byte[bb.remaining()];
                         bb.get(bytes);
@@ -553,7 +608,8 @@ public class SocketConfigurator {
                 case "heartbeatContext":
                     if (value instanceof byte[]) {
                         builder.heartbeatContext((byte[]) value);
-                    } else if (value instanceof ByteBuffer) {
+                    }
+                    else if (value instanceof ByteBuffer) {
                         ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
                         byte[] bytes = new byte[bb.remaining()];
                         bb.get(bytes);
@@ -587,7 +643,8 @@ public class SocketConfigurator {
                 case "curvePublicKey":
                     if (value instanceof byte[]) {
                         builder.curvePublicKey((byte[]) value);
-                    } else if (value instanceof ByteBuffer) {
+                    }
+                    else if (value instanceof ByteBuffer) {
                         ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
                         byte[] bytes = new byte[bb.remaining()];
                         bb.get(bytes);
@@ -597,7 +654,8 @@ public class SocketConfigurator {
                 case "curveSecretKey":
                     if (value instanceof byte[]) {
                         builder.curveSecretKey((byte[]) value);
-                    } else if (value instanceof ByteBuffer) {
+                    }
+                    else if (value instanceof ByteBuffer) {
                         ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
                         byte[] bytes = new byte[bb.remaining()];
                         bb.get(bytes);
@@ -607,7 +665,8 @@ public class SocketConfigurator {
                 case "curveServerKey":
                     if (value instanceof byte[]) {
                         builder.curveServerKey((byte[]) value);
-                    } else if (value instanceof ByteBuffer) {
+                    }
+                    else if (value instanceof ByteBuffer) {
                         ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
                         byte[] bytes = new byte[bb.remaining()];
                         bb.get(bytes);

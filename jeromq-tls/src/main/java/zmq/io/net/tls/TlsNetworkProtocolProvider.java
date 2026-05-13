@@ -94,7 +94,8 @@ public class TlsNetworkProtocolProvider implements NetworkProtocolProvider<InetS
         return factory.updateAndGet(this::lazyResolution);
     }
 
-    private SocketFactory<InetSocketAddress> lazyResolution(SocketFactory<InetSocketAddress> v) {
+    private SocketFactory<InetSocketAddress> lazyResolution(SocketFactory<InetSocketAddress> v)
+    {
         return v == null ? TlsSocketFactory.newBuilder().build().wrap(NetProtocol.tcp.factory()) : v;
     }
 }

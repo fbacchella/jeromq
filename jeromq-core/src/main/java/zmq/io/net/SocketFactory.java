@@ -5,11 +5,14 @@ import java.net.SocketAddress;
 
 import zmq.Options;
 
-public abstract class SocketFactory<S extends SocketAddress> {
+public abstract class SocketFactory<S extends SocketAddress>
+{
     @FunctionalInterface
-    public interface ChannelFactoryWrapper<S extends SocketAddress> {
+    public interface ChannelFactoryWrapper<S extends SocketAddress>
+    {
         SocketFactory<S> wrap(SocketFactory<S> factory);
-        default SocketFactory<S> wrap(NetProtocol protocol) {
+        default SocketFactory<S> wrap(NetProtocol protocol)
+        {
             return wrap(protocol.factory());
         }
     }
@@ -17,5 +20,4 @@ public abstract class SocketFactory<S extends SocketAddress> {
     public abstract SocketWrapper<S> makeSocket(Options options) throws IOException;
     @SuppressWarnings("unchecked")
     public static final ChannelFactoryWrapper<? extends SocketAddress> TRANSPARENT = f -> f;
-
 }

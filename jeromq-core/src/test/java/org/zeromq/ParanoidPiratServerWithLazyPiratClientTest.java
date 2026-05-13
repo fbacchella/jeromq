@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
@@ -438,7 +437,8 @@ class ParanoidPiratServerWithLazyPiratClientTest
                 worker.get();
                 logger.info("Restarting new worker after crash");
                 service.submit(new Worker(portWorkers));
-            } catch (InterruptedException | ExecutionException e) {
+            }
+            catch (InterruptedException | ExecutionException e) {
                 logger.error("Error in worker rebooter", e);
             }
         });

@@ -90,7 +90,8 @@ public class ExternalServerMechanism extends Mechanism
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return "";
     }
 
@@ -107,7 +108,6 @@ public class ExternalServerMechanism extends Mechanism
         }
         return rc;
     }
-
 
     private int processWelcome(Msg msg)
     {

@@ -17,8 +17,8 @@ import zmq.io.net.SocketWrapper;
 import zmq.io.net.ServerSocketWrapper;
 import zmq.util.Utils;
 
-public class IpcChannelFactory extends SocketFactory<UnixDomainSocketAddress> {
-
+public class IpcChannelFactory extends SocketFactory<UnixDomainSocketAddress>
+{
     @Override
     public ServerSocketWrapper makeServerSocket(Options options) throws IOException
     {
@@ -35,7 +35,8 @@ public class IpcChannelFactory extends SocketFactory<UnixDomainSocketAddress> {
     {
         private final ServerSocketChannel serverChannel;
         private final Options options;
-        public IpcServerSocket(Options options) throws IOException {
+        public IpcServerSocket(Options options) throws IOException
+        {
             this.serverChannel = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
             this.options = options;
         }
@@ -189,8 +190,7 @@ public class IpcChannelFactory extends SocketFactory<UnixDomainSocketAddress> {
         @Override
         public void tune()
         {
-
+            // Default to do nothing
         }
     }
-
 }

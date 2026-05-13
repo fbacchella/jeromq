@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ZConfigTest
 {
     @TempDir
-    private Path TEST_FOLDER;
+    private Path testFolder;
     private static final ZConfig      conf        = new ZConfig("root", null);
 
     @BeforeEach
@@ -31,7 +31,7 @@ public class ZConfigTest
         conf.putValue("/curve/secret-key", "(w3lSF/5yv&j*c&0h{4JHe(CETJSksTr.QSjcZE}");
         conf.putValue("metadata/name", "key-value tests");
 
-        Writer write = Files.newBufferedWriter(TEST_FOLDER.resolve("test.zpl"));
+        Writer write = Files.newBufferedWriter(testFolder.resolve("test.zpl"));
         write.write("1. ZPL configuration file example\n"); // should be discarded
         write.write(" # some initial comment \n"); // should be discarded
         write.write("meta\n");
@@ -45,7 +45,7 @@ public class ZConfigTest
         write.write("        fortuna = f95\n");
         write.close();
 
-        write = Files.newBufferedWriter(TEST_FOLDER.resolve("reference.zpl"));
+        write = Files.newBufferedWriter(testFolder.resolve("reference.zpl"));
         write.write("context\n");
         write.write("    iothreads = 1\n");
         write.write("    verbose = 1      #   Ask for a trace\n");
@@ -114,17 +114,18 @@ public class ZConfigTest
     @Test
     public void testLoadSave() throws IOException
     {
-        Path certPath = TEST_FOLDER.resolve("test.cert");
+        Path certPath = testFolder.resolve("test.cert");
         conf.save(certPath);
-        Assertions.assertTrue(isFileInPath(TEST_FOLDER, "test.cert"));
-        ZConfig loadedConfig = ZConfig.load(TEST_FOLDER.resolve("test.cert"));
+        Assertions.assertTrue(isFileInPath(testFolder, "test.cert"));
+        ZConfig loadedConfig = ZConfig.load(testFolder.resolve("test.cert"));
         assertThat(loadedConfig.getValue("/curve/public-key"), is("abcdefg"));
         // intentionally checking without leading /
         assertThat(loadedConfig.getValue("curve/secret-key"), is("(w3lSF/5yv&j*c&0h{4JHe(CETJSksTr.QSjcZE}"));
         assertThat(loadedConfig.getValue("/metadata/name"), is("key-value tests"));
     }
 
-    private boolean isFileInPath(Path dirPath, String filename) {
+    private boolean isFileInPath(Path dirPath, String filename)
+    {
         if (!Files.isDirectory(dirPath)) {
             return false;
         }
@@ -134,7 +135,8 @@ public class ZConfigTest
                     return true;
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             return false;
         }
         return false;
@@ -145,7 +147,7 @@ public class ZConfigTest
     {
         // this file was generated in the init-method and tests some cases that should be processed by the loader but are not
         // created with our writer.
-        ZConfig zplSpecials = ZConfig.load(TEST_FOLDER.resolve("test.zpl"));
+        ZConfig zplSpecials = ZConfig.load(testFolder.resolve("test.zpl"));
         // test leading quotes
         assertThat(zplSpecials.getValue("meta/leadingquote"), is("\"abcde"));
         // test ending quotes
@@ -165,7 +167,7 @@ public class ZConfigTest
     @Test
     public void testReadReference() throws IOException
     {
-        ZConfig ref = ZConfig.load(TEST_FOLDER.resolve("reference.zpl"));
+        ZConfig ref = ZConfig.load(testFolder.resolve("reference.zpl"));
         assertThat(ref.getValue("context/iothreads"), is("1"));
         assertThat(ref.getValue("context/verbose"), is("1"));
         assertThat(ref.getValue("main/type"), is("zqueue"));

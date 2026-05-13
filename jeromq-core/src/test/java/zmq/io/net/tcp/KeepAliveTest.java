@@ -12,11 +12,12 @@ import org.junit.jupiter.api.condition.JRE;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class KeepAliveTest {
-
+class KeepAliveTest
+{
     @EnabledForJreRange(min = JRE.JAVA_13)
     @Test
-    void testConsistent() throws IOException {
+    void testConsistent() throws IOException
+    {
         SocketChannel sc = SocketChannel.open();
         TcpUtils.tuneTcpKeepalives(sc, 1, 2, 3, 4);
 

@@ -33,8 +33,8 @@ import org.zeromq.ZMQ.Socket;
 import zmq.Msg;
 import zmq.io.Metadata;
 
-class TlsTest {
-
+class TlsTest
+{
     private static SSLContext ssl;
 
     @BeforeAll
@@ -45,7 +45,8 @@ class TlsTest {
     }
 
     @Test
-    void tesExplicitFactory() {
+    void tesExplicitFactory()
+    {
         Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
             try (ZContext ctx = new ZContext(1);
                     Socket pull = ctx.createSocket(SocketType.PULL);
@@ -58,7 +59,8 @@ class TlsTest {
                     try {
                         principalReference.set(s.getPeerPrincipal());
                         return Optional.ofNullable(s.getPeerPrincipal().getName());
-                    } catch (SSLPeerUnverifiedException e) {
+                    }
+                    catch (SSLPeerUnverifiedException e) {
                         return Optional.empty();
                     }
                 };
@@ -89,7 +91,8 @@ class TlsTest {
     }
 
     @Test
-    void testByAddr() {
+    void testByAddr()
+    {
         Assertions.assertTimeoutPreemptively(Duration.ofDays(1000), () -> {
             try (ZContext ctx = new ZContext(1);
                     Socket pull = ctx.createSocket(SocketType.PULL);
@@ -102,7 +105,8 @@ class TlsTest {
                     try {
                         principalReference.set(s.getPeerPrincipal());
                         return Optional.ofNullable(s.getPeerPrincipal().getName());
-                    } catch (SSLPeerUnverifiedException e) {
+                    }
+                    catch (SSLPeerUnverifiedException e) {
                         return Optional.empty();
                     }
                 };
@@ -137,7 +141,8 @@ class TlsTest {
     }
 
     @Test
-    public void testFailed() {
+    public void testFailed()
+    {
         Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
             CompletableFuture<Throwable> future = new CompletableFuture<>();
             try (ZContext ctx = getNewContext(future);
@@ -172,7 +177,8 @@ class TlsTest {
     }
 
     @Test
-    void testFailedSSL() {
+    void testFailedSSL()
+    {
         Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
             CompletableFuture<Throwable> future = new CompletableFuture<>();
             try (ZContext ctx = getNewContext(future);
@@ -213,7 +219,8 @@ class TlsTest {
         if (e.getEvent() == Events.EXCEPTION) {
             Throwable ex = e.getValue();
             future.complete(ex);
-        } else if (e.getEvent() == Events.DISCONNECTED){
+        }
+        else if (e.getEvent() == Events.DISCONNECTED) {
             disconnect.incrementAndGet();
         }
     }

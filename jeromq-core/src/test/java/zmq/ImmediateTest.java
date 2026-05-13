@@ -88,7 +88,8 @@ class ImmediateTest
     }
 
     @Test
-    void testImmediateFalse() throws IOException {
+    void testImmediateFalse() throws IOException
+    {
         logger.info("Immediate = false");
         // TEST 2
         // This time we will do the same thing, connect two pipes,
@@ -156,7 +157,8 @@ class ImmediateTest
 
     @Test
     @Timeout(value = 5, unit = TimeUnit.SECONDS)
-    void testImmediateFalseWithBrokenConnection() throws IOException {
+    void testImmediateFalseWithBrokenConnection() throws IOException
+    {
         logger.info("Immediate = false with broken connection");
         // TEST 3
         // This time we want to validate that the same blocking behaviour

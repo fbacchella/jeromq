@@ -22,7 +22,8 @@ public class GssapiServerMechanism extends Mechanism
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return Mechanisms.GSSAPI.name();
     }
 

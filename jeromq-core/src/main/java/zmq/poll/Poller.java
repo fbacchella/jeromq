@@ -2,7 +2,6 @@ package zmq.poll;
 
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectableChannel;

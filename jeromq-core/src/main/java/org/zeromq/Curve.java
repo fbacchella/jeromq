@@ -59,9 +59,15 @@ import static zmq.io.mechanism.curve.Curve.CURVE_KEYSIZE_Z85;
  * </li>
  * </ul>
  */
-public class Curve {
+public class Curve
+{
     public static final int KEY_SIZE = CURVE_KEYSIZE;
     public static final int KEY_SIZE_Z85 = CURVE_KEYSIZE_Z85;
+
+    private Curve()
+    {
+        // Private constructor
+    }
 
     /**
      * <p>Returns a newly generated random keypair consisting of a public key
@@ -71,7 +77,8 @@ public class Curve {
      *
      * @return Randomly generated {@link KeyPair}
      */
-    public static KeyPair generateKeyPair() {
+    public static KeyPair generateKeyPair()
+    {
         String[] keys = new zmq.io.mechanism.curve.Curve().keypairZ85();
         return new KeyPair(keys[0], keys[1]);
     }
@@ -84,7 +91,8 @@ public class Curve {
      * @param key Key to be decoded
      * @return The resulting key as byte array
      */
-    public static byte[] z85Decode(String key) {
+    public static byte[] z85Decode(String key)
+    {
         return Z85.decode(key);
     }
 
@@ -98,7 +106,8 @@ public class Curve {
      * @param key Key to be encoded
      * @return The resulting key as String in Z85
      */
-    public static String z85Encode(byte[] key) {
+    public static String z85Encode(byte[] key)
+    {
         return zmq.io.mechanism.curve.Curve.z85EncodePublic(key);
     }
 
@@ -106,7 +115,8 @@ public class Curve {
      * A container for a public and a corresponding secret key.
      * Keys have to be encoded in Z85 format.
      */
-    public static class KeyPair {
+    public static class KeyPair
+    {
         /**
          * Z85-encoded public key.
          */
@@ -117,7 +127,8 @@ public class Curve {
          */
         public final String secretKey;
 
-        public KeyPair(String publicKey, String secretKey) {
+        public KeyPair(String publicKey, String secretKey)
+        {
             Utils.checkArgument(publicKey != null, "Public key cannot be null");
             Utils.checkArgument(publicKey.length() == Curve.KEY_SIZE_Z85, "Public key has to be Z85 format");
             Utils.checkArgument(secretKey == null || secretKey.length() == Curve.KEY_SIZE_Z85,

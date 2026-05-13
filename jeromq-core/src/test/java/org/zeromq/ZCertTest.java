@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ZCertTest
 {
     @TempDir
-    private Path CERTSTORE_LOCATION;
+    private Path certstoreLocation;
 
     @Test
     void testConstructorNullStringPublicKey()
@@ -191,7 +191,7 @@ public class ZCertTest
     void testSavePublicFile() throws IOException
     {
         ZCert cert = new ZCert();
-        Path p = CERTSTORE_LOCATION.resolve("test.cert");
+        Path p = certstoreLocation.resolve("test.cert");
         cert.savePublic(p);
         assertTrue(Files.exists(p));
     }
@@ -200,7 +200,7 @@ public class ZCertTest
     void testSaveSecretFile() throws IOException
     {
         ZCert cert = new ZCert();
-        Path p = CERTSTORE_LOCATION.resolve("test_secret.cert");
+        Path p = certstoreLocation.resolve("test_secret.cert");
         cert.saveSecret(p);
         assertTrue(Files.exists(p));
     }

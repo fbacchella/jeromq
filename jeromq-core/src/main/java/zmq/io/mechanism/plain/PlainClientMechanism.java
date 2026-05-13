@@ -98,7 +98,8 @@ public class PlainClientMechanism extends Mechanism
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return Mechanisms.PLAIN.name();
     }
 

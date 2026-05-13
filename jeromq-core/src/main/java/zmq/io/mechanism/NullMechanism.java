@@ -156,14 +156,16 @@ public class NullMechanism extends Mechanism
         return Mechanisms.NULL.name();
     }
 
-    public static class NullMechanismSettings implements MechanismSettings<NullMechanismSettings> {
+    public static class NullMechanismSettings implements MechanismSettings<NullMechanismSettings>
+    {
         @Override
         public Mechanisms getMechanism()
         {
             return Mechanisms.NULL;
         }
 
-        public boolean isServer() {
+        public boolean isServer()
+        {
             return false;
         }
 
@@ -180,12 +182,14 @@ public class NullMechanism extends Mechanism
         }
 
         @Override
-        public boolean canZap() {
+        public boolean canZap()
+        {
             return false;
         }
 
         @Override
-        public String name() {
+        public String name()
+        {
             return "NULL";
         }
     }

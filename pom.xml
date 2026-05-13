@@ -19,7 +19,7 @@
         <!-- Indirection needed to keep optional jacoco settings and external argument lines-->
         <arg.line />
         <argLine>${arg.line}</argLine>
-        <checkstyle.file>${maven.multiModuleProjectDirectory}</checkstyle.file>
+        <checkstyle.file>${maven.multiModuleProjectDirectory}/src/checkstyle/checks.xml</checkstyle.file>
         <maven.install.skip>false</maven.install.skip>
     </properties>
 

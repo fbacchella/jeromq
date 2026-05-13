@@ -15,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 import zmq.io.Metadata;
-import zmq.io.mechanism.Mechanisms;
-import zmq.io.net.SelectorProviderChooser;
 import zmq.msg.MsgAllocator;
 import zmq.msg.MsgAllocatorThreshold;
 import zmq.poll.PollItem;

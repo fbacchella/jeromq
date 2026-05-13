@@ -7,14 +7,15 @@ import zmq.io.mechanism.MechanismSettings;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 
-public class PlainMechanismSettings implements MechanismSettings<PlainMechanismSettings> {
-
+public class PlainMechanismSettings implements MechanismSettings<PlainMechanismSettings>
+{
     private final boolean server;
 
     private final String username;
     private final  String password;
 
-    public PlainMechanismSettings(boolean server, String username, String password) {
+    public PlainMechanismSettings(boolean server, String username, String password)
+    {
         assert (username.length() < 256);
         assert (password.length() < 256);
         this.server = server;
@@ -23,12 +24,14 @@ public class PlainMechanismSettings implements MechanismSettings<PlainMechanismS
     }
 
     @Override
-    public Mechanisms getMechanism() {
+    public Mechanisms getMechanism()
+    {
         return Mechanisms.PLAIN;
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return "PLAIN";
     }
 
@@ -38,15 +41,18 @@ public class PlainMechanismSettings implements MechanismSettings<PlainMechanismS
     }
 
     @Override
-    public PlainMechanismSettings resolve() {
+    public PlainMechanismSettings resolve()
+    {
         return this;
     }
 
-    public String username() {
+    public String username()
+    {
         return this.username;
     }
 
-    public String password() {
+    public String password()
+    {
         return this.password;
     }
 

@@ -12,7 +12,6 @@ import zmq.poll.PollItem;
 
 class InprocDisconnectTest
 {
-
     private static final Logger logger = LogManager.getLogger(InprocDisconnectTest.class);
 
     @Test
@@ -60,7 +59,8 @@ class InprocDisconnectTest
                         Assertions.assertTrue(isSubscribed);
                         logger.info("unsubscribing from '{}'", new String(buffer, 1, msgSize - 1));
                         isSubscribed = false;
-                    } else {
+                    }
+                    else {
                         Assertions.assertFalse(isSubscribed);
                         logger.info("subscribing on '{}'", new String(buffer, 1, msgSize - 1));
                         isSubscribed = true;

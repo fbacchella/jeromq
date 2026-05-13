@@ -71,8 +71,9 @@ public class ZCertStore
         {
             if (Files.isRegularFile(path)) {
                 return Files.newInputStream(path);
-            } else if (Files.isDirectory(path)) {
-                try(Stream<Path> files = Files.list(path)) {
+            }
+            else if (Files.isDirectory(path)) {
+                try (Stream<Path> files = Files.list(path)) {
                     List<String> list = files.map(p -> p.getFileName().toString())
                                              .sorted()
                                              .collect(Collectors.toList());
@@ -248,7 +249,8 @@ public class ZCertStore
             try {
                 loadFiles();
                 return true;
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 return false;
             }
         }
@@ -268,23 +270,27 @@ public class ZCertStore
             boolean modified = traverseDirectory(location, new IFileVisitor()
             {
                 @Override
-                public boolean visitFile(Path file) throws IOException {
+                public boolean visitFile(Path file) throws IOException
+                {
                     return modified(presents.remove(file), file);
                 }
 
                 @Override
-                public boolean visitDir(Path dir) throws IOException {
+                public boolean visitDir(Path dir) throws IOException
+                {
                     return modified(presents.remove(dir), dir);
                 }
             });
             // if some files remain, that means they have been deleted since last scan
             return modified || !presents.isEmpty();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             return false;
         }
     }
 
-    private boolean modified(byte[] fingerprint, Path path) throws IOException {
+    private boolean modified(byte[] fingerprint, Path path) throws IOException
+    {
         if (Files.notExists(path)) {
             // run load-files if one file is not present
             return true;

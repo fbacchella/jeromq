@@ -10,10 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TestSocketConfigurator {
-
+class TestSocketConfigurator
+{
     @Test
-    void testBuild() {
+    void testBuild()
+    {
         SocketConfigurator config = SocketConfigurator.build();
         assertNotNull(config);
         assertNull(config.endpoint);
@@ -25,7 +26,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    void testBuilder() {
+    void testBuilder()
+    {
         SocketConfigurator config = SocketConfigurator.builder()
                 .endpoint("tcp://localhost:5555")
                 .type(SocketType.SUB)
@@ -70,7 +72,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    void testFromMap() {
+    void testFromMap()
+    {
         java.util.Map<String, Object> settings = new java.util.HashMap<>();
         settings.put("endpoint", "tcp://localhost:5555");
         settings.put("type", "SUB");
@@ -115,7 +118,8 @@ class TestSocketConfigurator {
         assertConfigurator(config);
     }
 
-    private void assertConfigurator(SocketConfigurator config) {
+    private void assertConfigurator(SocketConfigurator config)
+    {
         assertNotNull(config);
         assertEquals("tcp://localhost:5555", config.endpoint);
         assertEquals(SocketType.SUB, config.type);
@@ -161,7 +165,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testGetSocket() {
+    public void testGetSocket()
+    {
         byte[] customIdentity = "custom-id".getBytes();
         SocketConfigurator config = SocketConfigurator.builder()
                 .endpoint("inproc://test")
@@ -207,7 +212,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testIdentityOverwritten() {
+    public void testIdentityOverwritten()
+    {
         try (ZContext ctx = new ZContext()) {
             SocketConfigurator config = SocketConfigurator.builder()
                     .endpoint("inproc://test")
@@ -251,7 +257,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testCustomIdentity() {
+    public void testCustomIdentity()
+    {
         byte[] customId = "my-custom-id".getBytes();
         try (ZContext ctx = new ZContext()) {
             SocketConfigurator config = SocketConfigurator.builder()
@@ -296,7 +303,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testFromMapWithByteBuffer() {
+    public void testFromMapWithByteBuffer()
+    {
         Map<String, Object> settings = new HashMap<>();
         byte[] identityBytes = new byte[]{1, 2, 3};
         byte[] contextBytes = "hb-context".getBytes();
@@ -315,7 +323,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testFromMapWithReadOnlyByteBuffer() {
+    public void testFromMapWithReadOnlyByteBuffer()
+    {
         Map<String, Object> settings = new HashMap<>();
         byte[] identityBytes = new byte[]{4, 5, 6};
         ByteBuffer identityBB = ByteBuffer.wrap(identityBytes).asReadOnlyBuffer();
@@ -330,7 +339,8 @@ class TestSocketConfigurator {
     }
 
     @Test
-    public void testDefensiveCopies() {
+    public void testDefensiveCopies()
+    {
         byte[] identity = new byte[]{1, 2, 3};
         byte[] heartbeatContext = new byte[]{4, 5, 6};
 

@@ -8,7 +8,8 @@ import zmq.ZMQ;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
 
-public interface MechanismSettings<S extends MechanismSettings> {
+public interface MechanismSettings<S extends MechanismSettings>
+{
     Mechanisms getMechanism();
     S resolve();
     Mechanism create(SessionBase session, Address<?> peerAddress, Options options);
@@ -22,7 +23,8 @@ public interface MechanismSettings<S extends MechanismSettings> {
         byte[] comp = Arrays.copyOf(name, 20);
         return Arrays.equals(dst, comp);
     }
-    default boolean canZap() {
+    default boolean canZap()
+    {
         return true;
     }
 

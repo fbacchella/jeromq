@@ -34,7 +34,8 @@ public class DynamicLog4jFilter extends AbstractFilter
         }
         else if ((inCircleCI || explicitDeactivation) && event.getLevel().isLessSpecificThan(Level.ERROR)) {
             return Result.DENY;
-        } else {
+        }
+        else {
             return Result.ACCEPT;
         }
     }

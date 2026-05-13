@@ -9,6 +9,7 @@ import javax.net.ssl.SSLSession;
  * metadata attribute.
  */
 @FunctionalInterface
-public interface PrincipalConverter {
+public interface PrincipalConverter
+{
     Optional<String> getPrincipal(SSLSession session);
 }

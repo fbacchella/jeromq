@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 
 import zmq.ZError;
 import zmq.io.net.Address;
-import zmq.io.net.tcp.TcpUtils;
 
 public class Utils
 {
@@ -76,8 +75,7 @@ public class Utils
 
     public static void unblockSocket(SelectableChannel... channels) throws IOException
     {
-        for (SelectableChannel ch : channels)
-        {
+        for (SelectableChannel ch : channels) {
             ch.configureBlocking(false);
         }
     }

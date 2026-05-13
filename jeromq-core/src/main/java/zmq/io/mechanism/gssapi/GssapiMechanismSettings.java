@@ -7,30 +7,37 @@ import zmq.io.mechanism.MechanismSettings;
 import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 
-public class GssapiMechanismSettings implements MechanismSettings<GssapiMechanismSettings> {
+public class GssapiMechanismSettings implements MechanismSettings<GssapiMechanismSettings>
+{
     @Override
-    public Mechanisms getMechanism() {
+    public Mechanisms getMechanism()
+    {
         return Mechanisms.GSSAPI;
     }
 
     @Override
-    public GssapiMechanismSettings resolve() {
+    public GssapiMechanismSettings resolve()
+    {
         return this;
     }
 
-    public Object gssPrincipal() {
+    public Object gssPrincipal()
+    {
         return null;
     }
 
-    public Object gssServicePrincipal() {
+    public Object gssServicePrincipal()
+    {
         return null;
     }
 
-    public Object gssPlaintext() {
+    public Object gssPlaintext()
+    {
         return null;
     }
 
-    public boolean isServer() {
+    public boolean isServer()
+    {
         return false;
     }
 
@@ -41,8 +48,8 @@ public class GssapiMechanismSettings implements MechanismSettings<GssapiMechanis
     }
 
     @Override
-    public String name() {
+    public String name()
+    {
         return "GSSAPI";
     }
-
 }

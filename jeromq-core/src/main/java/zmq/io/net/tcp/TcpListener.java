@@ -14,7 +14,6 @@ import zmq.io.net.ServerSocketWrapper;
 
 public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAddress>
 {
-
     public TcpListener(IOThread ioThread, SocketBase socket, Options options)
     {
         super(ioThread, socket, options);
@@ -31,7 +30,8 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
         try {
             int port = getFd().getAddress().getPort();
             return address.toString(port);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -61,7 +61,6 @@ public class TcpListener extends AbstractSocketListener<InetSocketAddress, TcpAd
     @Override
     protected void bindServer(ServerSocketWrapper<InetSocketAddress> fd, TcpAddress address) throws IOException
     {
-
         fd.configureBlocking(false);
         fd.bind(address.address());
     }

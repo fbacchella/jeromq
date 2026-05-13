@@ -12,7 +12,6 @@ import zmq.ZError;
 import zmq.ZMQ;
 import zmq.ZObject;
 import zmq.io.StreamEngine.ErrorReason;
-import zmq.io.mechanism.Mechanisms;
 import zmq.io.net.Address;
 import zmq.io.net.NetProtocol;
 import zmq.pipe.Pipe;

@@ -116,7 +116,8 @@ public class TcpAddress implements Address.IZAddress<InetSocketAddress>
         else {
             try {
                 port = Integer.parseInt(portStr);
-            } catch (NumberFormatException e) {
+            }
+            catch (NumberFormatException e) {
                 throw new IllegalArgumentException(String.format("Not a integer for the port of \"%s\": %s", name, portStr));
             }
         }

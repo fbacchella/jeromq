@@ -58,7 +58,8 @@ public enum ProtocolCode {
     {
         if (MAP.containsKey(code)) {
             return MAP.get(code);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("Protocol code unknown: " + code);
         }
     }

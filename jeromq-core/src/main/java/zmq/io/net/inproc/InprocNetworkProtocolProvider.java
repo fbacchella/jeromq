@@ -60,7 +60,8 @@ public class InprocNetworkProtocolProvider implements NetworkProtocolProvider<In
     }
 
     @Override
-    public SocketFactory<InetSocketAddress> channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory()
+    {
         return null;
     }
 }

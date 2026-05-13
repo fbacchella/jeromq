@@ -77,7 +77,8 @@ public class IpcNetworkProtocolProvider implements NetworkProtocolProvider<InetS
     }
 
     @Override
-    public SocketFactory<InetSocketAddress> channelFactory() {
+    public SocketFactory<InetSocketAddress> channelFactory()
+    {
         return factory;
     }
 }

@@ -3,12 +3,9 @@ package zmq.io.net.tls;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectableChannel;
-import java.util.Optional;
-import java.util.function.Function;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
 
 import tlschannel.SniSslContextFactory;
 import zmq.io.net.Address.IZAddress;
@@ -16,8 +13,10 @@ import zmq.io.net.ServerSocketWrapper;
 import zmq.io.net.SocketWrapper;
 import zmq.util.Errno;
 
-class TlsServerSocketWrapper implements ServerSocketWrapper<InetSocketAddress> {
-    static class Builder {
+class TlsServerSocketWrapper implements ServerSocketWrapper<InetSocketAddress>
+{
+    static class Builder
+    {
         private final ServerSocketWrapper<InetSocketAddress> parentServerSocket;
         private Errno errno;
         private SSLContext ctx;
@@ -72,7 +71,8 @@ class TlsServerSocketWrapper implements ServerSocketWrapper<InetSocketAddress> {
     private final SSLParameters sslParams;
     private SniSslContextFactory sniSslContextFactory;
 
-    TlsServerSocketWrapper(Builder builder) {
+    TlsServerSocketWrapper(Builder builder)
+    {
         assert builder.errno != null;
         this.parentServerSocket = builder.parentServerSocket;
         this.errno = builder.errno;
@@ -83,7 +83,8 @@ class TlsServerSocketWrapper implements ServerSocketWrapper<InetSocketAddress> {
     }
 
     @Override
-    public SocketWrapper<InetSocketAddress> accept(IZAddress<InetSocketAddress> address) throws IOException {
+    public SocketWrapper<InetSocketAddress> accept(IZAddress<InetSocketAddress> address) throws IOException
+    {
         SocketWrapper<InetSocketAddress> wrapped = parentServerSocket.accept(address);
         return TlsSocketWrapper.newBuilder(wrapped)
                                .setErrno(errno)
@@ -96,27 +97,32 @@ class TlsServerSocketWrapper implements ServerSocketWrapper<InetSocketAddress> {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws IOException
+    {
         parentServerSocket.close();
     }
 
     @Override
-    public SelectableChannel getSelectableChannel() {
+    public SelectableChannel getSelectableChannel()
+    {
         return parentServerSocket.getSelectableChannel();
     }
 
     @Override
-    public void configureBlocking(boolean b) throws IOException {
+    public void configureBlocking(boolean b) throws IOException
+    {
         parentServerSocket.configureBlocking(b);
     }
 
     @Override
-    public void bind(InetSocketAddress socketAddress) throws IOException {
+    public void bind(InetSocketAddress socketAddress) throws IOException
+    {
         parentServerSocket.bind(socketAddress);
     }
 
     @Override
-    public InetSocketAddress getAddress() throws IOException {
+    public InetSocketAddress getAddress() throws IOException
+    {
         return parentServerSocket.getAddress();
     }
 }
