@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.Principal;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,6 +22,7 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.zeromq.Events;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
@@ -45,92 +45,90 @@ class TlsTest
     }
 
     @Test
+    @Timeout(2)
     void tesExplicitFactory()
     {
-        Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
-            try (ZContext ctx = new ZContext(1);
-                    Socket pull = ctx.createSocket(SocketType.PULL);
-                    Socket push = ctx.createSocket(SocketType.PUSH)
-            ) {
-                SSLParameters params = ssl.getDefaultSSLParameters();
-                params.setWantClientAuth(true);
-                AtomicReference<Principal> principalReference = new AtomicReference<>();
-                PrincipalConverter principalConverter = s -> {
-                    try {
-                        principalReference.set(s.getPeerPrincipal());
-                        return Optional.ofNullable(s.getPeerPrincipal().getName());
-                    }
-                    catch (SSLPeerUnverifiedException e) {
-                        return Optional.empty();
-                    }
-                };
-                TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).build();
-                TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(params).setPrincipalConverter(principalConverter).build();
-                pull.setChannelWrapper(serverWrapper);
-                push.setChannelWrapper(clientWrapper);
-                Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
-                Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
+        try (ZContext ctx = new ZContext(1);
+                Socket pull = ctx.createSocket(SocketType.PULL);
+                Socket push = ctx.createSocket(SocketType.PUSH)
+        ) {
+            SSLParameters params = ssl.getDefaultSSLParameters();
+            params.setWantClientAuth(true);
+            AtomicReference<Principal> principalReference = new AtomicReference<>();
+            PrincipalConverter principalConverter = s -> {
+                try {
+                    principalReference.set(s.getPeerPrincipal());
+                    return Optional.ofNullable(s.getPeerPrincipal().getName());
+                }
+                catch (SSLPeerUnverifiedException e) {
+                    return Optional.empty();
+                }
+            };
+            TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).build();
+            TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(params).setPrincipalConverter(principalConverter).build();
+            pull.setChannelWrapper(serverWrapper);
+            push.setChannelWrapper(clientWrapper);
+            Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
+            Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
 
-                CompletableFuture<Throwable> fPush = new CompletableFuture<>();
-                CompletableFuture<Throwable> fPull = new CompletableFuture<>();
-                AtomicInteger disconnect = new AtomicInteger();
-                push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
-                pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
+            CompletableFuture<Throwable> fPush = new CompletableFuture<>();
+            CompletableFuture<Throwable> fPull = new CompletableFuture<>();
+            AtomicInteger disconnect = new AtomicInteger();
+            push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
+            pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
 
-                int port = pull.bindToRandomPort("tcp://*");
-                push.connect("tcp://127.0.0.1:" + port);
+            int port = pull.bindToRandomPort("tcp://*");
+            push.connect("tcp://127.0.0.1:" + port);
 
-                String expected = "Hello";
-                push.send(expected);
-                Msg msg = pull.recvMsg(0);
-                Assertions.assertEquals(expected, new String(msg.data(), StandardCharsets.UTF_8));
-                Assertions.assertEquals("CN=localhost", msg.getMetadata().get(Metadata.USER_ID));
-                Assertions.assertEquals(X500Principal.class, principalReference.get().getClass());
-            }
-        });
+            String expected = "Hello";
+            push.send(expected);
+            Msg msg = pull.recvMsg(0);
+            Assertions.assertEquals(expected, new String(msg.data(), StandardCharsets.UTF_8));
+            Assertions.assertEquals("CN=localhost", msg.getMetadata().get(Metadata.USER_ID));
+            Assertions.assertEquals(X500Principal.class, principalReference.get().getClass());
+        }
     }
 
     @Test
+    @Timeout(2)
     void testByAddr()
     {
-        Assertions.assertTimeoutPreemptively(Duration.ofDays(1000), () -> {
-            try (ZContext ctx = new ZContext(1);
-                    Socket pull = ctx.createSocket(SocketType.PULL);
-                    Socket push = ctx.createSocket(SocketType.PUSH)
-            ) {
-                SSLParameters params = ssl.getDefaultSSLParameters();
-                params.setWantClientAuth(true);
-                AtomicReference<Principal> principalReference = new AtomicReference<>();
-                PrincipalConverter principalConverter = s -> {
-                    try {
-                        principalReference.set(s.getPeerPrincipal());
-                        return Optional.ofNullable(s.getPeerPrincipal().getName());
-                    }
-                    catch (SSLPeerUnverifiedException e) {
-                        return Optional.empty();
-                    }
-                };
-                push.setSslContext(ssl);
-                pull.setSslContext(ssl);
-                pull.setSslParameters(params);
-                pull.setPrincipalConvert(principalConverter);
-                CompletableFuture<Throwable> fPush = new CompletableFuture<>();
-                CompletableFuture<Throwable> fPull = new CompletableFuture<>();
-                AtomicInteger disconnect = new AtomicInteger();
-                push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
-                pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
+        try (ZContext ctx = new ZContext(1);
+                Socket pull = ctx.createSocket(SocketType.PULL);
+                Socket push = ctx.createSocket(SocketType.PUSH)
+        ) {
+            SSLParameters params = ssl.getDefaultSSLParameters();
+            params.setWantClientAuth(true);
+            AtomicReference<Principal> principalReference = new AtomicReference<>();
+            PrincipalConverter principalConverter = s -> {
+                try {
+                    principalReference.set(s.getPeerPrincipal());
+                    return Optional.ofNullable(s.getPeerPrincipal().getName());
+                }
+                catch (SSLPeerUnverifiedException e) {
+                    return Optional.empty();
+                }
+            };
+            push.setSslContext(ssl);
+            pull.setSslContext(ssl);
+            pull.setSslParameters(params);
+            pull.setPrincipalConvert(principalConverter);
+            CompletableFuture<Throwable> fPush = new CompletableFuture<>();
+            CompletableFuture<Throwable> fPull = new CompletableFuture<>();
+            AtomicInteger disconnect = new AtomicInteger();
+            push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
+            pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
 
-                int port = pull.bindToRandomPort("tls://*");
-                push.connect("tls://127.0.0.1:" + port);
+            int port = pull.bindToRandomPort("tls://*");
+            push.connect("tls://127.0.0.1:" + port);
 
-                String expected = "Hello";
-                push.send(expected);
-                Msg msg = pull.recvMsg(0);
-                Assertions.assertEquals(expected, new String(msg.data(), StandardCharsets.UTF_8));
-                Assertions.assertEquals("CN=localhost", msg.getMetadata().get(Metadata.USER_ID));
-                Assertions.assertEquals(X500Principal.class, principalReference.get().getClass());
-            }
-        });
+            String expected = "Hello";
+            push.send(expected);
+            Msg msg = pull.recvMsg(0);
+            Assertions.assertEquals(expected, new String(msg.data(), StandardCharsets.UTF_8));
+            Assertions.assertEquals("CN=localhost", msg.getMetadata().get(Metadata.USER_ID));
+            Assertions.assertEquals(X500Principal.class, principalReference.get().getClass());
+        }
     }
 
     private ZContext getNewContext(CompletableFuture<Throwable> future)
@@ -141,77 +139,75 @@ class TlsTest
     }
 
     @Test
-    public void testFailed()
+    @Timeout(2)
+    void testFailed() throws Exception
     {
-        Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
-            CompletableFuture<Throwable> future = new CompletableFuture<>();
-            try (ZContext ctx = getNewContext(future);
-                    Socket pull = ctx.createSocket(SocketType.PULL);
-                    Socket push = ctx.createSocket(SocketType.PUSH)
-            ) {
-                SSLContext defaultCtx = SSLContext.getDefault();
-                TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(defaultCtx).build();
-                TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).build();
-                pull.setChannelWrapper(serverWrapper);
-                push.setChannelWrapper(clientWrapper);
-                Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
-                Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
+        CompletableFuture<Throwable> future = new CompletableFuture<>();
+        try (ZContext ctx = getNewContext(future);
+                Socket pull = ctx.createSocket(SocketType.PULL);
+                Socket push = ctx.createSocket(SocketType.PUSH)
+        ) {
+            SSLContext defaultCtx = SSLContext.getDefault();
+            TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(defaultCtx).build();
+            TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).build();
+            pull.setChannelWrapper(serverWrapper);
+            push.setChannelWrapper(clientWrapper);
+            Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
+            Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
 
-                CompletableFuture<Throwable> fPush = new CompletableFuture<>();
-                CompletableFuture<Throwable> fPull = new CompletableFuture<>();
-                AtomicInteger disconnect = new AtomicInteger();
-                push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
-                pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
+            CompletableFuture<Throwable> fPush = new CompletableFuture<>();
+            CompletableFuture<Throwable> fPull = new CompletableFuture<>();
+            AtomicInteger disconnect = new AtomicInteger();
+            push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
+            pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
 
-                int port = pull.bindToRandomPort("tcp://*");
-                push.connect("tcp://127.0.0.1:" + port);
+            int port = pull.bindToRandomPort("tcp://*");
+            push.connect("tcp://127.0.0.1:" + port);
 
-                String expected = "Hello";
-                Assertions.assertTrue(push.send(expected));
-                Assertions.assertEquals(SSLHandshakeException.class, fPush.get().getClass());
-                fPull.get();
-                Assertions.assertEquals(2, disconnect.get());
-                Assertions.assertTrue(push.send(expected));
-            }
-        });
+            String expected = "Hello";
+            Assertions.assertTrue(push.send(expected));
+            Assertions.assertEquals(SSLHandshakeException.class, fPush.get().getClass());
+            fPull.get();
+            Assertions.assertEquals(2, disconnect.get());
+            Assertions.assertTrue(push.send(expected));
+        }
     }
 
     @Test
-    void testFailedSSL()
+    @Timeout(4)
+    void testFailedSSL() throws Exception
     {
-        Assertions.assertTimeoutPreemptively(Duration.ofMillis(1000), () -> {
-            CompletableFuture<Throwable> future = new CompletableFuture<>();
-            try (ZContext ctx = getNewContext(future);
-                    Socket pull = ctx.createSocket(SocketType.PULL);
-                    Socket push = ctx.createSocket(SocketType.PUSH)
-            ) {
-                SSLParameters sslv12 = ssl.getDefaultSSLParameters();
-                SSLParameters sslv13 = ssl.getDefaultSSLParameters();
-                sslv12.setProtocols(new String[]{"TLSv1.2"});
-                sslv13.setProtocols(new String[]{"TLSv1.3"});
-                TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(sslv12).build();
-                TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(sslv13).build();
-                pull.setChannelWrapper(serverWrapper);
-                push.setChannelWrapper(clientWrapper);
-                Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
-                Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
+        CompletableFuture<Throwable> future = new CompletableFuture<>();
+        try (ZContext ctx = getNewContext(future);
+                Socket pull = ctx.createSocket(SocketType.PULL);
+                Socket push = ctx.createSocket(SocketType.PUSH)
+        ) {
+            SSLParameters sslv12 = ssl.getDefaultSSLParameters();
+            SSLParameters sslv13 = ssl.getDefaultSSLParameters();
+            sslv12.setProtocols(new String[]{"TLSv1.2"});
+            sslv13.setProtocols(new String[]{"TLSv1.3"});
+            TlsSocketFactory clientWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(sslv12).build();
+            TlsSocketFactory serverWrapper = TlsSocketFactory.newBuilder().setCtx(ssl).setParameters(sslv13).build();
+            pull.setChannelWrapper(serverWrapper);
+            push.setChannelWrapper(clientWrapper);
+            Assertions.assertEquals(serverWrapper, pull.getChannelWrapper());
+            Assertions.assertEquals(clientWrapper, push.getChannelWrapper());
 
-                CompletableFuture<Throwable> fPush = new CompletableFuture<>();
-                CompletableFuture<Throwable> fPull = new CompletableFuture<>();
-                AtomicInteger disconnect = new AtomicInteger();
-                push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
-                pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
+            CompletableFuture<Throwable> fPush = new CompletableFuture<>();
+            CompletableFuture<Throwable> fPull = new CompletableFuture<>();
+            AtomicInteger disconnect = new AtomicInteger();
+            push.setEventHook(e -> eventConsumer(e, fPush, disconnect), ZMQ.EVENT_ALL);
+            pull.setEventHook(e -> eventConsumer(e, fPull, disconnect), ZMQ.EVENT_ALL);
 
-                int port = pull.bindToRandomPort("tcp://*");
-                push.connect("tcp://127.0.0.1:" + port);
+            int port = pull.bindToRandomPort("tcp://*");
+            push.connect("tcp://127.0.0.1:" + port);
 
-                String expected = "Hello";
-                Assertions.assertTrue(push.send(expected));
-                Assertions.assertTrue(push.send(expected));
-                Assertions.assertEquals(SSLHandshakeException.class, fPull.get().getClass());
-                Assertions.assertEquals(ClosedChannelException.class, fPush.get().getClass());
-            }
-        });
+            String expected = "Hello";
+            Assertions.assertTrue(push.send(expected));
+            Assertions.assertTrue(push.send(expected));
+            Assertions.assertEquals(SSLHandshakeException.class, fPull.get().getClass());
+            Assertions.assertEquals(ClosedChannelException.class, fPush.get().getClass());
+        }
     }
 
     private void eventConsumer(ZEvent e, CompletableFuture<Throwable> future, AtomicInteger disconnect)
