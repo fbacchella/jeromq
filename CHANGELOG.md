@@ -4,10 +4,13 @@
 
 ## Added
 
+* Added `org.zeromq.SocketConfigurator`, an immutable configuration holder for a ZeroMQ socket.
+  It captures all socket options (endpoint, type, security mechanism, HWM, timeouts, keep-alive, …)
+  and applies them to a `ZMQ.Socket` via `getSocket(Socket)`. Instances are created through a fluent
+  `Builder` API or from a plain `Map<String, Object>` via `SocketConfigurator.from(Map)`.
 * Added `org.zeromq.EncodingDetector`, a utility class that detects whether a string is encoded in
   Base64 (RFC 4648), URL-safe Base64, or Z85 (RFC 7238), and decodes it accordingly via
   `EncodingDetector.decode(String)`.
-
 * Errno now embed the thrown exception if needed. So adding event to notify that an exception was thrown, that can be 
   logged or handled. This needs to increase the value of zmq.ZMQ.ZMQ_EVENT_ALL to 0xffffffff.
 * Many inner Enum are now autonomous.

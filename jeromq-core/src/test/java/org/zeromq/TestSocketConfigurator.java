@@ -6,10 +6,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.zeromq.Curve.KeyPair;
 
+import zmq.io.mechanism.curve.CurveMechanismSettings;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TestSocketConfigurator
@@ -39,9 +42,9 @@ class TestSocketConfigurator
                 .recvHwm(200)
                 .maxMsgSize(1024L)
                 .linger(10)
-                .curvePeerPublicKey(kp.publicKey)
-                .curveSecretKey(kp.secretKey)
-                .curvePublicKey(kp.publicKey)
+                .curvePeerPublicKey(CurveMechanismSettings.curveKey(kp.publicKey))
+                .curveSecretKey(CurveMechanismSettings.curveKey(kp.secretKey))
+                .curvePublicKey(CurveMechanismSettings.curveKey(kp.publicKey))
                 .backlog(50)
                 .affinity(1L)
                 .identity(new byte[]{1, 2, 3})
@@ -294,7 +297,6 @@ class TestSocketConfigurator
 
             ZMQ.Socket socket = ctx.createSocket(config.type);
             config.getSocket(socket);
-            // L'identité personnalisée devrait être respectée
             assertArrayEquals(customId, socket.getIdentity());
             socket.close();
         }
@@ -337,6 +339,18 @@ class TestSocketConfigurator
     }
 
     @Test
+    void testFromMapInvalidValueIncludesKey()
+    {
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("sendHwm", "not-a-number");
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.from(settings));
+        assertTrue(ex.getMessage().contains("sendHwm"),
+                "Exception message should contain the key name 'sendHwm'");
+    }
+
+    @Test
     void testDefensiveCopies()
     {
         byte[] identity = new byte[]{1, 2, 3};
@@ -346,11 +360,11 @@ class TestSocketConfigurator
                 .identity(identity)
                 .heartbeatContext(heartbeatContext);
 
+       SocketConfigurator config = builder.build();
+
         // Modify original arrays
         identity[0] = 9;
         heartbeatContext[0] = 9;
-
-        SocketConfigurator config = builder.build();
 
         // Check that Configurator has the original values (defensive copy in Builder)
         byte[] actualIdentity = new byte[config.identity.remaining()];
