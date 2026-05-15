@@ -405,6 +405,90 @@ class TestSocketConfigurator
     }
 
     @Test
+    void testSetOptionUnknownKey()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("unknownKey", "value"));
+        assertTrue(ex.getMessage().contains("unknownKey"),
+                "Exception message should contain the unknown key name");
+    }
+
+    @Test
+    void testSetOptionInvalidNumber()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("sendHwm", "not-a-number"));
+        assertTrue(ex.getMessage().contains("sendHwm"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
+    void testSetOptionInvalidBoolean()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("ipv6", "maybe"));
+        assertTrue(ex.getMessage().contains("ipv6"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
+    void testSetOptionInvalidSocketType()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("type", "INVALID_TYPE"));
+        assertTrue(ex.getMessage().contains("type"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
+    void testSetOptionInvalidMethod()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("method", "INVALID_METHOD"));
+        assertTrue(ex.getMessage().contains("method"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
+    void testSetOptionInvalidMechanismCast()
+    {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.builder().setOption("mechanism", "not-a-mechanism"));
+        assertTrue(ex.getMessage().contains("mechanism"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
+    void testFromMapUnknownKey()
+    {
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("nonExistentOption", "value");
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.from(settings));
+        assertTrue(ex.getMessage().contains("nonExistentOption"),
+                "Exception message should contain the unknown key name");
+    }
+
+    @Test
+    void testFromMapInvalidBoolean()
+    {
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("ipv6", "maybe");
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> SocketConfigurator.from(settings));
+        assertTrue(ex.getMessage().contains("ipv6"),
+                "Exception message should contain the key name");
+    }
+
+    @Test
     void testDefensiveCopies()
     {
         byte[] identity = new byte[]{1, 2, 3};

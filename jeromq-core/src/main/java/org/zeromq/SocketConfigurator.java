@@ -762,6 +762,222 @@ public class SocketConfigurator
         }
 
         /**
+         * Applies a single named option to this builder.
+         *
+         * <p>The {@code key} must match one of the setter names (e.g. {@code "endpoint"},
+         * {@code "sendHwm"}, {@code "ipv6"}, …). The {@code value} is coerced to the expected
+         * type using the same rules as {@link SocketConfigurator#from(Map)}.</p>
+         *
+         * @param key   the option name; must not be {@code null}
+         * @param value the option value; must not be {@code null}
+         * @return this builder
+         * @throws IllegalArgumentException if the key is unknown or the value cannot be coerced
+         */
+        public Builder setOption(String key, Object value)
+        {
+            if (value == null) {
+                return this;
+            }
+            try {
+                switch (key) {
+                case "endpoint":
+                    endpoint((String) value);
+                    break;
+                case "type":
+                    if (value instanceof SocketType) {
+                        type((SocketType) value);
+                    }
+                    else {
+                        type(SocketType.valueOf(value.toString().toUpperCase(Locale.ENGLISH)));
+                    }
+                    break;
+                case "method":
+                    if (value instanceof Method) {
+                        method((Method) value);
+                    }
+                    else {
+                        method(Method.valueOf(value.toString().toUpperCase(Locale.ENGLISH)));
+                    }
+                    break;
+                case "sendHwm":
+                    sendHwm(numberFrom(value).intValue());
+                    break;
+                case "recvHwm":
+                    recvHwm(numberFrom(value).intValue());
+                    break;
+                case "maxMsgSize":
+                    maxMsgSize(numberFrom(value).longValue());
+                    break;
+                case "linger":
+                    linger(numberFrom(value).intValue());
+                    break;
+                case "backlog":
+                    backlog(numberFrom(value).intValue());
+                    break;
+                case "affinity":
+                    affinity(numberFrom(value).longValue());
+                    break;
+                case "identity":
+                    identity(bytearrayFrom(value));
+                    break;
+                case "ipv6":
+                    ipv6(booleanFrom(value));
+                    break;
+                case "receiveBufferSize":
+                    receiveBufferSize(numberFrom(value).intValue());
+                    break;
+                case "sendBufferSize":
+                    sendBufferSize(numberFrom(value).intValue());
+                    break;
+                case "receiveTimeOut":
+                    receiveTimeOut(numberFrom(value).intValue());
+                    break;
+                case "reconnectIVL":
+                    reconnectIVL(numberFrom(value).intValue());
+                    break;
+                case "reconnectIVLMax":
+                    reconnectIVLMax(numberFrom(value).intValue());
+                    break;
+                case "sendTimeOut":
+                    sendTimeOut(numberFrom(value).intValue());
+                    break;
+                case "tcpKeepAlive":
+                    tcpKeepAlive(numberFrom(value).intValue());
+                    break;
+                case "tcpKeepAliveCount":
+                    tcpKeepAliveCount(numberFrom(value).intValue());
+                    break;
+                case "tcpKeepAliveIdle":
+                    tcpKeepAliveIdle(numberFrom(value).intValue());
+                    break;
+                case "tcpKeepAliveInterval":
+                    tcpKeepAliveInterval(numberFrom(value).intValue());
+                    break;
+                case "xpubVerbose":
+                    xpubVerbose(booleanFrom(value));
+                    break;
+                case "tos":
+                    tos(numberFrom(value).intValue());
+                    break;
+                case "heartbeatIvl":
+                    heartbeatIvl(numberFrom(value).intValue());
+                    break;
+                case "heartbeatTimeout":
+                    heartbeatTimeout(numberFrom(value).intValue());
+                    break;
+                case "heartbeatTtl":
+                    heartbeatTtl(numberFrom(value).intValue());
+                    break;
+                case "heartbeatContext":
+                    heartbeatContext(bytearrayFrom(value));
+                    break;
+                case "handshakeIvl":
+                    handshakeIvl(numberFrom(value).intValue());
+                    break;
+                case "socksProxyPort":
+                    socksProxyPort(numberFrom(value).intValue());
+                    break;
+                case "socksProxyHost":
+                    socksProxyHost(value.toString());
+                    break;
+                case "xpubNoDrop":
+                    xpubNoDrop(booleanFrom(value));
+                    break;
+                case "xpubManual":
+                    xpubManual(booleanFrom(value));
+                    break;
+                case "xpubVerboser":
+                    xpubVerboser(booleanFrom(value));
+                    break;
+                case "plainUsername":
+                    plainUsername(value.toString());
+                    break;
+                case "plainPassword":
+                    plainPassword(value.toString());
+                    break;
+                case "curvePeerPublicKey":
+                    curvePeerPublicKey(CurveMechanismSettings.curveKey(value));
+                    break;
+                case "curvePublicKey":
+                    curvePublicKey(CurveMechanismSettings.curveKey(value));
+                    break;
+                case "curveSecretKey":
+                    curveSecretKey(CurveMechanismSettings.curveKey(value));
+                    break;
+                case "mechanism":
+                    mechanism((MechanismSettings<?>) value);
+                    break;
+                default:
+                    throw new IllegalArgumentException("unknown option");
+                }
+            }
+            catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format("Option '%s' not a number: \"%s\"", key, value));
+            }
+            catch (RuntimeException e) {
+                switch (e.getMessage()) {
+                case "unknown option":
+                    throw new IllegalArgumentException(String.format("Option '%s' unknown", key));
+                case "not a boolean":
+                    throw new IllegalArgumentException(String.format("Option '%s' not a: \"%s\"", key, value));
+                default:
+                    throw new IllegalArgumentException(String.format("Option '%s' failed: %s", key, e.getMessage()), e);
+                }
+            }
+            return this;
+        }
+
+        private Number numberFrom(Object value)
+        {
+            if (value instanceof Number) {
+                return (Number) value;
+            }
+            else {
+                return Long.parseLong(value.toString());
+            }
+        }
+
+        private byte[] bytearrayFrom(Object value)
+        {
+            if (value instanceof byte[]) {
+                return (byte[]) value;
+            }
+            else if (value instanceof ByteBuffer) {
+                ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
+                byte[] bytes = new byte[bb.remaining()];
+                bb.get(bytes);
+                return bytes;
+            }
+            else if (value instanceof String) {
+                return EncodingDetector.decode((String) value);
+            }
+            else {
+                return value.toString().getBytes(StandardCharsets.UTF_8);
+            }
+        }
+
+        private Boolean booleanFrom(Object value)
+        {
+            if (value instanceof Boolean) {
+                return (Boolean) value;
+            }
+            else {
+                switch (value.toString().toLowerCase(Locale.ENGLISH)) {
+                case "1":
+                case "yes":
+                case "true":
+                    return true;
+                case "0":
+                case "no":
+                case "false":
+                    return false;
+                default:
+                    throw new IllegalArgumentException("not a boolean");
+                }
+            }
+        }
+
+        /**
          * Builds and returns an immutable {@link SocketConfigurator}.
          *
          * <p>If no explicit {@link MechanismSettings} was provided, the method will automatically
@@ -792,61 +1008,6 @@ public class SocketConfigurator
                 }
             }
             return new SocketConfigurator(this);
-        }
-    }
-
-    private static byte[] bytearrayFrom(Object value)
-    {
-        if (value instanceof byte[]) {
-            return (byte[]) value;
-        }
-        else if (value instanceof ByteBuffer) {
-            ByteBuffer bb = ((ByteBuffer) value).asReadOnlyBuffer();
-            byte[] bytes = new byte[bb.remaining()];
-            bb.get(bytes);
-            return bytes;
-        }
-        else if (value instanceof String) {
-            return EncodingDetector.decode((String) value);
-        }
-        else {
-            return value.toString().getBytes(StandardCharsets.UTF_8);
-        }
-    }
-
-    private static Number numberFrom(Object value)
-    {
-        if (value instanceof Number) {
-            return (Number) value;
-        }
-        else {
-            try {
-                return Long.parseLong(value.toString());
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Not a number: \"" + value + "\"");
-            }
-        }
-    }
-
-    private static Boolean booleanFrom(Object value)
-    {
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        else {
-            switch (value.toString().toLowerCase(Locale.ENGLISH)) {
-            case "1":
-            case "yes":
-            case "true":
-                return true;
-            case "0":
-            case "no":
-            case "false":
-                return false;
-            default:
-                throw new IllegalArgumentException("Not a boolean: \"" + value + "\"");
-            }
         }
     }
 
@@ -891,142 +1052,8 @@ public class SocketConfigurator
         for (Map.Entry<String, ?> entry : settings.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if (value == null) {
-                continue;
-            }
             try {
-                switch (key) {
-                case "endpoint":
-                    builder.endpoint((String) value);
-                    break;
-                case "type":
-                    if (value instanceof SocketType) {
-                        builder.type((SocketType) value);
-                    }
-                    else {
-                        builder.type(SocketType.valueOf(value.toString().toUpperCase(Locale.ENGLISH)));
-                    }
-                    break;
-                case "method":
-                    if (value instanceof Method) {
-                        builder.method((Method) value);
-                    }
-                    else {
-                        builder.method(Method.valueOf(value.toString().toUpperCase(Locale.ENGLISH)));
-                    }
-                    break;
-                case "sendHwm":
-                    builder.sendHwm(numberFrom(value).intValue());
-                    break;
-                case "recvHwm":
-                    builder.recvHwm(numberFrom(value).intValue());
-                    break;
-                case "maxMsgSize":
-                    builder.maxMsgSize(numberFrom(value).longValue());
-                    break;
-                case "linger":
-                    builder.linger(numberFrom(value).intValue());
-                    break;
-                case "backlog":
-                    builder.backlog(numberFrom(value).intValue());
-                    break;
-                case "affinity":
-                    builder.affinity(numberFrom(value).longValue());
-                    break;
-                case "identity":
-                    builder.identity(bytearrayFrom(value));
-                    break;
-                case "ipv6":
-                    builder.ipv6(booleanFrom(value));
-                    break;
-                case "receiveBufferSize":
-                    builder.receiveBufferSize(numberFrom(value).intValue());
-                    break;
-                case "sendBufferSize":
-                    builder.sendBufferSize(numberFrom(value).intValue());
-                    break;
-                case "receiveTimeOut":
-                    builder.receiveTimeOut(numberFrom(value).intValue());
-                    break;
-                case "reconnectIVL":
-                    builder.reconnectIVL(numberFrom(value).intValue());
-                    break;
-                case "reconnectIVLMax":
-                    builder.reconnectIVLMax(numberFrom(value).intValue());
-                    break;
-                case "sendTimeOut":
-                    builder.sendTimeOut(numberFrom(value).intValue());
-                    break;
-                case "tcpKeepAlive":
-                    builder.tcpKeepAlive(numberFrom(value).intValue());
-                    break;
-                case "tcpKeepAliveCount":
-                    builder.tcpKeepAliveCount(numberFrom(value).intValue());
-                    break;
-                case "tcpKeepAliveIdle":
-                    builder.tcpKeepAliveIdle(numberFrom(value).intValue());
-                    break;
-                case "tcpKeepAliveInterval":
-                    builder.tcpKeepAliveInterval(numberFrom(value).intValue());
-                    break;
-                case "xpubVerbose":
-                    builder.xpubVerbose(booleanFrom(value));
-                    break;
-                case "tos":
-                    builder.tos(numberFrom(value).intValue());
-                    break;
-                case "heartbeatIvl":
-                    builder.heartbeatIvl(numberFrom(value).intValue());
-                    break;
-                case "heartbeatTimeout":
-                    builder.heartbeatTimeout(numberFrom(value).intValue());
-                    break;
-                case "heartbeatTtl":
-                    builder.heartbeatTtl(numberFrom(value).intValue());
-                    break;
-                case "heartbeatContext":
-                    builder.heartbeatContext(bytearrayFrom(value));
-                    break;
-                case "handshakeIvl":
-                    builder.handshakeIvl(numberFrom(value).intValue());
-                    break;
-                case "socksProxyPort":
-                    builder.socksProxyPort(numberFrom(value).intValue());
-                    break;
-                case "socksProxyHost":
-                    builder.socksProxyHost(value.toString());
-                    break;
-                case "xpubNoDrop":
-                    builder.xpubNoDrop(booleanFrom(value));
-                    break;
-                case "xpubManual":
-                    builder.xpubManual(booleanFrom(value));
-                    break;
-                case "xpubVerboser":
-                    builder.xpubVerboser(booleanFrom(value));
-                    break;
-                case "plainUsername":
-                    builder.plainUsername(value.toString());
-                    break;
-                case "plainPassword":
-                    builder.plainPassword(value.toString());
-                    break;
-                case "curvePeerPublicKey":
-                    builder.curvePeerPublicKey(CurveMechanismSettings.curveKey(value));
-                    break;
-                case "curvePublicKey":
-                    builder.curvePublicKey(CurveMechanismSettings.curveKey(value));
-                    break;
-                case "curveSecretKey":
-                    builder.curveSecretKey(CurveMechanismSettings.curveKey(value));
-                    break;
-                case "mechanism":
-                    builder.mechanism((MechanismSettings<?>) value);
-                    break;
-                default:
-                    assert false : "Unknown key " + key;
-                    break;
-                }
+                builder.setOption(key, value);
             }
             catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid value for key '" + key + "': " + e.getMessage(), e);
