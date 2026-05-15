@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.zeromq.ZMQ.Socket;
 
@@ -173,55 +174,60 @@ public class SocketConfigurator
      * @param socket the socket to configure; must not be {@code null}
      * @return the same {@code socket} instance, after all options have been applied
      */
-    public Socket getSocket(Socket socket)
+    public Socket configure(Socket socket)
     {
-        Optional.of(maxMsgSize).filter(i -> i >= 0).ifPresent(socket::setMaxMsgSize);
-        Optional.of(linger).filter(i -> i > 0).ifPresent(socket::setLinger);
-        Optional.of(backlog).filter(i -> i >= 0).ifPresent(socket::setBacklog);
-        Optional.of(affinity).filter(i -> i >= 0).ifPresent(socket::setAffinity);
-        Optional.of(tcpKeepAlive).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAlive);
-        Optional.of(tcpKeepAliveCount).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveCount);
-        Optional.of(tcpKeepAliveIdle).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveIdle);
-        Optional.of(recvHwm).filter(i -> i >= 0).ifPresent(socket::setRcvHWM);
-        Optional.of(sendHwm).filter(i -> i >= 0).ifPresent(socket::setSndHWM);
-        Optional.of(tos).filter(i -> i >= 0).ifPresent(socket::setTos);
-        Optional.of(sendBufferSize).filter(i -> i >= 0).ifPresent(socket::setSendBufferSize);
-        Optional.of(receiveBufferSize).filter(i -> i >= 0).ifPresent(socket::setReceiveBufferSize);
-        Optional.of(sendTimeOut).filter(i -> i >= 0).ifPresent(socket::setSendTimeOut);
-        Optional.of(receiveTimeOut).filter(i -> i >= 0).ifPresent(socket::setReceiveTimeOut);
-
-        if (identity != null && identity.hasRemaining()) {
-            byte[] identityBytes = new byte[identity.remaining()];
-            identity.duplicate().get(identityBytes);
-            socket.setIdentity(identityBytes);
+        Optional.ofNullable(maxMsgSize).filter(i -> i >= 0).ifPresent(socket::setMaxMsgSize);
+        Optional.ofNullable(linger).filter(i -> i > 0).ifPresent(socket::setLinger);
+        Optional.ofNullable(backlog).filter(i -> i >= 0).ifPresent(socket::setBacklog);
+        Optional.ofNullable(affinity).filter(i -> i >= 0).ifPresent(socket::setAffinity);
+        Optional.ofNullable(tcpKeepAlive).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAlive);
+        Optional.ofNullable(tcpKeepAliveCount).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveCount);
+        Optional.ofNullable(tcpKeepAliveIdle).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveIdle);
+        Optional.ofNullable(recvHwm).filter(i -> i >= 0).ifPresent(socket::setRcvHWM);
+        Optional.ofNullable(sendHwm).filter(i -> i >= 0).ifPresent(socket::setSndHWM);
+        Optional.ofNullable(tos).filter(i -> i >= 0).ifPresent(socket::setTos);
+        Optional.ofNullable(sendBufferSize).filter(i -> i >= 0).ifPresent(socket::setSendBufferSize);
+        Optional.ofNullable(receiveBufferSize).filter(i -> i >= 0).ifPresent(socket::setReceiveBufferSize);
+        Optional.ofNullable(sendTimeOut).filter(i -> i >= 0).ifPresent(socket::setSendTimeOut);
+        Optional.ofNullable(receiveTimeOut).filter(i -> i >= 0).ifPresent(socket::setReceiveTimeOut);
+        if (identity.hasRemaining()) {
+            setBytesOption(identity, socket::setIdentity);
         }
         else if (endpoint != null && type != null && method != null) {
             String url = endpoint + ":" + type + ":" + method.getSymbol();
-            socket.setIdentity(url.getBytes());
+            socket.setIdentity(url.getBytes(StandardCharsets.UTF_8));
         }
 
-        Optional.of(reconnectIVL).filter(i -> i >= 0).ifPresent(socket::setReconnectIVL);
-        Optional.of(reconnectIVLMax).filter(i -> i >= 0).ifPresent(socket::setReconnectIVLMax);
-        Optional.of(tcpKeepAliveInterval).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveInterval);
-        Optional.of(heartbeatIvl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatIvl);
-        Optional.of(heartbeatTimeout).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTimeout);
-        Optional.of(heartbeatTtl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTtl);
-        if (heartbeatContext != null) {
-            byte[] hbBytes = new byte[heartbeatContext.remaining()];
-            heartbeatContext.duplicate().get(hbBytes);
-            socket.setHeartbeatContext(hbBytes);
-        }
-        Optional.of(handshakeIvl).filter(i -> i >= 0).ifPresent(socket::setHandshakeIvl);
+        Optional.ofNullable(reconnectIVL).filter(i -> i >= 0).ifPresent(socket::setReconnectIVL);
+        Optional.ofNullable(reconnectIVLMax).filter(i -> i >= 0).ifPresent(socket::setReconnectIVLMax);
+        Optional.ofNullable(tcpKeepAliveInterval).filter(i -> i >= 0).ifPresent(socket::setTCPKeepAliveInterval);
+        Optional.ofNullable(heartbeatIvl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatIvl);
+        Optional.ofNullable(heartbeatTimeout).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTimeout);
+        Optional.ofNullable(heartbeatTtl).filter(i -> i >= 0).ifPresent(socket::setHeartbeatTtl);
+        setBytesOption(heartbeatContext, socket::setHeartbeatContext);
+        Optional.ofNullable(handshakeIvl).filter(i -> i >= 0).ifPresent(socket::setHandshakeIvl);
         if (socksProxyHost != null && socksProxyPort > 0) {
             socket.setSocksProxy(socksProxyHost + ":" + socksProxyPort);
         }
-        socket.setXpubVerbose(xpubVerbose);
-        socket.setXpubNoDrop(xpubNoDrop);
-        socket.setXpubManual(xpubManual);
-        socket.setXpubVerboser(xpubVerboser);
-        socket.setIPv6(ipv6);
+        Optional.ofNullable(xpubVerbose).ifPresent(socket::setXpubVerbose);
+        Optional.ofNullable(xpubNoDrop).ifPresent(socket::setXpubNoDrop);
+        Optional.ofNullable(xpubManual).ifPresent(socket::setXpubManual);
+        Optional.ofNullable(xpubVerboser).ifPresent(socket::setXpubVerboser);
+        Optional.ofNullable(ipv6).ifPresent(socket::setIPv6);
         Optional.ofNullable(mechanism).ifPresent(socket::setMechanism);
         return socket;
+    }
+
+    private void setBytesOption(ByteBuffer buffer, Consumer<byte[]> setter)
+    {
+        if (buffer.hasRemaining()) {
+            buffer.mark();
+            buffer.position(0);
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            buffer.reset();
+            setter.accept(bytes);
+        }
     }
 
     /**

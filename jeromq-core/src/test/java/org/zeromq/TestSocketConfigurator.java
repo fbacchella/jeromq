@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TestSocketConfigurator
@@ -23,11 +24,64 @@ class TestSocketConfigurator
         SocketConfigurator config = SocketConfigurator.build();
         assertNotNull(config);
         assertNull(config.endpoint);
+        assertNull(config.type);
+        assertNull(config.method);
         assertNull(config.sendHwm);
         assertNull(config.recvHwm);
         assertNull(config.maxMsgSize);
         assertNull(config.linger);
         assertNull(config.backlog);
+        assertNull(config.affinity);
+        assertNotNull(config.identity);
+        assertFalse(config.identity.hasRemaining());
+        assertNull(config.ipv6);
+        assertNull(config.receiveBufferSize);
+        assertNull(config.sendBufferSize);
+        assertNull(config.receiveTimeOut);
+        assertNull(config.reconnectIVL);
+        assertNull(config.reconnectIVLMax);
+        assertNull(config.sendTimeOut);
+        assertNull(config.tcpKeepAlive);
+        assertNull(config.tcpKeepAliveCount);
+        assertNull(config.tcpKeepAliveIdle);
+        assertNull(config.tcpKeepAliveInterval);
+        assertNull(config.xpubVerbose);
+        assertNull(config.tos);
+        assertNull(config.heartbeatIvl);
+        assertNull(config.heartbeatTimeout);
+        assertNull(config.heartbeatTtl);
+        assertNotNull(config.heartbeatContext);
+        assertFalse(config.heartbeatContext.hasRemaining());
+        assertNull(config.handshakeIvl);
+        assertNull(config.socksProxyPort);
+        assertNull(config.socksProxyHost);
+        assertNull(config.xpubNoDrop);
+        assertNull(config.xpubManual);
+        assertNull(config.xpubVerboser);
+        assertNull(config.mechanism);
+        try (ZContext ctx = new ZContext()) {
+            ZMQ.Socket socket = ctx.createSocket(SocketType.PAIR);
+            config.configure(socket);
+            assertNotNull(socket);
+            assertEquals(zmq.ZMQ.DEFAULT_SEND_HWM, socket.getSndHWM());
+            assertEquals(zmq.ZMQ.DEFAULT_RECV_HWM, socket.getRcvHWM());
+            assertEquals(zmq.ZMQ.DEFAULT_MAX_MSG_SIZE, socket.getMaxMsgSize());
+            assertEquals(ctx.getLinger(), socket.getLinger());
+            assertEquals(zmq.ZMQ.DEFAULT_BACKLOG, socket.getBacklog());
+            assertEquals(zmq.ZMQ.DEFAULT_AFFINITY, socket.getAffinity());
+            assertEquals(zmq.ZMQ.DEFAULT_RECONNECT_IVL, socket.getReconnectIVL());
+            assertEquals(zmq.ZMQ.DEFAULT_RECONNECT_IVL_MAX, socket.getReconnectIVLMax());
+            assertEquals(zmq.ZMQ.DEFAULT_RECV_TIMEOUT, socket.getReceiveTimeOut());
+            assertEquals(zmq.ZMQ.DEFAULT_SEND_TIMEOUT, socket.getSendTimeOut());
+            assertEquals(zmq.ZMQ.DEFAULT_RCVBUF, socket.getReceiveBufferSize());
+            assertEquals(zmq.ZMQ.DEFAULT_SNDBUF, socket.getSendBufferSize());
+            assertEquals(zmq.ZMQ.DEFAULT_TCP_KEEP_ALIVE, socket.getTCPKeepAlive());
+            assertEquals(zmq.ZMQ.DEFAULT_TOS, socket.getTos());
+            assertEquals(zmq.ZMQ.DEFAULT_HANDSHAKE_IVL, socket.getHandshakeIvl());
+            assertEquals(zmq.ZMQ.DEFAULT_HEARTBEAT_INTERVAL, socket.getHeartbeatIvl());
+            assertEquals(zmq.ZMQ.DEFAULT_HEARTBEAT_TIMEOUT, socket.getHeartbeatTimeout());
+            assertEquals(zmq.ZMQ.DEFAULT_HEARTBEAT_TTL, socket.getHeartbeatTtl());
+        }
     }
 
     @Test
@@ -166,7 +220,7 @@ class TestSocketConfigurator
     }
 
     @Test
-    void testGetSocket()
+    void testConfigure()
     {
         byte[] customIdentity = "custom-id".getBytes();
         SocketConfigurator config = SocketConfigurator.builder()
@@ -204,7 +258,7 @@ class TestSocketConfigurator
 
         try (ZContext ctx = new ZContext()) {
             ZMQ.Socket socket = ctx.createSocket(config.type);
-            config.getSocket(socket);
+            config.configure(socket);
             assertNotNull(socket);
             assertEquals(0, socket.getLinger());
             assertEquals(SocketType.XPUB, socket.getSocketType());
@@ -249,7 +303,7 @@ class TestSocketConfigurator
                     .build();
 
             ZMQ.Socket socket = ctx.createSocket(config.type);
-            config.getSocket(socket);
+            config.configure(socket);
             // Par défaut, Configurator génère une identité basée sur l'URL
             String url = "inproc://test:PUB:O";
             assertArrayEquals(url.getBytes(), socket.getIdentity());
@@ -296,7 +350,7 @@ class TestSocketConfigurator
                     .build();
 
             ZMQ.Socket socket = ctx.createSocket(config.type);
-            config.getSocket(socket);
+            config.configure(socket);
             assertArrayEquals(customId, socket.getIdentity());
             socket.close();
         }
