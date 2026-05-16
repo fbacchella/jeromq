@@ -253,6 +253,7 @@ public class ZConfig
                 }
             }
         }, 0);
+        writer.flush();
     }
 
     public static ZConfig load(Reader reader) throws IOException
