@@ -3473,7 +3473,7 @@ public class ZMQ
          */
         public boolean send(String data, int flags)
         {
-            return sendByteBuffer(CHARSET.encode(data), flags) != -1;
+            return send(CHARSET.encode(data), flags);
         }
 
         /**
@@ -3497,6 +3497,18 @@ public class ZMQ
          * This does not indicate that the message has been transmitted to the network.
          */
         public boolean sendMore(byte[] data)
+        {
+            return send(data, zmq.ZMQ.ZMQ_SNDMORE);
+        }
+
+        /**
+         * Queues a multi-part message created from data, so it can be sent.
+         *
+         * @param data the data to send. further message parts are to follow.
+         * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
+         * This does not indicate that the message has been transmitted to the network.
+         */
+        public boolean sendMore(ByteBuffer data)
         {
             return send(data, zmq.ZMQ.ZMQ_SNDMORE);
         }
@@ -3601,9 +3613,9 @@ public class ZMQ
          * @param data  ByteBuffer payload
          * @return the number of bytes queued, -1 on error
          */
-        public int sendByteBuffer(ByteBuffer data)
+        public boolean send(ByteBuffer data)
         {
-            return sendByteBuffer(data, 0);
+            return send(data, 0);
         }
 
         /**
@@ -3624,15 +3636,15 @@ public class ZMQ
          *              </ul>
          * @return the number of bytes queued, -1 on error
          */
-        public int sendByteBuffer(ByteBuffer data, int flags)
+        public boolean send(ByteBuffer data, int flags)
         {
             Msg msg = new Msg(data);
             if (base.send(msg, flags)) {
-                return msg.size();
+                return true;
             }
 
             mayRaise();
-            return -1;
+            return false;
         }
 
         /**

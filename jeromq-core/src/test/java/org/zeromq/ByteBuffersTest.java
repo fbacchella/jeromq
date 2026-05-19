@@ -2,6 +2,7 @@ package org.zeromq;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -54,7 +55,7 @@ public class ByteBuffersTest
 
             Thread.sleep(1000);
 
-            push.sendByteBuffer(bb, 0);
+            assertTrue(push.send(bb, 0));
             String actual = new String(pull.recv(), ZMQ.CHARSET);
             assertEquals("PING", actual);
         }
@@ -141,7 +142,7 @@ public class ByteBuffersTest
             Thread.sleep(1000);
 
             long start = System.currentTimeMillis();
-            push.sendByteBuffer(bSend, 0);
+            assertTrue(push.send(bSend, 0));
             pull.recvByteBuffer(bRec, 0);
             long end = System.currentTimeMillis();
             System.out.println("Received ~" + size + "Mb msg in " + (end - start) + " millisec.");
@@ -202,7 +203,7 @@ public class ByteBuffersTest
             Thread.sleep(1000);
 
             long start = System.currentTimeMillis();
-            push.sendByteBuffer(bSend, 0);
+            assertTrue(push.send(bSend, 0));
             pull.recvByteBuffer(bRec, 0);
             long end = System.currentTimeMillis();
             System.out.println("Received ~" + size + "Mb msg in " + (end - start) + " millisec.");
@@ -256,7 +257,7 @@ public class ByteBuffersTest
             bb.flip();
 
             Thread.sleep(1000);
-            push.sendByteBuffer(bb, 0);
+            assertTrue(push.send(bb, 0));
             String actual = new String(pull.recv(), ZMQ.CHARSET);
             assertEquals("PING", actual);
 
@@ -264,7 +265,7 @@ public class ByteBuffersTest
 
             bb.put("PONG".getBytes(ZMQ.CHARSET));
             bb.flip();
-            push.sendByteBuffer(bb, 0);
+            assertTrue(push.send(bb, 0));
             String newMsg = new String(pull.recv(), ZMQ.CHARSET);
             assertEquals("PONG", newMsg);
 
