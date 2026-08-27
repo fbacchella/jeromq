@@ -53,7 +53,7 @@ jobs:
                   command: |
                       # If no symbolic name, it's a PR, will run sonar
                       if [ -n "$(git symbolic-ref HEAD 2>/dev/null )" ] ; then
-                          SONAR="jacoco:report sonar:sonar -Psonar -Dsonar.projectKey=fr.loghub:jeromq"
+                          SONAR="jacoco:report sonar:sonar -Psonar"
                           echo "Doing sonar"
                       else
                           SONAR=""
